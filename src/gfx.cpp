@@ -39,6 +39,14 @@ void Gfx::init() {
 
     // swapchain and stuff
     createSwapchain();
+
+    // MULTI THREADING INVOLVED HERE:
+    // Assuming that the asset loading pipeline was kicked off prior to this point 
+    // Assets class should know the texture image COUNT by this point (shared resource)
+    // the following function will access that shared resource to see
+    // how many texture sampler descriptors to specify in the descriptor set layout
+    // 
+    //createDescriptorSetLayout();
     
 
 }

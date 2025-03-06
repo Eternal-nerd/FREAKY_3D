@@ -4,6 +4,7 @@
 
 #include <string>
 
+#include "clock.h"
 #include "util.h"
 #include "gfx.h"
 
@@ -21,6 +22,9 @@ public:
 private:
 	bool running_ = false;
 	bool visible_ = true;
+
+	// clock
+	Clock clock_;
 
 	// Graphics
 	Gfx gfx_;

@@ -20,6 +20,7 @@ set(SOURCES
 	src/gfx.cpp
 	src/util.cpp
 	src/clock.cpp
+	src/assets.cpp
 )
 
 # add headers
@@ -29,6 +30,7 @@ set(HEADERS
 	src/util.h
 	src/types.h
 	src/clock.h
+	src/assets.h
 )
 
 # add executable:

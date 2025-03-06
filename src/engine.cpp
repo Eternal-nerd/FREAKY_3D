@@ -15,6 +15,8 @@ void Engine::run() {
 -----------------------------------------------------------------------------*/
 void Engine::init() {
 	util::log(name, "initializing");
+
+    clock_.init();
 	
 	gfx_.init();
 
