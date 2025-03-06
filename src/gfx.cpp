@@ -115,7 +115,8 @@ void Gfx::createDevice() {
     if (!SDL_Vulkan_CreateSurface(window_, instance_, nullptr, &surface_)) {
         throw std::runtime_error("failed to create SDL window surface!");
     }
-
+    
+    // TODO: print device selected to logger!!!!
     // Vulkan physical device (GPU) --------------------====<
     util::log(name, "selecting physical device");
     uint32_t deviceCount = 0;
