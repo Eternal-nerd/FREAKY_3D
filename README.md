@@ -1,2 +1,2 @@
-This program will allow the user to inspect and interact with 3D models via the program window.  
+A fun game (soon) to play with your friends (soon) or alone (soon)
 
