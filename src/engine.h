@@ -7,6 +7,7 @@
 #include "clock.h"
 #include "util.h"
 #include "gfx.h"
+#include "assets.h"
 
 /*
 The engine class pretty much just encapsulates everything. 
@@ -22,6 +23,9 @@ public:
 private:
 	bool running_ = false;
 	bool visible_ = true;
+
+  // Asset manager
+  Assets assets_; 
 
 	// clock
 	Clock clock_;

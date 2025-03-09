@@ -1,5 +1,7 @@
 #include "engine.h"
 
+#include <thread>
+
 /*-----------------------------------------------------------------------------
 -----------------------------ONLY-PUBLIC-METHOD--------------------------------
 -----------------------------------------------------------------------------*/
@@ -16,9 +18,14 @@ void Engine::run() {
 void Engine::init() {
 	util::log(name, "initializing");
 
-    clock_.init();
-	
+  // Kick off asset pipeline on background thread
+  std::thread asset_thread(&Assets::init, &assets_);
+
+  clock_.init();
+
 	gfx_.init();
+
+  asset_thread.join();
 
 }
 
