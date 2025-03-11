@@ -16,16 +16,11 @@ void Engine::run() {
 ------------------------------INITIALIZATION-----------------------------------
 -----------------------------------------------------------------------------*/
 void Engine::init() {
-	util::log(name, "initializing");
+    util::log(name, "initializing");
 
-  // Kick off asset pipeline on background thread
-  std::thread asset_thread(&Assets::init, &assets_);
+    clock_.init();
 
-  clock_.init();
-
-	gfx_.init();
-
-  asset_thread.join();
+    gfx_.init();
 
 }
 

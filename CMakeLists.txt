@@ -21,6 +21,7 @@ set(SOURCES
 	src/util.cpp
 	src/clock.cpp
 	src/assets.cpp
+	src/texture.cpp
 )
 
 # add headers
@@ -31,6 +32,7 @@ set(HEADERS
 	src/types.h
 	src/clock.h
 	src/assets.h
+	src/texture.h
 )
 
 # add executable:

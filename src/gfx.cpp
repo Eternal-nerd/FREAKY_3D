@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <set>
 #include <array>
+#include <thread>
 
 /*-----------------------------------------------------------------------------
 ------------------------------INITIALIZATION-----------------------------------
@@ -34,21 +35,42 @@ void Gfx::init() {
     // Init Vulkan instance and logical device
     createDevice();
 
+    // command pools / buffers
+    createCommandPool();
+    createCommandBuffers();
+
+    // KICK OFF ASSET PIPELINE HERE
+    assets_.enumerateFiles();
+    int textureCount = assets_.getTextureCount();
+    std::thread asset_thread(&Gfx::startAssetPipeline, this);
+
     // create Vulkan render pass
     createRenderPass();
 
     // swapchain and stuff
     createSwapchain();
 
-    // MULTI THREADING INVOLVED HERE:
-    // Assuming that the asset loading pipeline was kicked off prior to this point 
-    // Assets class should know the texture image COUNT by this point (shared resource)
-    // the following function will access that shared resource to see
-    // how many texture sampler descriptors to specify in the descriptor set layout
-    // 
-    //createDescriptorSetLayout();
-    
+    // use texture count from assets for this
+    createDescriptorSetLayout(textureCount);
 
+    // sync objects
+    createSyncObjects();
+
+    // UBO
+    createUniformBuffers();
+
+    // Descriptor pool
+    createDescriptorPool(textureCount);
+
+    // need to join asset thread to be able to create descriptor sets
+    asset_thread.join();
+    //createDescriptorSets();
+}
+
+void Gfx::startAssetPipeline() {
+    util::log(name, "kicking off the asset pipeline");
+
+    assets_.init(device_, physicalDevice_);
 }
 
 /*-----------------------------------------------------------------------------
@@ -188,7 +210,6 @@ void Gfx::createDevice() {
     util::log(name, "getting device queues");
     vkGetDeviceQueue(device_, indices.graphicsFamily.value(), 0, &graphicsQueue_);
     vkGetDeviceQueue(device_, indices.presentFamily.value(), 0, &presentQueue_);
-
 }
 
 /*-----------------------------------------------------------------------------
@@ -408,10 +429,153 @@ void Gfx::cleanupSwapchain() {
 }
 
 /*-----------------------------------------------------------------------------
+------------------------------GFX-PIPELINE-------------------------------------
+-----------------------------------------------------------------------------*/
+void Gfx::recreatePipeline(VkPolygonMode mode) {
+    // CLEANUP SHIT THEN RECREATE???
+
+    util::log(name, "destroying graphics pipeline (for recreation)");
+    vkDestroyPipeline(device_, graphicsPipeline_, nullptr);
+    util::log(name, "destroying pipeline layout (for recreation)");
+    vkDestroyPipelineLayout(device_, pipelineLayout_, nullptr);
+
+    // RECREATE
+    createGraphicsPipeline(mode);
+
+}
+
+
+void Gfx::createGraphicsPipeline(VkPolygonMode mode) {
+    util::log(name, "creating graphics pipeline");
+    // TODO MAYBE Move this to assets or separate shader management class? 
+    auto vertShaderCode = util::readFile("../shaders/compiled/vert.spv");
+    auto fragShaderCode = util::readFile("../shaders/compiled/frag.spv");
+
+    VkShaderModule vertShaderModule = util::createShaderModule(vertShaderCode, device_);
+    VkShaderModule fragShaderModule = util::createShaderModule(fragShaderCode, device_);
+
+    VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
+    vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+    vertShaderStageInfo.module = vertShaderModule;
+    vertShaderStageInfo.pName = "main";
+
+    VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+    fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+    fragShaderStageInfo.module = fragShaderModule;
+    fragShaderStageInfo.pName = "main";
+
+    VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
+
+    VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+    vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    auto bindingDescription = Vertex::getBindingDescription();
+    auto attributeDescriptions = Vertex::getAttributeDescriptions();
+    vertexInputInfo.vertexBindingDescriptionCount = 1;
+    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+    vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+    vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+
+    VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
+    inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+    inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    inputAssembly.primitiveRestartEnable = VK_FALSE;
+
+    VkPipelineViewportStateCreateInfo viewportState{};
+    viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+    viewportState.viewportCount = 1;
+    viewportState.scissorCount = 1;
+
+    VkPipelineRasterizationStateCreateInfo rasterizer{};
+    rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+    rasterizer.depthClampEnable = VK_FALSE;
+    rasterizer.rasterizerDiscardEnable = VK_FALSE;
+    rasterizer.polygonMode = mode;
+    // TODO: when input key for polygon mode is added: 
+    // currentMode_ = mode;
+    rasterizer.lineWidth = 1.0f;
+    rasterizer.cullMode = VK_CULL_MODE_BACK_BIT; // _NONE;
+    rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    rasterizer.depthBiasEnable = VK_FALSE;
+
+    VkPipelineMultisampleStateCreateInfo multisampling{};
+    multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+    multisampling.sampleShadingEnable = VK_FALSE;
+    multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+
+    VkPipelineDepthStencilStateCreateInfo depthStencil{};
+    depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    depthStencil.depthTestEnable = VK_TRUE;
+    depthStencil.depthWriteEnable = VK_TRUE;
+    depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+    depthStencil.depthBoundsTestEnable = VK_FALSE;
+    depthStencil.stencilTestEnable = VK_FALSE;
+
+    VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+    colorBlendAttachment.colorWriteMask =
+        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+        VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+    colorBlendAttachment.blendEnable = VK_FALSE;
+
+    VkPipelineColorBlendStateCreateInfo colorBlending{};
+    colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    colorBlending.logicOpEnable = VK_FALSE;
+    colorBlending.logicOp = VK_LOGIC_OP_COPY;
+    colorBlending.attachmentCount = 1;
+    colorBlending.pAttachments = &colorBlendAttachment;
+    colorBlending.blendConstants[0] = 0.0f;
+    colorBlending.blendConstants[1] = 0.0f;
+    colorBlending.blendConstants[2] = 0.0f;
+    colorBlending.blendConstants[3] = 0.0f;
+
+    std::vector<VkDynamicState> dynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+    VkPipelineDynamicStateCreateInfo dynamicState{};
+    dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+    dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
+    dynamicState.pDynamicStates = dynamicStates.data();
+
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipelineLayoutInfo.setLayoutCount = 1;
+    pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout_;
+
+    util::log(name, "creating graphics pipeline layout");
+    if (vkCreatePipelineLayout(device_, &pipelineLayoutInfo, nullptr, &pipelineLayout_) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create pipeline layout!");
+    }
+
+    VkGraphicsPipelineCreateInfo pipelineInfo{};
+    pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    pipelineInfo.stageCount = 2;
+    pipelineInfo.pStages = shaderStages;
+    pipelineInfo.pVertexInputState = &vertexInputInfo;
+    pipelineInfo.pInputAssemblyState = &inputAssembly;
+    pipelineInfo.pViewportState = &viewportState;
+    pipelineInfo.pRasterizationState = &rasterizer;
+    pipelineInfo.pMultisampleState = &multisampling;
+    pipelineInfo.pDepthStencilState = &depthStencil;
+    pipelineInfo.pColorBlendState = &colorBlending;
+    pipelineInfo.pDynamicState = &dynamicState;
+    pipelineInfo.layout = pipelineLayout_;
+    pipelineInfo.renderPass = renderPass_;
+    pipelineInfo.subpass = 0;
+    pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+
+    util::log(name, "ACTUALLY creating graphics pipeline");
+    if (vkCreateGraphicsPipelines(device_, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline_) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create graphics pipeline!");
+    }
+
+    vkDestroyShaderModule(device_, fragShaderModule, nullptr);
+    vkDestroyShaderModule(device_, vertShaderModule, nullptr);
+}
+
+/*-----------------------------------------------------------------------------
 -----------------------------DESCRIPTOR----------------------------------------
 -----------------------------------------------------------------------------*/
-/*void Gfx::createDescriptorSetLayout() {
-    util::log("Creating descriptor set layout...");
+void Gfx::createDescriptorSetLayout(int textureCount) {
+    util::log(name, "creating descriptor set layout");
     VkDescriptorSetLayoutBinding uboLayoutBinding{};
     uboLayoutBinding.binding = 0;
     uboLayoutBinding.descriptorCount = 1;
@@ -421,7 +585,7 @@ void Gfx::cleanupSwapchain() {
 
     VkDescriptorSetLayoutBinding samplerLayoutBinding{};
     samplerLayoutBinding.binding = 1;
-    samplerLayoutBinding.descriptorCount = static_cast<uint32_t>(textureNames_.size());
+    samplerLayoutBinding.descriptorCount = static_cast<uint32_t>(textureCount);
     samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     samplerLayoutBinding.pImmutableSamplers = nullptr;
     samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -437,7 +601,106 @@ void Gfx::cleanupSwapchain() {
         &descriptorSetLayout_) != VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor set layout!");
     }
-}*/
+}
+
+void Gfx::createDescriptorPool(int textureCount) {
+    util::log(name, "creating descriptor pool");
+
+    std::array<VkDescriptorPoolSize, 2> poolSizes{};
+    poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+    poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT * textureCount);
+
+    VkDescriptorPoolCreateInfo poolInfo{};
+    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+    poolInfo.pPoolSizes = poolSizes.data();
+    poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+
+    if (vkCreateDescriptorPool(device_, &poolInfo, nullptr, &descriptorPool_) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create descriptor pool!");
+    }
+}
+
+/*-----------------------------------------------------------------------------
+------------------------------VULKAN-COMMANDER---------------------------------
+-----------------------------------------------------------------------------*/
+void Gfx::createCommandPool() {
+    util::log(name, "creating command pool");
+    QueueFamilyIndices queueFamilyIndices = util::findQueueFamilies(physicalDevice_, surface_);
+
+    VkCommandPoolCreateInfo poolInfo{};
+    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
+
+    if (vkCreateCommandPool(device_, &poolInfo, nullptr, &commandPool_) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create graphics command pool!");
+    }
+}
+
+void Gfx::createCommandBuffers() {
+    util::log(name, "creating command buffers");
+    commandBuffers_.resize(MAX_FRAMES_IN_FLIGHT);
+
+    VkCommandBufferAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.commandPool = commandPool_;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandBufferCount = (uint32_t)commandBuffers_.size();
+
+    if (vkAllocateCommandBuffers(device_, &allocInfo, commandBuffers_.data()) != VK_SUCCESS) {
+        throw std::runtime_error("failed to allocate command buffers!");
+    }
+}
+
+/*-----------------------------------------------------------------------------
+------------------------------VULKAN-SYNC--------------------------------------
+-----------------------------------------------------------------------------*/
+void Gfx::createSyncObjects() {
+    util::log(name, "creating sync objects");
+
+    imageAvailableSemaphores_.resize(MAX_FRAMES_IN_FLIGHT);
+    renderFinishedSemaphores_.resize(MAX_FRAMES_IN_FLIGHT);
+    inFlightFences_.resize(MAX_FRAMES_IN_FLIGHT);
+
+    VkSemaphoreCreateInfo semaphoreInfo{};
+    semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+    VkFenceCreateInfo fenceInfo{};
+    fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        if (vkCreateSemaphore(device_, &semaphoreInfo, nullptr, &imageAvailableSemaphores_[i]) != VK_SUCCESS ||
+            vkCreateSemaphore(device_, &semaphoreInfo, nullptr, &renderFinishedSemaphores_[i]) != VK_SUCCESS ||
+            vkCreateFence(device_, &fenceInfo, nullptr, &inFlightFences_[i]) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create synchronization objects for a frame!");
+        }
+    }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------UNIFORM-BUFFERS-----------------------------------
+-----------------------------------------------------------------------------*/
+void Gfx::createUniformBuffers() {
+    VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+
+    uniformBuffers_.resize(MAX_FRAMES_IN_FLIGHT);
+    uniformBuffersMemory_.resize(MAX_FRAMES_IN_FLIGHT);
+    uniformBuffersMapped_.resize(MAX_FRAMES_IN_FLIGHT);
+
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        util::createBuffer(bufferSize, 
+            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            uniformBuffers_[i], uniformBuffersMemory_[i],
+            device_, physicalDevice_);
+
+        vkMapMemory(device_, uniformBuffersMemory_[i], 0, bufferSize, 0, &uniformBuffersMapped_[i]);
+    }
+}
 
 /*-----------------------------------------------------------------------------
 ------------------------------DRAW-SHIT----------------------------------------
@@ -459,12 +722,41 @@ void Gfx::cleanup() {
 
 
 
-
-
+    // pipeline & layout
+    util::log(name, "destroying graphics pipeline");
+    vkDestroyPipeline(device_, graphicsPipeline_, nullptr);
+    util::log(name, "destroying pipeline layout");
+    vkDestroyPipelineLayout(device_, pipelineLayout_, nullptr);
 
     // render pass
     util::log(name, "destroying render pass");
     vkDestroyRenderPass(device_, renderPass_, nullptr);
+
+    // UBO
+    util::log(name, "destroying uniform buffers");
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        vkDestroyBuffer(device_, uniformBuffers_[i], nullptr);
+        vkFreeMemory(device_, uniformBuffersMemory_[i], nullptr);
+    }
+
+    // descriptor stuff
+    util::log(name, "destroying descriptor pool");
+    vkDestroyDescriptorPool(device_, descriptorPool_, nullptr);
+
+    util::log(name, "destroying descriptor set layout");
+    vkDestroyDescriptorSetLayout(device_, descriptorSetLayout_, nullptr);
+
+    // snyc stuff
+    util::log(name, "destroying semaphores and fences");
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        vkDestroySemaphore(device_, renderFinishedSemaphores_[i], nullptr);
+        vkDestroySemaphore(device_, imageAvailableSemaphores_[i], nullptr);
+        vkDestroyFence(device_, inFlightFences_[i], nullptr);
+    }
+
+    // command pool
+    util::log(name, "destroying command pool");
+    vkDestroyCommandPool(device_, commandPool_, nullptr);
 
     // Devices/instance
     util::log(name, "destroying logical device");
