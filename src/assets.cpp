@@ -43,22 +43,85 @@ int Assets::getTextureCount() {
 	return textureCount_;
 }
 
-void Assets::init(VkDevice device, VkPhysicalDevice physicalDevice) {
+void Assets::init(const TextureAccess access) {
 	util::log(name, "initializing");
 
-	device_ = device;
-	physicalDevice_ = physicalDevice;	
-
-
-	// TESTING 
-	for (int i=0; i<10; i++) {
-		std::string s = "Count: " + std::to_string(i);
-		util::log(name, s);
-		std::this_thread::sleep_for(std::chrono::milliseconds(5));
+	// textures/images -------------------------------------------====================<
+	textureAccess_ = access;
+	for (int i = 0; i < textureCount_; i++) {
+		Texture t;
+		t.create(textureFilenames_[i], textureAccess_);
+		textures_.push_back(t);
 	}
-  
+
+	// Audio -------------------------------------------====================<
+	// for now, create SDL audio stream on init, and set audio spec to first file in list..
+	if (!SDL_LoadWAV(audioFilenames_[0].c_str(), &audioSpec_, &wavData_, &wavDataLen_)) {
+		throw std::runtime_error("failed to load .WAV file: " + audioFilenames_[0]);
+	}
+
+	// Create our audio stream in the same format as the .wav file. It'll convert to what the audio hardware wants.
+	stream_ = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &audioSpec_, NULL, NULL);
+	if (!stream_) {
+		SDL_Log("Couldn't create audio stream: %s", SDL_GetError());
+		throw std::runtime_error("Failed to create SDL audio stream! ");
+	}
+
+	// lower volume
+	SDL_SetAudioStreamGain(stream_, 0.1f);
+
+	// SDL_OpenAudioDeviceStream starts the device paused. You have to tell it to start!
+	SDL_ResumeAudioStreamDevice(stream_);
+
+	// MESHSSS   -------------------------------------------====================<
+
+}
+
+/*-----------------------------------------------------------------------------
+------------------------------TEXTURES-----------------------------------------
+-----------------------------------------------------------------------------*/
+TextureDetails Assets::getTextureDetails(int index) {
+	if (index < 0 || index >= textureCount_) {
+		throw std::runtime_error("texture index out of bounds");
+	}
+
+	TextureDetails d;
+	d.textureImageView = textures_[index].getTextureImageView();
+	d.textureSampler = textures_[index].getTextureSampler();
+	return d;
+}
+
+/*-----------------------------------------------------------------------------
+------------------------------PLAY-SOUNDS--------------------------------------
+-----------------------------------------------------------------------------*/
+void Assets::playSound(int soundIndex) {
+	// free PCM data previously loaded into buffer
+	SDL_free(wavData_);
+
+	if (!SDL_LoadWAV(audioFilenames_[soundIndex].c_str(), &audioSpec_, &wavData_, &wavDataLen_)) {
+		throw std::runtime_error("Failed to load .WAV file: " + audioFilenames_[soundIndex]);
+	}
+
+	// clear audiostream incase of past sounds still replaying:
+	// FIXMEEEEE need to add overlapping sounds
+	SDL_ClearAudioStream(stream_);
+
+	// feed more data to the stream. It will queue at the end, and trickle out as the hardware needs more data. 
+	SDL_PutAudioStreamData(stream_, wavData_, wavDataLen_);
 }
 
 /*-----------------------------------------------------------------------------
 ------------------------------CLEANUP------------------------------------------
 -----------------------------------------------------------------------------*/
+void Assets::cleanup() {
+	util::log(name, "cleaning up");
+
+	// texture cleanup here
+	for (auto t : textures_) {
+		t.cleanup();
+	}
+
+	util::log(name, "destroying audio object");
+	SDL_free(wavData_);
+
+}

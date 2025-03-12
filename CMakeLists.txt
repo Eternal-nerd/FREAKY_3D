@@ -33,6 +33,8 @@ set(HEADERS
 	src/clock.h
 	src/assets.h
 	src/texture.h
+
+	lib/stb_image.h
 )
 
 # add executable:

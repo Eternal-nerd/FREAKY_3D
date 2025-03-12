@@ -64,20 +64,25 @@ void Gfx::init() {
 
     // need to join asset thread to be able to create descriptor sets
     asset_thread.join();
-    //createDescriptorSets();
+    createDescriptorSets();
 }
 
 void Gfx::startAssetPipeline() {
     util::log(name, "kicking off the asset pipeline");
 
-    assets_.init(device_, physicalDevice_);
+    TextureAccess access;
+    access.physicalDevice = physicalDevice_;
+    access.device = device_;
+    access.commandPool = commandPool_;
+    access.graphicsQueue = graphicsQueue_;
+
+    assets_.init(access);
 }
 
 /*-----------------------------------------------------------------------------
 ------------------------------DEVICE-CREATION----------------------------------
 -----------------------------------------------------------------------------*/
 void Gfx::createDevice() {
-
     // Vulkan instance --------------------====<
     util::log(name, "creating Vulkan instance");
     if (enableValidationLayers && !util::checkValidationLayerSupport(validationLayers)) {
@@ -623,6 +628,56 @@ void Gfx::createDescriptorPool(int textureCount) {
     }
 }
 
+void Gfx::createDescriptorSets() {
+    util::log(name, "creating descriptor sets");
+    std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout_);
+    VkDescriptorSetAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    allocInfo.descriptorPool = descriptorPool_;
+    allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+    allocInfo.pSetLayouts = layouts.data();
+
+    descriptorSets_.resize(MAX_FRAMES_IN_FLIGHT);
+    if (vkAllocateDescriptorSets(device_, &allocInfo, descriptorSets_.data()) != VK_SUCCESS) {
+        throw std::runtime_error("failed to allocate descriptor sets!");
+    }
+
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        VkDescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = uniformBuffers_[i];
+        bufferInfo.offset = 0;
+        bufferInfo.range = sizeof(UniformBufferObject);
+
+        std::vector<VkDescriptorImageInfo> textureDescriptors(assets_.getTextureCount());
+        for (int i = 0; i < assets_.getTextureCount(); i++) {
+            textureDescriptors[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            TextureDetails d = assets_.getTextureDetails(i);
+            textureDescriptors[i].imageView = d.textureImageView;
+            textureDescriptors[i].sampler = d.textureSampler;
+        }
+
+        std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+
+        descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[0].dstSet = descriptorSets_[i];
+        descriptorWrites[0].dstBinding = 0;
+        descriptorWrites[0].dstArrayElement = 0;
+        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrites[0].descriptorCount = 1;
+        descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+        descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrites[1].dstSet = descriptorSets_[i];
+        descriptorWrites[1].dstBinding = 1;
+        descriptorWrites[1].dstArrayElement = 0;
+        descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        descriptorWrites[1].descriptorCount = static_cast<uint32_t>(assets_.getTextureCount());
+        descriptorWrites[1].pImageInfo = textureDescriptors.data();
+
+        vkUpdateDescriptorSets(device_, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+    }
+}
+
 /*-----------------------------------------------------------------------------
 ------------------------------VULKAN-COMMANDER---------------------------------
 -----------------------------------------------------------------------------*/
@@ -718,9 +773,8 @@ void Gfx::cleanup() {
     // very first, swapchain
     cleanupSwapchain();
 
-
-
-
+    // cleanup assets
+    assets_.cleanup();
 
     // pipeline & layout
     util::log(name, "destroying graphics pipeline");

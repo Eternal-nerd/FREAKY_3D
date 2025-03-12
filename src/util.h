@@ -48,6 +48,8 @@ namespace util {
 		VkMemoryPropertyFlags properties, VkImage& image,
 		VkDeviceMemory& imageMemory, VkDevice& device, 
 		VkPhysicalDevice& physicalDevice);
+	void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, VkDevice device, VkCommandPool commandPool, VkQueue graphicsQueue);
+	void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, VkDevice device, VkCommandPool commandPool, VkQueue graphicsQueue);
 
 	// BUffers/memory stuff
 	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, const VkPhysicalDevice& physicalDevice);
@@ -56,5 +58,9 @@ namespace util {
 	// SHADERS
 	std::vector<char> readFile(const std::string& filename);
 	VkShaderModule createShaderModule(const std::vector<char>& code, const VkDevice& device);
+	
+	// COMMAND BUFFERS
+	VkCommandBuffer beginSingleTimeCommands(VkDevice device, VkCommandPool commandPool);
+	void endSingleTimeCommands(VkCommandBuffer commandBuffer, VkDevice device, VkCommandPool commandPool, VkQueue graphicsQueue);
 
 }
