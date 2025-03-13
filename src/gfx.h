@@ -38,7 +38,7 @@ public:
 
 	void cleanup();
 
-	std::string name = "GFX";
+	const std::string name_ = "GFX";
 
 private:
 	// SDL Shit

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../lib/tiny_obj_loader.h"
+
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
 #include <vulkan/vulkan.h>
@@ -54,13 +56,16 @@ namespace util {
 	// BUffers/memory stuff
 	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, const VkPhysicalDevice& physicalDevice);
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory, const VkDevice& device, const VkPhysicalDevice& physicalDevice);
-
-	// SHADERS
-	std::vector<char> readFile(const std::string& filename);
-	VkShaderModule createShaderModule(const std::vector<char>& code, const VkDevice& device);
+	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, GfxAccess access);
 	
 	// COMMAND BUFFERS
 	VkCommandBuffer beginSingleTimeCommands(VkDevice device, VkCommandPool commandPool);
 	void endSingleTimeCommands(VkCommandBuffer commandBuffer, VkDevice device, VkCommandPool commandPool, VkQueue graphicsQueue);
 
+	// File IO
+	MeshData getObjData(const std::string obj_filename);
+	std::vector<char> readFile(const std::string& filename);
+
+	// SHADERS
+	VkShaderModule createShaderModule(const std::vector<char>& code, const VkDevice& device);
 }

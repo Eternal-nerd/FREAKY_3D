@@ -7,6 +7,7 @@
 #include "clock.h"
 #include "util.h"
 #include "gfx.h"
+#include "camera.h"
 
 /*
 The engine class pretty much just encapsulates everything. 
@@ -17,17 +18,20 @@ public:
 	// public function to "start" engine
 	void run();
 
-	std::string name = "ENGINE";
+	const std::string name_ = "ENGINE";
 
 private:
 	bool running_ = false;
 	bool visible_ = true;
 
-	// clock
+	// CLock
 	Clock clock_;
 
 	// Graphics
 	Gfx gfx_;
+
+	// Player Camera
+	Camera camera_;
 
 	// Events
 	SDL_Event event_;

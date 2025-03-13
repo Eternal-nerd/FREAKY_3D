@@ -6,7 +6,7 @@
 -----------------------------ONLY-PUBLIC-METHOD--------------------------------
 -----------------------------------------------------------------------------*/
 void Engine::run() {
-	util::log(name, "running engine");
+	util::log(name_, "running engine");
 	init();
 	loop();
 	cleanup();
@@ -16,11 +16,13 @@ void Engine::run() {
 ------------------------------INITIALIZATION-----------------------------------
 -----------------------------------------------------------------------------*/
 void Engine::init() {
-    util::log(name, "initializing");
+    util::log(name_, "initializing");
 
     clock_.init();
 
     gfx_.init();
+
+    camera_.init();
 
 }
 
@@ -28,7 +30,7 @@ void Engine::init() {
 ------------------------------MAIN-LOOP----------------------------------------
 -----------------------------------------------------------------------------*/
 void Engine::loop() {
-	util::log(name, "beginning the main loop");
+	util::log(name_, "beginning the main loop");
 
 	running_ = true;
 	while (running_) {
@@ -96,7 +98,7 @@ void Engine::handleInputEvent() {
 ------------------------------CLEANUP------------------------------------------
 -----------------------------------------------------------------------------*/
 void Engine::cleanup() {
-	util::log(name, "cleaning up");
+	util::log(name_, "cleaning up");
 
 	gfx_.cleanup();
 }

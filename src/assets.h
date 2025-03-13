@@ -6,6 +6,7 @@
 #include "util.h"
 #include "types.h"
 #include "texture.h"
+#include "mesh.h"
 
 /*
 Class in charge of files/data on disk used by the engine
@@ -17,7 +18,7 @@ public:
 	void enumerateFiles();
 	int getTextureCount();
 
-	void init(const TextureAccess access);
+	void init(const GfxAccess access);
 
 	TextureDetails getTextureDetails(int index);
 
@@ -25,27 +26,31 @@ public:
 
 	void cleanup();
 
-	std::string name = "ASSETS";
+	const std::string name_ = "ASSETS";
 
 private:
-	// references to vk stuff
-	TextureAccess textureAccess_;
+	// vk access
+	GfxAccess access_;
 
 	// Textures
-	int textureCount_ = 0;
+	int textureFileCount_ = 0;
 	std::vector<std::string> textureFilenames_{};
 	std::vector<Texture> textures_{};
 
 	// Audio
-	int audioCount_ = 0;
+	int audioFileCount_ = 0;
 	std::vector<std::string> audioFilenames_{};
 	SDL_AudioStream* stream_ = NULL;
 	Uint8* wavData_ = NULL;
 	Uint32 wavDataLen_ = 0;
 	SDL_AudioSpec audioSpec_;
 
-	// Mesh
-	int meshCount_ = 0;
-	std::vector<std::string> meshFilenames_{};
+	// Models / Meshs
+	int modelFileCount_ = 0;
+	std::vector<std::string> modelFilenames_{};
+	std::vector<Mesh> meshs_{};
+	void loadModels();
+	void generateMeshs();
+
 
 };

@@ -1,6 +1,8 @@
 #include "clock.h"
 
 void Clock::init() {
+	util::log(name_, "initializing clock");
+
 	// set a start timepoint
 	start_ = std::chrono::high_resolution_clock::now();
 }

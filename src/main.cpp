@@ -5,6 +5,7 @@
 #include <stdexcept>
 
 #define STB_IMAGE_IMPLEMENTATION
+#define TINYOBJLOADER_IMPLEMENTATION
 
 #include "engine.h"
 

@@ -3,10 +3,10 @@
 /*-----------------------------------------------------------------------------
 ------------------------------INITIALIZATION-----------------------------------
 -----------------------------------------------------------------------------*/
-void Texture::create(const std::string& filename, const TextureAccess& access) {
-	util::log(name, "creating texture");
+void Texture::create(const std::string& filename, const GfxAccess& access) {
+	util::log(name_, "creating texture");
 
-	textureAccess_ = access;
+	access_ = access;
 
 	filename_ = filename.c_str();
 
@@ -36,12 +36,12 @@ void Texture::createVkTexture() {
 	VkDeviceMemory stagingBufferMemory;
 	util::createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-		stagingBuffer, stagingBufferMemory, textureAccess_.device, textureAccess_.physicalDevice);
+		stagingBuffer, stagingBufferMemory, access_.device, access_.physicalDevice);
 
 	void* data;
-	vkMapMemory(textureAccess_.device, stagingBufferMemory, 0, imageSize, 0, &data);
+	vkMapMemory(access_.device, stagingBufferMemory, 0, imageSize, 0, &data);
 	memcpy(data, pixels, static_cast<size_t>(imageSize));
-	vkUnmapMemory(textureAccess_.device, stagingBufferMemory);
+	vkUnmapMemory(access_.device, stagingBufferMemory);
 
 	stbi_image_free(pixels);
 
@@ -49,25 +49,25 @@ void Texture::createVkTexture() {
 		texWidth, texHeight, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
 		VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage_, textureImageMemory_,
-		textureAccess_.device, textureAccess_.physicalDevice);
+		access_.device, access_.physicalDevice);
 
 	util::transitionImageLayout(textureImage_, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, 
-		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, textureAccess_.device, textureAccess_.commandPool, textureAccess_.graphicsQueue);
+		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, access_.device, access_.commandPool, access_.graphicsQueue);
 	imageLayout_ = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 	util::copyBufferToImage(stagingBuffer, textureImage_, static_cast<uint32_t>(texWidth), 
-		static_cast<uint32_t>(texHeight), textureAccess_.device, textureAccess_.commandPool, textureAccess_.graphicsQueue);
+		static_cast<uint32_t>(texHeight), access_.device, access_.commandPool, access_.graphicsQueue);
 	util::transitionImageLayout(textureImage_, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
-		VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, textureAccess_.device, textureAccess_.commandPool, textureAccess_.graphicsQueue);
+		VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, access_.device, access_.commandPool, access_.graphicsQueue);
 
-	vkDestroyBuffer(textureAccess_.device, stagingBuffer, nullptr);
-	vkFreeMemory(textureAccess_.device, stagingBufferMemory, nullptr);
+	vkDestroyBuffer(access_.device, stagingBuffer, nullptr);
+	vkFreeMemory(access_.device, stagingBufferMemory, nullptr);
 
 	// TEXTURE IMAGE VIEW ------------------------------====<
-	textureImageView_ = util::createImageView(textureImage_, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, textureAccess_.device);
+	textureImageView_ = util::createImageView(textureImage_, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, access_.device);
 	
 	// TEXTURE IMAGE SAMPLER ------------------------------====<
 	VkPhysicalDeviceProperties properties{};
-	vkGetPhysicalDeviceProperties(textureAccess_.physicalDevice, &properties);
+	vkGetPhysicalDeviceProperties(access_.physicalDevice, &properties);
 
 	VkSamplerCreateInfo samplerInfo{};
 	samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -84,7 +84,7 @@ void Texture::createVkTexture() {
 	samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
 	samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
-	if (vkCreateSampler(textureAccess_.device, &samplerInfo, nullptr, &textureSampler_) != VK_SUCCESS) {
+	if (vkCreateSampler(access_.device, &samplerInfo, nullptr, &textureSampler_) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create texture sampler!");
 	}
 }
@@ -94,15 +94,15 @@ void Texture::createVkTexture() {
 ------------------------------CLEANUP------------------------------------------
 -----------------------------------------------------------------------------*/
 void Texture::cleanup() {
-	util::log(name, "cleaning up texture");
+	util::log(name_, "cleaning up texture");
 
 	// CLEANUP TEXTURES
-	util::log(name, "destroying texture sampler");
-	vkDestroySampler(textureAccess_.device, textureSampler_, nullptr);
-	util::log(name, "destroying texture image view");
-	vkDestroyImageView(textureAccess_.device, textureImageView_, nullptr);
-	util::log(name, "destroying texture image");
-	vkDestroyImage(textureAccess_.device, textureImage_, nullptr);
-	util::log(name, "destroying texture image memory");
-	vkFreeMemory(textureAccess_.device, textureImageMemory_, nullptr);
+	util::log(name_, "destroying texture sampler");
+	vkDestroySampler(access_.device, textureSampler_, nullptr);
+	util::log(name_, "destroying texture image view");
+	vkDestroyImageView(access_.device, textureImageView_, nullptr);
+	util::log(name_, "destroying texture image");
+	vkDestroyImage(access_.device, textureImage_, nullptr);
+	util::log(name_, "destroying texture image memory");
+	vkFreeMemory(access_.device, textureImageMemory_, nullptr);
 }

@@ -11,18 +11,18 @@
 
 class Texture {
 public:
-	void create(const std::string& filename, const TextureAccess& access);
+	void create(const std::string& filename, const GfxAccess& access);
 
 	const VkImageView& getTextureImageView() const;
 	const VkSampler& getTextureSampler() const;
 
 	void cleanup();
 
-	std::string name = "TEXTURE";
+	const std::string name_ = "TEXTURE";
 
 private:
 	// references to vk stuff
-	TextureAccess textureAccess_;
+	GfxAccess access_;
 
 	// name of picture file
 	const char* filename_;

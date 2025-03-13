@@ -9,25 +9,25 @@
 ------------------------------INITIALIZATION-----------------------------------
 -----------------------------------------------------------------------------*/
 void Gfx::init() {
-	util::log(name, "initializing");
+	util::log(name_, "initializing");
 
-	util::log(name, "initializing SDL");
+	util::log(name_, "initializing SDL");
 	if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
 		throw std::runtime_error("Failed to initialize SDL");
 	}
 
-    util::log(name, "creating SDL window");
+    util::log(name_, "creating SDL window");
     window_ = SDL_CreateWindow("FREAKY_3D", WIDTH, HEIGHT, SDL_WINDOW_VULKAN);
     if (!window_) {
         throw std::runtime_error("Failed to create SDL window");
     }
 
-    util::log(name, "setting SDL window to be resizable");
+    util::log(name_, "setting SDL window to be resizable");
     if (!SDL_SetWindowResizable(window_, true)) {
         throw std::runtime_error("Failed to make window resizable");
     }
 
-    util::log(name, "set mouse into relative mode (for FPS camera)");
+    util::log(name_, "set mouse into relative mode (for FPS camera)");
     if (!SDL_SetWindowRelativeMouseMode(window_, true)) {
         throw std::runtime_error("Failed to put mouse into relative mode");
     }
@@ -41,6 +41,7 @@ void Gfx::init() {
 
     // KICK OFF ASSET PIPELINE HERE
     assets_.enumerateFiles();
+    // FIXME this doesnt account for if textures are synthesized by the program!!!!!
     int textureCount = assets_.getTextureCount();
     std::thread asset_thread(&Gfx::startAssetPipeline, this);
 
@@ -68,9 +69,9 @@ void Gfx::init() {
 }
 
 void Gfx::startAssetPipeline() {
-    util::log(name, "kicking off the asset pipeline");
+    util::log(name_, "kicking off the asset pipeline");
 
-    TextureAccess access;
+    GfxAccess access;
     access.physicalDevice = physicalDevice_;
     access.device = device_;
     access.commandPool = commandPool_;
@@ -84,7 +85,7 @@ void Gfx::startAssetPipeline() {
 -----------------------------------------------------------------------------*/
 void Gfx::createDevice() {
     // Vulkan instance --------------------====<
-    util::log(name, "creating Vulkan instance");
+    util::log(name_, "creating Vulkan instance");
     if (enableValidationLayers && !util::checkValidationLayerSupport(validationLayers)) {
         throw std::runtime_error("validation layers requested, but not available!");
     }
@@ -128,7 +129,7 @@ void Gfx::createDevice() {
     // Vulkan debug layer --------------------====<
     // setup debug messager if in debug mode
     if (enableValidationLayers) {
-        util::log(name, "setting up debug messenger");
+        util::log(name_, "setting up debug messenger");
         VkDebugUtilsMessengerCreateInfoEXT createInfo;
         util::populateDebugMessengerCreateInfo(createInfo);
 
@@ -138,14 +139,14 @@ void Gfx::createDevice() {
     }
 
     // Vulkan/SDL surface --------------------====<
-    util::log(name, "creating surface");
+    util::log(name_, "creating surface");
     if (!SDL_Vulkan_CreateSurface(window_, instance_, nullptr, &surface_)) {
         throw std::runtime_error("failed to create SDL window surface!");
     }
     
     // TODO: print device selected to logger!!!!
     // Vulkan physical device (GPU) --------------------====<
-    util::log(name, "selecting physical device");
+    util::log(name_, "selecting physical device");
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(instance_, &deviceCount, nullptr);
 
@@ -168,7 +169,7 @@ void Gfx::createDevice() {
     }
 
     // Vulkan LOGICAL Device --------------------====<
-    util::log(name, "creating logical device");
+    util::log(name_, "creating logical device");
     QueueFamilyIndices indices = util::findQueueFamilies(physicalDevice_, surface_);
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
@@ -212,7 +213,7 @@ void Gfx::createDevice() {
         throw std::runtime_error("failed to create logical device!");
     }
 
-    util::log(name, "getting device queues");
+    util::log(name_, "getting device queues");
     vkGetDeviceQueue(device_, indices.graphicsFamily.value(), 0, &graphicsQueue_);
     vkGetDeviceQueue(device_, indices.presentFamily.value(), 0, &presentQueue_);
 }
@@ -221,7 +222,7 @@ void Gfx::createDevice() {
 ------------------------------RENDER-PASS--------------------------------------
 -----------------------------------------------------------------------------*/
 void Gfx::createRenderPass() {
-    util::log(name, "creating renderpass");
+    util::log(name_, "creating renderpass");
 
     // get some swapchain details here:
     SwapChainSupportDetails swapChainSupport = util::querySwapChainSupport(physicalDevice_, surface_);
@@ -294,7 +295,7 @@ void Gfx::createRenderPass() {
 -----------------------------------------------------------------------------*/
 void Gfx::createSwapchain() {
     // SWAPCHAIN ----------------------------------====<
-    util::log(name, "creating swapchain");
+    util::log(name_, "creating swapchain");
     SwapChainSupportDetails swapChainSupport = util::querySwapChainSupport(physicalDevice_, surface_);
     VkSurfaceFormatKHR surfaceFormat = util::chooseSwapSurfaceFormat(swapChainSupport.formats);
     VkPresentModeKHR presentMode = util::chooseSwapPresentMode(swapChainSupport.presentModes);
@@ -346,7 +347,7 @@ void Gfx::createSwapchain() {
     swapChainExtent_ = extent;
 
     // IMAGE VIEWS ----------------------------=====<
-    util::log(name, "creating swapchain image views");
+    util::log(name_, "creating swapchain image views");
     swapChainImageViews_.resize(swapChainImages_.size());
 
     for (uint32_t i = 0; i < swapChainImages_.size(); i++) {
@@ -359,7 +360,7 @@ void Gfx::createSwapchain() {
     }
 
     // DEPTH RESOURCES --------------------================<
-    util::log(name, "creating depth resources");
+    util::log(name_, "creating depth resources");
     VkFormat depthFormat = util::findDepthFormat(physicalDevice_);
 
     util::createImage(
@@ -383,7 +384,7 @@ void Gfx::createSwapchain() {
     );
 
     // FRAMEBUFFERS -------------------------===<
-    util::log(name, "creating framebuffers");
+    util::log(name_, "creating framebuffers");
     swapChainFramebuffers_.resize(swapChainImageViews_.size());
 
     for (size_t i = 0; i < swapChainImageViews_.size(); i++) {
@@ -405,31 +406,31 @@ void Gfx::createSwapchain() {
 }
 
 void Gfx::recreateSwapchain() {
-    util::log(name, "recreating swapchain");
+    util::log(name_, "recreating swapchain");
     vkDeviceWaitIdle(device_);
     cleanupSwapchain();
     createSwapchain();
 }
 
 void Gfx::cleanupSwapchain() {
-    util::log(name, "cleaning up swapchain");
+    util::log(name_, "cleaning up swapchain");
 
-    util::log(name, "destroying swapchain depth resources");
+    util::log(name_, "destroying swapchain depth resources");
     vkDestroyImageView(device_, depthImageView_, nullptr);
     vkDestroyImage(device_, depthImage_, nullptr);
     vkFreeMemory(device_, depthImageMemory_, nullptr);
 
-    util::log(name, "destroying swapchain frame buffers");
+    util::log(name_, "destroying swapchain frame buffers");
     for (auto framebuffer : swapChainFramebuffers_) {
         vkDestroyFramebuffer(device_, framebuffer, nullptr);
     }
 
-    util::log(name, "destroying swapchain image views");
+    util::log(name_, "destroying swapchain image views");
     for (auto imageView : swapChainImageViews_) {
         vkDestroyImageView(device_, imageView, nullptr);
     }
 
-    util::log(name, "destroying swapchain");
+    util::log(name_, "destroying swapchain");
     vkDestroySwapchainKHR(device_, swapChain_, nullptr);
 }
 
@@ -439,9 +440,9 @@ void Gfx::cleanupSwapchain() {
 void Gfx::recreatePipeline(VkPolygonMode mode) {
     // CLEANUP SHIT THEN RECREATE???
 
-    util::log(name, "destroying graphics pipeline (for recreation)");
+    util::log(name_, "destroying graphics pipeline (for recreation)");
     vkDestroyPipeline(device_, graphicsPipeline_, nullptr);
-    util::log(name, "destroying pipeline layout (for recreation)");
+    util::log(name_, "destroying pipeline layout (for recreation)");
     vkDestroyPipelineLayout(device_, pipelineLayout_, nullptr);
 
     // RECREATE
@@ -451,7 +452,7 @@ void Gfx::recreatePipeline(VkPolygonMode mode) {
 
 
 void Gfx::createGraphicsPipeline(VkPolygonMode mode) {
-    util::log(name, "creating graphics pipeline");
+    util::log(name_, "creating graphics pipeline");
     // TODO MAYBE Move this to assets or separate shader management class? 
     auto vertShaderCode = util::readFile("../shaders/compiled/vert.spv");
     auto fragShaderCode = util::readFile("../shaders/compiled/frag.spv");
@@ -545,7 +546,7 @@ void Gfx::createGraphicsPipeline(VkPolygonMode mode) {
     pipelineLayoutInfo.setLayoutCount = 1;
     pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout_;
 
-    util::log(name, "creating graphics pipeline layout");
+    util::log(name_, "creating graphics pipeline layout");
     if (vkCreatePipelineLayout(device_, &pipelineLayoutInfo, nullptr, &pipelineLayout_) != VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");
     }
@@ -567,7 +568,7 @@ void Gfx::createGraphicsPipeline(VkPolygonMode mode) {
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-    util::log(name, "ACTUALLY creating graphics pipeline");
+    util::log(name_, "ACTUALLY creating graphics pipeline");
     if (vkCreateGraphicsPipelines(device_, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline_) != VK_SUCCESS) {
         throw std::runtime_error("failed to create graphics pipeline!");
     }
@@ -580,7 +581,7 @@ void Gfx::createGraphicsPipeline(VkPolygonMode mode) {
 -----------------------------DESCRIPTOR----------------------------------------
 -----------------------------------------------------------------------------*/
 void Gfx::createDescriptorSetLayout(int textureCount) {
-    util::log(name, "creating descriptor set layout");
+    util::log(name_, "creating descriptor set layout");
     VkDescriptorSetLayoutBinding uboLayoutBinding{};
     uboLayoutBinding.binding = 0;
     uboLayoutBinding.descriptorCount = 1;
@@ -609,7 +610,7 @@ void Gfx::createDescriptorSetLayout(int textureCount) {
 }
 
 void Gfx::createDescriptorPool(int textureCount) {
-    util::log(name, "creating descriptor pool");
+    util::log(name_, "creating descriptor pool");
 
     std::array<VkDescriptorPoolSize, 2> poolSizes{};
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -629,7 +630,7 @@ void Gfx::createDescriptorPool(int textureCount) {
 }
 
 void Gfx::createDescriptorSets() {
-    util::log(name, "creating descriptor sets");
+    util::log(name_, "creating descriptor sets");
     std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout_);
     VkDescriptorSetAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -682,7 +683,7 @@ void Gfx::createDescriptorSets() {
 ------------------------------VULKAN-COMMANDER---------------------------------
 -----------------------------------------------------------------------------*/
 void Gfx::createCommandPool() {
-    util::log(name, "creating command pool");
+    util::log(name_, "creating command pool");
     QueueFamilyIndices queueFamilyIndices = util::findQueueFamilies(physicalDevice_, surface_);
 
     VkCommandPoolCreateInfo poolInfo{};
@@ -696,7 +697,7 @@ void Gfx::createCommandPool() {
 }
 
 void Gfx::createCommandBuffers() {
-    util::log(name, "creating command buffers");
+    util::log(name_, "creating command buffers");
     commandBuffers_.resize(MAX_FRAMES_IN_FLIGHT);
 
     VkCommandBufferAllocateInfo allocInfo{};
@@ -714,7 +715,7 @@ void Gfx::createCommandBuffers() {
 ------------------------------VULKAN-SYNC--------------------------------------
 -----------------------------------------------------------------------------*/
 void Gfx::createSyncObjects() {
-    util::log(name, "creating sync objects");
+    util::log(name_, "creating sync objects");
 
     imageAvailableSemaphores_.resize(MAX_FRAMES_IN_FLIGHT);
     renderFinishedSemaphores_.resize(MAX_FRAMES_IN_FLIGHT);
@@ -768,7 +769,7 @@ void Gfx::render() {
 ------------------------------CLEANUP------------------------------------------
 -----------------------------------------------------------------------------*/
 void Gfx::cleanup() {
-	util::log(name, "cleaning up");
+	util::log(name_, "cleaning up");
 
     // very first, swapchain
     cleanupSwapchain();
@@ -777,31 +778,31 @@ void Gfx::cleanup() {
     assets_.cleanup();
 
     // pipeline & layout
-    util::log(name, "destroying graphics pipeline");
+    util::log(name_, "destroying graphics pipeline");
     vkDestroyPipeline(device_, graphicsPipeline_, nullptr);
-    util::log(name, "destroying pipeline layout");
+    util::log(name_, "destroying pipeline layout");
     vkDestroyPipelineLayout(device_, pipelineLayout_, nullptr);
 
     // render pass
-    util::log(name, "destroying render pass");
+    util::log(name_, "destroying render pass");
     vkDestroyRenderPass(device_, renderPass_, nullptr);
 
     // UBO
-    util::log(name, "destroying uniform buffers");
+    util::log(name_, "destroying uniform buffers");
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vkDestroyBuffer(device_, uniformBuffers_[i], nullptr);
         vkFreeMemory(device_, uniformBuffersMemory_[i], nullptr);
     }
 
     // descriptor stuff
-    util::log(name, "destroying descriptor pool");
+    util::log(name_, "destroying descriptor pool");
     vkDestroyDescriptorPool(device_, descriptorPool_, nullptr);
 
-    util::log(name, "destroying descriptor set layout");
+    util::log(name_, "destroying descriptor set layout");
     vkDestroyDescriptorSetLayout(device_, descriptorSetLayout_, nullptr);
 
     // snyc stuff
-    util::log(name, "destroying semaphores and fences");
+    util::log(name_, "destroying semaphores and fences");
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vkDestroySemaphore(device_, renderFinishedSemaphores_[i], nullptr);
         vkDestroySemaphore(device_, imageAvailableSemaphores_[i], nullptr);
@@ -809,26 +810,26 @@ void Gfx::cleanup() {
     }
 
     // command pool
-    util::log(name, "destroying command pool");
+    util::log(name_, "destroying command pool");
     vkDestroyCommandPool(device_, commandPool_, nullptr);
 
     // Devices/instance
-    util::log(name, "destroying logical device");
+    util::log(name_, "destroying logical device");
     vkDestroyDevice(device_, nullptr);
 
-    util::log(name, "destroying surface");
+    util::log(name_, "destroying surface");
     vkDestroySurfaceKHR(instance_, surface_, nullptr);
 
     if (enableValidationLayers) {
-        util::log(name, "destroying debug messenger");
+        util::log(name_, "destroying debug messenger");
         util::DestroyDebugUtilsMessengerEXT(instance_, debugMessenger_, nullptr);
     }
 
-    util::log(name, "destroying Vulkan instance");
+    util::log(name_, "destroying Vulkan instance");
     vkDestroyInstance(instance_, nullptr);
 
     // SDL
-    util::log(name, "cleaning up SDL");
+    util::log(name_, "cleaning up SDL");
     SDL_DestroyWindow(window_);
     SDL_Quit();
 }

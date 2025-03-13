@@ -11,7 +11,7 @@ namespace fs = std::filesystem;
 ------------------------------INITIALIZATION-----------------------------------
 -----------------------------------------------------------------------------*/
 void Assets::enumerateFiles() {
-	util::log(name, "enumerating asset filenames");
+	util::log(name_, "enumerating asset filenames");
 
 	fs::path toCheck = "../assets";
 
@@ -21,36 +21,36 @@ void Assets::enumerateFiles() {
 
 	for (auto const& entry : fs::recursive_directory_iterator(toCheck)) {
 		if (entry.path().has_extension()) {
-			util::log(name, "found file: " + entry.path().generic_string());
+			util::log(name_, "found file: " + entry.path().generic_string());
 			fs::path ext = entry.path().extension();
 			if (ext == ".jpg" || ext == ".png") {
 				textureFilenames_.push_back(entry.path().generic_string());
-				textureCount_++;
+				textureFileCount_++;
 			}
 			if (ext == ".wav") {
 				audioFilenames_.push_back(entry.path().generic_string());
-				audioCount_++;
+				audioFileCount_++;
 			}
 			if (ext == ".obj") {
-				meshFilenames_.push_back(entry.path().generic_string());
-				meshCount_++;
+				modelFilenames_.push_back(entry.path().generic_string());
+				modelFileCount_++;
 			}
 		}
 	}
 }
 
 int Assets::getTextureCount() {
-	return textureCount_;
+	return textureFileCount_;
 }
 
-void Assets::init(const TextureAccess access) {
-	util::log(name, "initializing");
+void Assets::init(const GfxAccess access) {
+	util::log(name_, "initializing");
 
 	// textures/images -------------------------------------------====================<
-	textureAccess_ = access;
-	for (int i = 0; i < textureCount_; i++) {
+	access_ = access;
+	for (int i = 0; i < textureFileCount_; i++) {
 		Texture t;
-		t.create(textureFilenames_[i], textureAccess_);
+		t.create(textureFilenames_[i], access_);
 		textures_.push_back(t);
 	}
 
@@ -74,14 +74,15 @@ void Assets::init(const TextureAccess access) {
 	SDL_ResumeAudioStreamDevice(stream_);
 
 	// MESHSSS   -------------------------------------------====================<
-
+	loadModels();
+	generateMeshs();
 }
 
 /*-----------------------------------------------------------------------------
 ------------------------------TEXTURES-----------------------------------------
 -----------------------------------------------------------------------------*/
 TextureDetails Assets::getTextureDetails(int index) {
-	if (index < 0 || index >= textureCount_) {
+	if (index < 0 || index >= textureFileCount_) {
 		throw std::runtime_error("texture index out of bounds");
 	}
 
@@ -111,17 +112,57 @@ void Assets::playSound(int soundIndex) {
 }
 
 /*-----------------------------------------------------------------------------
+------------------------------MESHS--------------------------------------------
+-----------------------------------------------------------------------------*/
+void Assets::loadModels() {
+	util::log(name_, "loading models");
+	for (int i = 0; i < modelFileCount_; i++) {
+		Mesh m;
+		m.init(util::getObjData(modelFilenames_[i]), access_);
+		meshs_.push_back(m);
+	}
+
+}
+
+void Assets::generateMeshs() {
+	util::log(name_, "generating additional meshs");
+
+	// do this by reading a file? map editor? 
+	// shitty way for now
+
+	// skybox mesh
+	Mesh skybox;
+	skybox.init(Geometry::InvertedTexturedCube::getMeshData(), access_);
+	meshs_.push_back(skybox);
+
+	// FLOOR mesh
+	Mesh floor;
+	floor.init(Geometry::Plane::getMeshData(), access_);
+	meshs_.push_back(floor);
+
+	// cube mesh
+	Mesh cube;
+	cube.init(Geometry::TexturedCube::getMeshData(), access_);
+	meshs_.push_back(cube);
+}
+
+/*-----------------------------------------------------------------------------
 ------------------------------CLEANUP------------------------------------------
 -----------------------------------------------------------------------------*/
 void Assets::cleanup() {
-	util::log(name, "cleaning up");
+	util::log(name_, "cleaning up");
 
 	// texture cleanup here
 	for (auto t : textures_) {
 		t.cleanup();
 	}
 
-	util::log(name, "destroying audio object");
+	// cleanup meshs (buffers)
+	for (auto m : meshs_) {
+		m.cleanup();
+	}
+
+	util::log(name_, "destroying audio object");
 	SDL_free(wavData_);
 
 }
