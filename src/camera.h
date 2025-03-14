@@ -21,6 +21,7 @@ class Camera {
 public:
 	void init();
 
+    void update();
 
 	const std::string name_ = "CAMERA";
 private:

@@ -44,6 +44,9 @@ private:
 	// handle events/input
 	void handleEvents();
 	void handleInputEvent();
+
+    // handles creating the pdated UBO for each frame
+    void updateUBO();
 	
 
 };

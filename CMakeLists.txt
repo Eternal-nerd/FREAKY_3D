@@ -25,8 +25,8 @@ set(SOURCES
 	src/mesh.cpp
 	src/entity.cpp
 	src/camera.cpp
-	src/rigid_body.cpp
-	src/physics.cpp
+	src/phys/rigid_body.cpp
+	src/phys/simulation.cpp
 )
 
 # add headers
@@ -41,15 +41,15 @@ set(HEADERS
 	src/mesh.h
 	src/entity.h
 	src/camera.h
-	src/rigid_body.h
-	src/physics.h
+	src/phys/rigid_body.h
+	src/phys/simulation.h
 
 	lib/stb_image.h
 	lib/tiny_obj_loader.h
 )
 
 # add executable:
-add_executable(FREAKY_3D ${SOURCES} ${HEADERS} "src/physics.h" "src/physics.cpp")
+add_executable(FREAKY_3D ${SOURCES} ${HEADERS})
 
 # add libs
 target_link_libraries(FREAKY_3D PRIVATE Vulkan::Vulkan SDL3::SDL3)
