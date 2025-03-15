@@ -47,6 +47,8 @@ private:
 
     // handles creating the pdated UBO for each frame
     void updateUBO();
-	
+
+    // draw game objects and preent image
+    void renderScene();
 
 };
