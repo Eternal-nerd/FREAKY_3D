@@ -43,4 +43,13 @@ void Camera::update(float aspect) {
 /*-----------------------------------------------------------------------------
 -----------------------------GETTERS-------------------------------------------
 -----------------------------------------------------------------------------*/
+const glm::mat4& Camera::getViewMatrix() const {
+	return view_;
+}
+
+const glm::mat4& Camera::getPerspectiveMatrix() const {
+	return config_.perspectiveM;
+}
+
+
 RigidBody* Camera::getBodyPtr() { return &body_; }

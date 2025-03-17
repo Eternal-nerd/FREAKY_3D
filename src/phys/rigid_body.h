@@ -17,6 +17,8 @@ public:
 
 	glm::vec3 getPosition();
 
+    glm::mat4 getModelMatrix();
+
 	const std::string name_ = "RIGID BODY";
 
 private:

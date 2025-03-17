@@ -26,3 +26,7 @@ void RigidBody::update() {
 glm::vec3 RigidBody::getPosition() {
 	return position_;
 }
+
+glm::mat4 RigidBody::getModelMatrix() {
+    return glm::mat4(1.f);
+}

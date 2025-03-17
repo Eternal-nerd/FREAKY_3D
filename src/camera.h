@@ -25,6 +25,10 @@ public:
     void update(float aspect);
 
 	// TODO: add updateConfig()
+    
+    // get matrices
+    const glm::mat4& getViewMatrix() const;
+	const glm::mat4& getPerspectiveMatrix() const;
 
 	RigidBody* getBodyPtr();
 

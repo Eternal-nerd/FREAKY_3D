@@ -54,6 +54,9 @@ void Gfx::init() {
     // use texture count from assets for this
     createDescriptorSetLayout(textureCount);
 
+    // create graphics pipeline
+    createGraphicsPipeline();
+
     // sync objects
     createSyncObjects();
 
@@ -78,6 +81,135 @@ void Gfx::startAssetPipeline() {
     access.graphicsQueue = graphicsQueue_;
 
     assets_.init(access);
+}
+
+/*-----------------------------------------------------------------------------
+------------------------------SYNC-MAPPING-------------------------------------
+-----------------------------------------------------------------------------*/
+void Gfx::deviceWaitIdle() { vkDeviceWaitIdle(device_); }
+
+void Gfx::mapUBO(const UniformBufferObject& ubo) {
+    memcpy(uniformBuffersMapped_[currentFrame_], &ubo, sizeof(ubo));
+}
+
+void Gfx::waitFrame() {
+    vkWaitForFences(device_, 1, &inFlightFences_[currentFrame_], VK_TRUE, UINT64_MAX);
+
+    VkResult result = vkAcquireNextImageKHR(device_, swapChain_, UINT64_MAX,
+        imageAvailableSemaphores_[currentFrame_], VK_NULL_HANDLE, &imageIndex_);
+
+    if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+        recreateSwapchain();
+    }
+    else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+        throw std::runtime_error("failed to acquire swap chain image!");
+    }
+}
+
+/*-----------------------------------------------------------------------------
+------------------------------DRAW-SHIT----------------------------------------
+-----------------------------------------------------------------------------*/
+VkCommandBuffer Gfx::setupCommandBuffer() {
+    VkCommandBuffer commandBuffer = commandBuffers_[currentFrame_];
+    
+    vkResetFences(device_, 1, &inFlightFences_[currentFrame_]);
+
+    vkResetCommandBuffer(commandBuffer, 0);
+
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+    if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
+        throw std::runtime_error("failed to begin recording command buffer!");
+    }
+
+    VkRenderPassBeginInfo renderPassInfo{};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = renderPass_;
+    renderPassInfo.framebuffer = swapChainFramebuffers_[imageIndex_];
+    renderPassInfo.renderArea.offset = { 0, 0 };
+    renderPassInfo.renderArea.extent = swapChainExtent_;
+
+    std::array<VkClearValue, 2> clearValues{};
+    clearValues[0].color = { {0.0f, 0.0f, 0.0f, 1.0f} };
+    clearValues[1].depthStencil = { 1.0f, 0 };
+
+    renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+    renderPassInfo.pClearValues = clearValues.data();
+
+    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline_);
+
+    VkViewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = (float)swapChainExtent_.width;
+    viewport.height = (float)swapChainExtent_.height;
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+    VkRect2D scissor{};
+    scissor.offset = { 0, 0 };
+    scissor.extent = swapChainExtent_;
+    vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+    // TODO where does this next line go???
+    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout_, 0, 1, &descriptorSets_[currentFrame_], 0, nullptr);
+
+    return commandBuffer;
+}
+
+void Gfx::submitCommandBuffer(VkCommandBuffer commandBuffer) {
+    vkCmdEndRenderPass(commandBuffer);
+
+    if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
+        throw std::runtime_error("failed to record command buffer!");
+    }
+
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+    VkSemaphore waitSemaphores[] = { imageAvailableSemaphores_[currentFrame_] };
+    VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+    submitInfo.waitSemaphoreCount = 1;
+    submitInfo.pWaitSemaphores = waitSemaphores;
+    submitInfo.pWaitDstStageMask = waitStages;
+
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &commandBuffer;
+
+    VkSemaphore signalSemaphores[] = { renderFinishedSemaphores_[currentFrame_] };
+    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.pSignalSemaphores = signalSemaphores;
+
+    if (vkQueueSubmit(graphicsQueue_, 1, &submitInfo, inFlightFences_[currentFrame_]) != VK_SUCCESS) {
+        throw std::runtime_error("failed to submit draw command buffer!");
+    }
+    
+    VkPresentInfoKHR presentInfo{};
+    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+    presentInfo.waitSemaphoreCount = 1;
+    presentInfo.pWaitSemaphores = signalSemaphores;
+
+    VkSwapchainKHR swapChains[] = { swapChain_ };
+    presentInfo.swapchainCount = 1;
+    presentInfo.pSwapchains = swapChains;
+
+    presentInfo.pImageIndices = &imageIndex_;
+
+    VkResult result = vkQueuePresentKHR(presentQueue_, &presentInfo);
+
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+        recreateSwapchain();
+    }
+    else if (result != VK_SUCCESS) {
+        throw std::runtime_error("failed to present swap chain image!");
+    }
+
+    currentFrame_ = (currentFrame_ + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
 /*-----------------------------------------------------------------------------
@@ -767,13 +899,6 @@ void Gfx::createUniformBuffers() {
 
         vkMapMemory(device_, uniformBuffersMemory_[i], 0, bufferSize, 0, &uniformBuffersMapped_[i]);
     }
-}
-
-/*-----------------------------------------------------------------------------
-------------------------------DRAW-SHIT----------------------------------------
------------------------------------------------------------------------------*/
-void Gfx::render() {
-
 }
 
 /*-----------------------------------------------------------------------------

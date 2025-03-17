@@ -36,8 +36,15 @@ public:
 
 	float getAspect();
 	Assets& getAssets();
+    
+    // command buffers
+	VkCommandBuffer setupCommandBuffer();
+    void submitCommandBuffer(VkCommandBuffer commandBuffer);
+    void mapUBO(const UniformBufferObject& ubo);
 
-	void render();
+    // sync
+    void waitFrame();
+    void deviceWaitIdle();
 
 	void cleanup();
 
@@ -60,7 +67,8 @@ private:
 	// Vulkan command buffers --------------------===<
 	VkCommandPool commandPool_ = VK_NULL_HANDLE;
 	std::vector<VkCommandBuffer> commandBuffers_;
-	void createCommandPool();
+	uint32_t currentFrame_ = 0;
+    void createCommandPool();
 	void createCommandBuffers();
 
 	// Asset manager ------------------------==<
@@ -81,6 +89,7 @@ private:
 	VkImage depthImage_ = VK_NULL_HANDLE;
 	VkDeviceMemory depthImageMemory_ = VK_NULL_HANDLE;
 	VkImageView depthImageView_ = VK_NULL_HANDLE;
+    uint32_t imageIndex_ = 0;
 	void createSwapchain();
 	void recreateSwapchain();
 	void cleanupSwapchain();

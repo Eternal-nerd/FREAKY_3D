@@ -30,7 +30,7 @@ void Engine::init() {
 
     // generate/init game objects & world
     generateWorld();
-
+    
     // get all rigid body ptrs from camera and game objects,
     // pass them to physics sim. and initialize model matrices
 
@@ -54,13 +54,31 @@ void Engine::loop() {
             renderScene();
         }
 	}
+    gfx_.deviceWaitIdle();
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------UPDATE-STUFF--------------------------------------
 -----------------------------------------------------------------------------*/
 void Engine::updateUBO() {
+    float time = clock_.getProgramTime();
+    
+    UniformBufferObject ubo{};
 
+    // model transforms (obtined from each entity's rigid body) --=====<
+    for (int i=0; i<entities_.size(); i++) {
+        // FIXME EEEE
+        ubo.model[i] = glm::mat4(1.f);
+    }
+
+    // Camera matrices -------------------------=========<
+    ubo.view = camera_.getViewMatrix();
+    ubo.proj = camera_.getPerspectiveMatrix();
+
+    // wait for frame to be ready
+    gfx_.waitFrame();
+
+    gfx_.mapUBO(ubo);
 }
 
 // TODO: step physics sim.
@@ -69,7 +87,17 @@ void Engine::updateUBO() {
 -----------------------------GRAPHICS------------------------------------------
 -----------------------------------------------------------------------------*/
 void Engine::renderScene() {
+    VkCommandBuffer commandBuffer = gfx_.setupCommandBuffer();
     
+    // draw entities
+    for (auto e : entities_) {
+        e.draw(commandBuffer);
+    }
+
+    // draw text
+
+    gfx_.submitCommandBuffer(commandBuffer);
+
 }
 
 
