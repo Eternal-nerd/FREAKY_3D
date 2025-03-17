@@ -22,7 +22,17 @@ void Engine::init() {
 
     gfx_.init();
 
-    camera_.init();
+    assets_ = &gfx_.getAssets();
+
+    float aspect = gfx_.getAspect();
+
+    camera_.init(aspect);
+
+    // generate/init game objects & world
+    generateWorld();
+
+    // get all rigid body ptrs from camera and game objects,
+    // pass them to physics sim. and initialize model matrices
 
 }
 
@@ -38,7 +48,7 @@ void Engine::loop() {
 		handleEvents();
 
         if (visible_) {
-            camera_.update();
+            camera_.update(gfx_.getAspect());
             updateUBO();
             // RENDER stuff
             renderScene();
@@ -52,6 +62,8 @@ void Engine::loop() {
 void Engine::updateUBO() {
 
 }
+
+// TODO: step physics sim.
 
 /*-----------------------------------------------------------------------------
 -----------------------------GRAPHICS------------------------------------------
@@ -107,6 +119,20 @@ void Engine::handleInputEvent() {
             break;
         }
     }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------WORLD-GEN-----------------------------------------
+-----------------------------------------------------------------------------*/
+void Engine::generateWorld() {
+    util::log(name_, "generating game world");
+
+    // mclovin cube
+    Entity e1;
+    RigidBodyProperties p1;
+    e1.init(0, assets_->getTexture("mclovin"), assets_->getMesh("cube"), p1);
+    entities_.push_back(e1);
+
 }
 
 /*-----------------------------------------------------------------------------

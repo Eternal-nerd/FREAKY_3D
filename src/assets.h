@@ -22,6 +22,10 @@ public:
 
 	TextureDetails getTextureDetails(int index);
 
+	// HELPERs
+	Texture& getTexture(const std::string name);
+	Mesh& getMesh(const std::string name);
+
 	void playSound(int soundIndex);
 
 	void cleanup();
@@ -33,12 +37,11 @@ private:
 	GfxAccess access_;
 
 	// Textures
-	int textureFileCount_ = 0;
 	std::vector<std::string> textureFilenames_{};
 	std::vector<Texture> textures_{};
+	std::vector<std::string> textureNames_{};
 
 	// Audio
-	int audioFileCount_ = 0;
 	std::vector<std::string> audioFilenames_{};
 	SDL_AudioStream* stream_ = NULL;
 	Uint8* wavData_ = NULL;
@@ -46,9 +49,9 @@ private:
 	SDL_AudioSpec audioSpec_;
 
 	// Models / Meshs
-	int modelFileCount_ = 0;
-	std::vector<std::string> modelFilenames_{};
+	std::vector<std::string> meshFilenames_{};
 	std::vector<Mesh> meshs_{};
+	std::vector<std::string> meshNames_{};
 	void loadModels();
 	void generateMeshs();
 

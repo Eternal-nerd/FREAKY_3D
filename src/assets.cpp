@@ -25,22 +25,21 @@ void Assets::enumerateFiles() {
 			fs::path ext = entry.path().extension();
 			if (ext == ".jpg" || ext == ".png") {
 				textureFilenames_.push_back(entry.path().generic_string());
-				textureFileCount_++;
+				textureNames_.push_back(entry.path().stem().generic_string());
 			}
 			if (ext == ".wav") {
 				audioFilenames_.push_back(entry.path().generic_string());
-				audioFileCount_++;
 			}
 			if (ext == ".obj") {
-				modelFilenames_.push_back(entry.path().generic_string());
-				modelFileCount_++;
+				meshFilenames_.push_back(entry.path().generic_string());
+				meshNames_.push_back(entry.path().stem().generic_string());
 			}
 		}
 	}
 }
 
 int Assets::getTextureCount() {
-	return textureFileCount_;
+	return textureFilenames_.size();
 }
 
 void Assets::init(const GfxAccess access) {
@@ -48,9 +47,9 @@ void Assets::init(const GfxAccess access) {
 
 	// textures/images -------------------------------------------====================<
 	access_ = access;
-	for (int i = 0; i < textureFileCount_; i++) {
+	for (int i = 0; i < textureFilenames_.size(); i++) {
 		Texture t;
-		t.create(textureFilenames_[i], access_);
+		t.create(i, textureFilenames_[i], access_);
 		textures_.push_back(t);
 	}
 
@@ -82,7 +81,7 @@ void Assets::init(const GfxAccess access) {
 ------------------------------TEXTURES-----------------------------------------
 -----------------------------------------------------------------------------*/
 TextureDetails Assets::getTextureDetails(int index) {
-	if (index < 0 || index >= textureFileCount_) {
+	if (index < 0 || index >= textures_.size()) {
 		throw std::runtime_error("texture index out of bounds");
 	}
 
@@ -116,9 +115,9 @@ void Assets::playSound(int soundIndex) {
 -----------------------------------------------------------------------------*/
 void Assets::loadModels() {
 	util::log(name_, "loading models");
-	for (int i = 0; i < modelFileCount_; i++) {
+	for (int i = 0; i < meshFilenames_.size(); i++) {
 		Mesh m;
-		m.init(util::getObjData(modelFilenames_[i]), access_);
+		m.init(util::getObjData(meshFilenames_[i]), access_);
 		meshs_.push_back(m);
 	}
 
@@ -134,16 +133,41 @@ void Assets::generateMeshs() {
 	Mesh skybox;
 	skybox.init(Geometry::InvertedTexturedCube::getMeshData(), access_);
 	meshs_.push_back(skybox);
+	meshNames_.push_back("skybox");
+
 
 	// FLOOR mesh
 	Mesh floor;
 	floor.init(Geometry::Plane::getMeshData(), access_);
 	meshs_.push_back(floor);
+	meshNames_.push_back("floor");
 
 	// cube mesh
 	Mesh cube;
 	cube.init(Geometry::TexturedCube::getMeshData(), access_);
 	meshs_.push_back(cube);
+	meshNames_.push_back("cube");
+}
+
+/*-----------------------------------------------------------------------------
+------------------------------HELPERS------------------------------------------
+-----------------------------------------------------------------------------*/
+Texture& Assets::getTexture(const std::string name) {
+	for (int i = 0; i < textureNames_.size(); i++) {
+		if (textureNames_[i] == name) {
+			return textures_[i];
+		}
+	}
+	throw std::runtime_error("failed to find texture: " + name);
+}
+
+Mesh& Assets::getMesh(const std::string name) {
+	for (int i = 0; i < meshNames_.size(); i++) {
+		if (meshNames_[i] == name) {
+			return meshs_[i];
+		}
+	}
+	throw std::runtime_error("failed to find mesh: " + name);
 }
 
 /*-----------------------------------------------------------------------------

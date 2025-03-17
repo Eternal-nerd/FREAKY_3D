@@ -14,6 +14,38 @@ void Mesh::init(MeshData data, GfxAccess access) {
 }
 
 /*-----------------------------------------------------------------------------
+------------------------------CHANGE-TEXTURE-----------------------------------
+-----------------------------------------------------------------------------*/
+void Mesh::setTextureIndex(int texIndex) {
+	// recreate buffers (destroy them)
+	cleanup();
+
+	for (int i = 0; i < data_.vertices.size(); i++) {
+		data_.vertices[i].texIndex = texIndex;
+	}
+	createVertexBuffer();
+	createIndexBuffer();
+}
+
+/*-----------------------------------------------------------------------------
+------------------------------BINDING------------------------------------------
+-----------------------------------------------------------------------------*/
+void Mesh::bindVertexBuffer(VkCommandBuffer commandBuffer) {
+	VkDeviceSize offsets = 0;
+	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer_, &offsets);
+}
+
+void Mesh::bindIndexBuffer(VkCommandBuffer commandBuffer) {
+	vkCmdBindIndexBuffer(commandBuffer, indexBuffer_, 0, VK_INDEX_TYPE_UINT32);
+}
+
+/*-----------------------------------------------------------------------------
+------------------------------GETTERS------------------------------------------
+-----------------------------------------------------------------------------*/
+int Mesh::getIndexCount() {	return data_.indices.size(); }
+
+
+/*-----------------------------------------------------------------------------
 ------------------------------BUFFERS------------------------------------------
 -----------------------------------------------------------------------------*/
 void Mesh::createVertexBuffer() {

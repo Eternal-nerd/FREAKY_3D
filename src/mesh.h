@@ -16,6 +16,14 @@ public:
 
 	void init(MeshData data, GfxAccess access);
 
+	void setTextureIndex(int texIndex);
+
+	// BINDING
+	void bindVertexBuffer(VkCommandBuffer commandBuffer);
+	void bindIndexBuffer(VkCommandBuffer commandBuffer);
+
+	// GETTERS
+	int getIndexCount();
 
 	void cleanup();
 

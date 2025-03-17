@@ -3,8 +3,10 @@
 /*-----------------------------------------------------------------------------
 ------------------------------INITIALIZATION-----------------------------------
 -----------------------------------------------------------------------------*/
-void Texture::create(const std::string& filename, const GfxAccess& access) {
+void Texture::create(int index, const std::string& filename, const GfxAccess& access) {
 	util::log(name_, "creating texture");
+
+	index_ = index;
 
 	access_ = access;
 
@@ -18,6 +20,7 @@ void Texture::create(const std::string& filename, const GfxAccess& access) {
 -----------------------------------------------------------------------------*/
 const VkImageView& Texture::getTextureImageView() const { return textureImageView_; }
 const VkSampler& Texture::getTextureSampler() const { return textureSampler_; }
+int Texture::getIndex() { return index_; }
 
 /*-----------------------------------------------------------------------------
 ------------------------------VK-TEXTURE----------------------------------

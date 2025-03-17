@@ -11,16 +11,20 @@
 
 class Texture {
 public:
-	void create(const std::string& filename, const GfxAccess& access);
+	void create(int index, const std::string& filename, const GfxAccess& access);
 
 	const VkImageView& getTextureImageView() const;
 	const VkSampler& getTextureSampler() const;
+	int getIndex();
 
 	void cleanup();
 
 	const std::string name_ = "TEXTURE";
 
 private:
+	// index of texture in list
+	int index_ = -1;
+
 	// references to vk stuff
 	GfxAccess access_;
 

@@ -111,6 +111,23 @@ struct GfxAccess {
     VkQueue graphicsQueue = VK_NULL_HANDLE;
 };
 
+// Camera config struct
+struct CameraConfig {
+    float fovy = 0;
+    float near = 0;
+    float far = 0;
+    glm::mat4 perspectiveM = glm::mat4(1);
+};
+
+// for initializing a rigid body
+struct RigidBodyProperties {
+    glm::vec3 position = { 0.f, 0.f, 0.f };
+    glm::vec3 linearVel = { 0.f, 0.f, 0.f };
+    glm::mat3 orientation = glm::mat3(1);
+    glm::vec3 angleVel = { 0.f, 0.f, 0.f };
+};
+
+
 /* helpers used for basic geometric meshs */
 namespace Geometry {
     namespace Plane {

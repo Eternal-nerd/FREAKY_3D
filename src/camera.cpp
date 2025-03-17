@@ -3,8 +3,29 @@
 /*-----------------------------------------------------------------------------
 ------------------------------INITIALIZATION-----------------------------------
 -----------------------------------------------------------------------------*/
-void Camera::init() {
+void Camera::init(float aspect) {
 	util::log(name_, "initializing camera");
+
+	// set intial rotation
+	pitch_ = 0;
+	yaw_ = 0;
+
+	// set camera config:
+	config_.fovy = 90;
+	config_.near = 0.1f;
+	config_.far = 2000.f;
+
+	config_.perspectiveM = glm::perspective(glm::radians(config_.fovy), aspect, config_.near, config_.far);
+	// invert the Y direction on projection matrix ???
+	config_.perspectiveM[1][1] *= -1;
+
+	// init physical body
+	RigidBodyProperties p;
+	p.position = { 0.f, 2.f, 2.f };
+	body_.init(p);
+
+	// init view matrix
+	view_ = glm::translate(glm::mat4(1), body_.getPosition());
 
 }
 
@@ -12,7 +33,7 @@ void Camera::init() {
 /*-----------------------------------------------------------------------------
 -----------------------------UPDATE-STUFF--------------------------------------
 -----------------------------------------------------------------------------*/
-void Camera::update() {
+void Camera::update(float aspect) {
 
 
 }
@@ -22,3 +43,4 @@ void Camera::update() {
 /*-----------------------------------------------------------------------------
 -----------------------------GETTERS-------------------------------------------
 -----------------------------------------------------------------------------*/
+RigidBody* Camera::getBodyPtr() { return &body_; }

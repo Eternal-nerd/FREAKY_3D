@@ -8,6 +8,7 @@
 #include "util.h"
 #include "gfx.h"
 #include "camera.h"
+#include "entity.h"
 
 /*
 The engine class pretty much just encapsulates everything. 
@@ -30,16 +31,25 @@ private:
 	// Graphics
 	Gfx gfx_;
 
+	// Assets ptr
+	Assets* assets_ = nullptr;
+
 	// Player Camera
 	Camera camera_;
 
 	// Events
 	SDL_Event event_;
 
+	// entities (game world)
+	std::vector<Entity> entities_;
+
 	// 3 functions used to initialize, execute, and cleanup the engine
 	void init();
 	void loop();
 	void cleanup();
+
+	// world creation
+	void generateWorld();
 
 	// handle events/input
 	void handleEvents();

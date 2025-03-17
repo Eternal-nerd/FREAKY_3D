@@ -34,6 +34,9 @@ public:
 
 	void init();
 
+	float getAspect();
+	Assets& getAssets();
+
 	void render();
 
 	void cleanup();
