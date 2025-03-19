@@ -67,6 +67,7 @@ void Gfx::init() {
     createDescriptorPool(textureCount);
 
     // need to join asset thread to be able to create descriptor sets
+    util::log(name_, "joining asset thread");
     asset_thread.join();
     createDescriptorSets();
 }
@@ -188,6 +189,7 @@ void Gfx::submitCommandBuffer(VkCommandBuffer commandBuffer) {
         throw std::runtime_error("failed to submit draw command buffer!");
     }
     
+    // PRESENT ----------------------------------------======================<
     VkPresentInfoKHR presentInfo{};
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 

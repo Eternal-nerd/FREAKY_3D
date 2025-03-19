@@ -3,13 +3,13 @@
 /*-----------------------------------------------------------------------------
 ------------------------------INITIALIZATION-----------------------------------
 -----------------------------------------------------------------------------*/
-void RigidBody::init(RigidBodyProperties p) {
+void RigidBody::init() {
 	util::log(name_, "initializing rigid body");
 
-	glm::vec3 position_ = p.position;
-	glm::vec3 linearVel_ = p.linearVel;
-	glm::mat3 orientation_ = p.orientation;
-	glm::vec3 angleVel_ = p.angleVel;
+	glm::vec3 position_ = {0.f, 0.f, 0.f};
+	glm::vec3 linearVel_ = { 0.f, 0.f, 0.f };
+	glm::mat3 orientation_ = glm::mat3(1.f);
+	glm::vec3 angleVel_ = { 0.f, 0.f, 0.f };
 }
 
 /*-----------------------------------------------------------------------------
@@ -20,13 +20,15 @@ void RigidBody::update() {
 }
 
 
+void RigidBody::setPosition(float x, float y, float z) {
+	position_.x = x;
+	position_.y = y;
+	position_.z = z;
+}
+
 /*-----------------------------------------------------------------------------
 -----------------------------GETTERS-------------------------------------------
 -----------------------------------------------------------------------------*/
 glm::vec3 RigidBody::getPosition() {
 	return position_;
-}
-
-glm::mat4 RigidBody::getModelMatrix() {
-    return glm::mat4(1.f);
 }

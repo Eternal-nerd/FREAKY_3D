@@ -68,7 +68,7 @@ void Engine::updateUBO() {
     // model transforms (obtined from each entity's rigid body) --=====<
     for (int i=0; i<entities_.size(); i++) {
         // FIXME EEEE
-        ubo.model[i] = glm::mat4(1.f);
+        ubo.model[i] = entities_[i].getModelMat();
     }
 
     // Camera matrices -------------------------=========<
@@ -134,18 +134,19 @@ void Engine::handleEvents() {
 }
 
 void Engine::handleInputEvent() {
-    if (event_.key.scancode == SDL_SCANCODE_ESCAPE) { 
-        running_ = false; 
-    }
-
+    // KEY INPUT
     if (event_.type != SDL_EVENT_MOUSE_MOTION) {
-        // update keystates struct
-        bool down = event_.type == SDL_EVENT_KEY_DOWN;
         switch (event_.key.scancode) {
-        case SDL_SCANCODE_W:
-            //keys_.w = down;
+        case SDL_SCANCODE_ESCAPE:
+            running_ = false;
             break;
         }
+    }
+
+    // MOUSE EVENTS
+    if (event_.type == SDL_EVENT_MOUSE_MOTION) {
+        camera_.incrementYaw((float)event_.motion.xrel / 250);
+        camera_.incrementPitch((float)event_.motion.yrel / 250);
     }
 }
 
@@ -157,9 +158,16 @@ void Engine::generateWorld() {
 
     // mclovin cube
     Entity e1;
-    RigidBodyProperties p1;
-    e1.init(0, assets_->getTexture("mclovin"), assets_->getMesh("cube"), p1);
+    e1.init(0, assets_->getTexture("mclovin"), assets_->getMesh("cube"));
+    e1.scale(10, 10, 10);
+    e1.setPosition(0,0,-10);
     entities_.push_back(e1);
+
+    // skybox
+    Entity e2;
+    e2.init(1, assets_->getTexture("skybox"), assets_->getMesh("skybox"));
+    e2.scale(1000.f, 1000.f, 1000.f);
+    entities_.push_back(e2);
 
 }
 

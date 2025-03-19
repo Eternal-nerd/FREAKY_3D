@@ -3,7 +3,6 @@
 #include <glm/glm.hpp>
 #include <string>
 
-#include "../types.h"
 #include "../util.h"
 
 /*
@@ -11,13 +10,12 @@ class for objects that will participate in the dynamics world
 */
 class RigidBody {
 public:
-	void init(RigidBodyProperties p);
+	void init();
 
 	void update();
 
 	glm::vec3 getPosition();
-
-    glm::mat4 getModelMatrix();
+	void setPosition(float x, float y, float z);
 
 	const std::string name_ = "RIGID BODY";
 

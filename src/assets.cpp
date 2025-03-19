@@ -153,6 +153,8 @@ void Assets::generateMeshs() {
 ------------------------------HELPERS------------------------------------------
 -----------------------------------------------------------------------------*/
 Texture& Assets::getTexture(const std::string name) {
+	util::log(name_, "searching for texture: " + name);
+
 	for (int i = 0; i < textureNames_.size(); i++) {
 		if (textureNames_[i] == name) {
 			return textures_[i];
@@ -162,6 +164,8 @@ Texture& Assets::getTexture(const std::string name) {
 }
 
 Mesh& Assets::getMesh(const std::string name) {
+	util::log(name_, "searching for mesh: " + name);
+
 	for (int i = 0; i < meshNames_.size(); i++) {
 		if (meshNames_[i] == name) {
 			return meshs_[i];

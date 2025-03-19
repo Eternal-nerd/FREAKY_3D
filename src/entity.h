@@ -18,7 +18,15 @@ each frame?
 
 class Entity {
 public:
-	void init(int id, Texture& texture, Mesh& mesh, RigidBodyProperties properties);
+	void init(int id, Texture& texture, Mesh& mesh);
+
+	// applies transforms to entity
+	void scale(float x, float y, float z);
+
+	// moves rigid body
+	void setPosition(float x, float y, float z);
+
+	glm::mat4 getModelMat();
 
 	void draw(VkCommandBuffer commandBuffer);
 
@@ -35,5 +43,11 @@ private:
 	Texture* texture_ = nullptr;
 	RigidBody body_;
 
+	// calculated for UBO
+	glm::vec3 scale_{};
+
+
+	// helpers
+	glm::mat4 getRotationMat();
 
 };

@@ -3,7 +3,7 @@
 /*-----------------------------------------------------------------------------
 ------------------------------INITIALIZATION-----------------------------------
 -----------------------------------------------------------------------------*/
-void Entity::init(int id, Texture& texture, Mesh& mesh, RigidBodyProperties properties) {
+void Entity::init(int id, Texture& texture, Mesh& mesh) {
 	util::log(name_, "initializing entity");
 
 	id_ = id;
@@ -15,8 +15,8 @@ void Entity::init(int id, Texture& texture, Mesh& mesh, RigidBodyProperties prop
 	util::log(name_, "updating mesh data's texture index");
 	mesh_->setTextureIndex(texture_->getIndex());
 
-	// init rigid body
-	body_.init(properties);
+	// init transforms
+	scale_ = { 1.f,1.f,1.f };
 }
 
 /*-----------------------------------------------------------------------------
@@ -29,6 +29,31 @@ void Entity::draw(VkCommandBuffer commandBuffer) {
 }
 
 /*-----------------------------------------------------------------------------
+-----------------------------TRANSFORMS----------------------------------------
+-----------------------------------------------------------------------------*/
+void Entity::scale(float x, float y, float z) {
+	scale_ = {x, y, z};
+}
+
+void Entity::setPosition(float x, float y, float z) {
+	body_.setPosition(x, y, z);
+}
+
+/*-----------------------------------------------------------------------------
 -----------------------------GETTERS-------------------------------------------
 -----------------------------------------------------------------------------*/
 RigidBody* Entity::getBodyPtr() { return &body_; }
+
+glm::mat4 Entity::getModelMat() {
+	glm::mat4 modelMat(1.f);
+
+	// move to position and orient
+	modelMat = glm::translate(modelMat, body_.getPosition());
+
+	// TODO ORIENT
+
+	// SCALE
+	modelMat = glm::scale(modelMat, scale_);
+
+	return modelMat;
+}

@@ -26,6 +26,9 @@ public:
 
 	// TODO: add updateConfig()
     
+	void incrementYaw(float increment);
+	void incrementPitch(float increment);
+
     // get matrices
     const glm::mat4& getViewMatrix() const;
 	const glm::mat4& getPerspectiveMatrix() const;
@@ -47,9 +50,8 @@ private:
 	// physical repr.
 	RigidBody body_;
 
-	//glm::mat4 getRotM();
+	glm::mat4 getRotationMat();
 
-	//glm::mat4 getYawRotM();
 
 
 
