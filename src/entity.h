@@ -26,6 +26,9 @@ public:
 	// moves rigid body
 	void setPosition(float x, float y, float z);
 
+	// rotates it
+	void setOrientation(float x, float y, float z);
+
 	glm::mat4 getModelMat();
 
 	void draw(VkCommandBuffer commandBuffer);

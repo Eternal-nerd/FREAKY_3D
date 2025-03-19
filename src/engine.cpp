@@ -63,13 +63,16 @@ void Engine::loop() {
 void Engine::updateUBO() {
     float time = clock_.getProgramTime();
     
+    // FIXME Cube animation
+    entities_[0].setOrientation(10*time, 20*time, 30*time);
+
     UniformBufferObject ubo{};
 
     // model transforms (obtined from each entity's rigid body) --=====<
     for (int i=0; i<entities_.size(); i++) {
         // FIXME EEEE
         ubo.model[i] = entities_[i].getModelMat();
-    }
+    } 
 
     // Camera matrices -------------------------=========<
     ubo.view = camera_.getViewMatrix();
@@ -161,6 +164,7 @@ void Engine::generateWorld() {
     e1.init(0, assets_->getTexture("mclovin"), assets_->getMesh("cube"));
     e1.scale(10, 10, 10);
     e1.setPosition(0,0,-10);
+    e1.setOrientation(0,0,180);
     entities_.push_back(e1);
 
     // skybox

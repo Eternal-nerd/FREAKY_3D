@@ -39,6 +39,10 @@ void Entity::setPosition(float x, float y, float z) {
 	body_.setPosition(x, y, z);
 }
 
+void Entity::setOrientation(float x, float y, float z) {
+	body_.setOrientation(x, y, z);
+}
+
 /*-----------------------------------------------------------------------------
 -----------------------------GETTERS-------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -50,7 +54,11 @@ glm::mat4 Entity::getModelMat() {
 	// move to position and orient
 	modelMat = glm::translate(modelMat, body_.getPosition());
 
-	// TODO ORIENT
+	// ORIENT
+	glm::vec3 orientation = body_.getOrientation();
+	modelMat = glm::rotate(modelMat, glm::radians(orientation.x), glm::vec3(1.f, 0.f, 0.f)); // x
+	modelMat = glm::rotate(modelMat, glm::radians(orientation.y), glm::vec3(0.f, 1.f, 0.f)); // y
+	modelMat = glm::rotate(modelMat, glm::radians(orientation.z), glm::vec3(0.f, 0.f, 1.f)); // z
 
 	// SCALE
 	modelMat = glm::scale(modelMat, scale_);
