@@ -34,9 +34,13 @@ public:
 
 	void init();
 
+	// config
+	void togglePolygonMode();
+	void toggleMouseMode(bool paused);
+
 	float getAspect();
 	Assets& getAssets();
-    
+
     // command buffers
 	VkCommandBuffer setupCommandBuffer();
     void submitCommandBuffer(VkCommandBuffer commandBuffer);
@@ -101,6 +105,7 @@ private:
 	void createDescriptorSetLayout(int textureCount);
 	void createGraphicsPipeline(VkPolygonMode mode = VK_POLYGON_MODE_FILL);
 	void recreatePipeline(VkPolygonMode mode);
+	VkPolygonMode currentMode_;
 
 	// Vulkan synchronization ------------------------===<
 	std::vector<VkSemaphore> imageAvailableSemaphores_;

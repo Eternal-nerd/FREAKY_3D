@@ -24,6 +24,7 @@ public:
 private:
 	bool running_ = false;
 	bool visible_ = true;
+	bool paused_ = false;
 
 	// CLock
 	Clock clock_;
@@ -40,6 +41,9 @@ private:
 	// Events
 	SDL_Event event_;
 
+	// keys state machine
+	KeyStates keys_{};
+
 	// entities (game world)
 	std::vector<Entity> entities_;
 
@@ -53,7 +57,10 @@ private:
 
 	// handle events/input
 	void handleEvents();
-	void handleInputEvent();
+	void captureKeyState();
+	void handleMouseEvent();
+	void handleKeyEvent();
+	void togglePause();
 
     // handles creating the pdated UBO for each frame
     void updateUBO();

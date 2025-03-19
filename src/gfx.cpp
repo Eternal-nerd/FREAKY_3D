@@ -85,6 +85,17 @@ void Gfx::startAssetPipeline() {
 }
 
 /*-----------------------------------------------------------------------------
+------------------------------CONFIG-------------------------------------------
+-----------------------------------------------------------------------------*/
+void Gfx::toggleMouseMode(bool paused) {
+    util::log(name_, "toggling mouse mode");
+    if (!SDL_SetWindowRelativeMouseMode(window_, !paused)) {
+        throw std::runtime_error("Failed to toggle mouse mode");
+    }
+}
+
+
+/*-----------------------------------------------------------------------------
 ------------------------------SYNC-MAPPING-------------------------------------
 -----------------------------------------------------------------------------*/
 void Gfx::deviceWaitIdle() { vkDeviceWaitIdle(device_); }
@@ -582,6 +593,21 @@ void Gfx::cleanupSwapchain() {
 /*-----------------------------------------------------------------------------
 ------------------------------GFX-PIPELINE-------------------------------------
 -----------------------------------------------------------------------------*/
+void Gfx::togglePolygonMode() {
+    //enum polygonMode_ { VK_POLYGON_MODE_FILL , VK_POLYGON_MODE_LINE, VK_POLYGON_MODE_POINT};
+    switch (currentMode_) {
+    case VK_POLYGON_MODE_FILL:
+        recreatePipeline(VK_POLYGON_MODE_LINE);
+        break;
+    case VK_POLYGON_MODE_LINE:
+        recreatePipeline(VK_POLYGON_MODE_POINT);
+        break;
+    case VK_POLYGON_MODE_POINT:
+        recreatePipeline(VK_POLYGON_MODE_FILL);
+        break;
+    }
+}
+
 void Gfx::recreatePipeline(VkPolygonMode mode) {
     // CLEANUP SHIT THEN RECREATE???
 
@@ -594,7 +620,6 @@ void Gfx::recreatePipeline(VkPolygonMode mode) {
     createGraphicsPipeline(mode);
 
 }
-
 
 void Gfx::createGraphicsPipeline(VkPolygonMode mode) {
     util::log(name_, "creating graphics pipeline");
@@ -643,9 +668,8 @@ void Gfx::createGraphicsPipeline(VkPolygonMode mode) {
     rasterizer.depthClampEnable = VK_FALSE;
     rasterizer.rasterizerDiscardEnable = VK_FALSE;
     rasterizer.polygonMode = mode;
-    // TODO: when input key for polygon mode is added: 
-    // currentMode_ = mode;
-    rasterizer.lineWidth = 1.0f;
+    currentMode_ = mode;
+    rasterizer.lineWidth = 2.0f;
     rasterizer.cullMode = VK_CULL_MODE_BACK_BIT; // _NONE;
     rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_FALSE;

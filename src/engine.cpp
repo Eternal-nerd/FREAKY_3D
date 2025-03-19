@@ -63,14 +63,14 @@ void Engine::loop() {
 void Engine::updateUBO() {
     float time = clock_.getProgramTime();
     
-    // FIXME Cube animation
+    // FIXME animations
     entities_[0].setOrientation(10*time, 20*time, 30*time);
+    //entities_[1].setOrientation(10 * time, 20 * time, 30 * time);
 
     UniformBufferObject ubo{};
 
     // model transforms (obtined from each entity's rigid body) --=====<
     for (int i=0; i<entities_.size(); i++) {
-        // FIXME EEEE
         ubo.model[i] = entities_[i].getModelMat();
     } 
 
@@ -118,8 +118,11 @@ void Engine::handleEvents() {
             // Input EVENTS
         case SDL_EVENT_KEY_DOWN:
         case SDL_EVENT_KEY_UP:
+            captureKeyState();
+            handleKeyEvent();
+            break;
         case SDL_EVENT_MOUSE_MOTION:
-            handleInputEvent();
+            handleMouseEvent();
             break;
             // MINIMIZE/MAXIMIZE EVENTS
         case SDL_EVENT_WINDOW_HIDDEN:
@@ -136,21 +139,62 @@ void Engine::handleEvents() {
     }
 }
 
-void Engine::handleInputEvent() {
+void Engine::captureKeyState() {
     // KEY INPUT
-    if (event_.type != SDL_EVENT_MOUSE_MOTION) {
-        switch (event_.key.scancode) {
-        case SDL_SCANCODE_ESCAPE:
-            running_ = false;
-            break;
+    bool down = event_.type == SDL_EVENT_KEY_DOWN;
+    switch (event_.key.scancode) {
+    case SDL_SCANCODE_ESCAPE:
+        keys_.esc = down;
+        break;
+    case SDL_SCANCODE_P:
+        keys_.p = down;
+        break;
+    case SDL_SCANCODE_W:
+        keys_.w = down;
+        break;
+    case SDL_SCANCODE_A:
+        keys_.a = down;
+        break;
+    case SDL_SCANCODE_S:
+        keys_.s = down;
+        break;
+    case SDL_SCANCODE_D:
+        keys_.d = down;
+        break;
+    case SDL_SCANCODE_SPACE:
+        keys_.space = down;
+        break;
+    case SDL_SCANCODE_LSHIFT:
+        keys_.shift = down;
+        break;
+    case SDL_SCANCODE_LCTRL:
+        keys_.ctrl = down;
+        break;
+    case SDL_SCANCODE_N:
+        keys_.n = down;
+        break;
+    default: break;
+    }
+}
+
+void Engine::handleMouseEvent() {
+    // MOUSE EVENTS
+    if (!paused_) {
+        if (event_.type == SDL_EVENT_MOUSE_MOTION) {
+            camera_.incrementYaw((float)event_.motion.xrel / 250);
+            camera_.incrementPitch((float)event_.motion.yrel / 250);
         }
     }
+}
 
-    // MOUSE EVENTS
-    if (event_.type == SDL_EVENT_MOUSE_MOTION) {
-        camera_.incrementYaw((float)event_.motion.xrel / 250);
-        camera_.incrementPitch((float)event_.motion.yrel / 250);
-    }
+void Engine::handleKeyEvent() {
+    if (keys_.esc) { togglePause(); }
+    if (keys_.p) { gfx_.togglePolygonMode(); }
+}
+
+void Engine::togglePause() {
+    paused_ = !paused_;
+    gfx_.toggleMouseMode(paused_);
 }
 
 /*-----------------------------------------------------------------------------

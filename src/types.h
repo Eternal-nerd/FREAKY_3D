@@ -119,6 +119,24 @@ struct CameraConfig {
     glm::mat4 perspectiveM = glm::mat4(1);
 };
 
+struct KeyStates {
+    bool esc = false;
+    bool q = false;
+    bool w = false;
+    bool e = false;
+    bool a = false;
+    bool s = false;
+    bool d = false;
+    bool space = false;
+    bool ctrl = false;
+    bool shift = false;
+    bool n = false; // NOCLIP
+    bool f3 = false; // debug text
+    bool p = false; // toggle polygon mode
+    //bool _ = false;
+
+};
+
 /* helpers used for basic geometric meshs */
 namespace Geometry {
     namespace Plane {
