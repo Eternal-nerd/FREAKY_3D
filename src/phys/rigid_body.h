@@ -22,6 +22,9 @@ public:
 	glm::vec3 getOrientation();
 	void setOrientation(float x, float y, float z);
 
+	// velocity
+	void setVelocity(float x, float y, float z);
+
 	const std::string name_ = "RIGID BODY";
 
 private:

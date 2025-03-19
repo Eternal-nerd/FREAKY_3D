@@ -27,6 +27,7 @@ void Engine::init() {
     float aspect = gfx_.getAspect();
 
     camera_.init(aspect);
+    camBody_ = camera_.getBodyPtr();
 
     // generate/init game objects & world
     generateWorld();
@@ -190,9 +191,15 @@ void Engine::handleMouseEvent() {
 void Engine::handleKeyEvent() {
     if (keys_.esc) { togglePause(); }
     if (keys_.p) { gfx_.togglePolygonMode(); }
+
+    // TODO add physics sim that is synced with program time so that 
+    // I can just update the camera's body's velocity here
+    // and the sim will automatically update the position
+
 }
 
 void Engine::togglePause() {
+    util::log(name_, "pausing");
     paused_ = !paused_;
     gfx_.toggleMouseMode(paused_);
 }

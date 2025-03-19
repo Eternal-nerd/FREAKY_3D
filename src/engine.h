@@ -9,6 +9,8 @@
 #include "gfx.h"
 #include "camera.h"
 #include "entity.h"
+#include "phys/rigid_body.h"
+#include "phys/simulation.h"
 
 /*
 The engine class pretty much just encapsulates everything. 
@@ -37,6 +39,7 @@ private:
 
 	// Player Camera
 	Camera camera_;
+	RigidBody* camBody_ = nullptr;
 
 	// Events
 	SDL_Event event_;

@@ -2,12 +2,12 @@
 
 
 /*
-a namespace where the collision detection stuf resides
+a class where the collision detection stuff resides
 operates on rigid bodies and joints?
 */
 
-namespace Simulation {
+class Simulation {
 
 
 
-}
+};

@@ -31,6 +31,12 @@ void RigidBody::setOrientation(float x, float y, float z) {
 	orientation_.z = z;
 }
 
+void RigidBody::setVelocity(float x, float y, float z) {
+	linearVel_.x = x;
+	linearVel_.y = y;
+	linearVel_.z = z;
+}
+
 /*-----------------------------------------------------------------------------
 -----------------------------GETTERS-------------------------------------------
 -----------------------------------------------------------------------------*/
