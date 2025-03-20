@@ -50,6 +50,9 @@ private:
 	// entities (game world)
 	std::vector<Entity> entities_;
 
+	// physics
+	Simulation sim_;
+
 	// 3 functions used to initialize, execute, and cleanup the engine
 	void init();
 	void loop();

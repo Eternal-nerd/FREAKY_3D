@@ -15,26 +15,26 @@ void RigidBody::init() {
 /*-----------------------------------------------------------------------------
 -----------------------------UPDATE-STUFF--------------------------------------
 -----------------------------------------------------------------------------*/
-void RigidBody::update() {
+void RigidBody::update(float deltaT) {
+	// first, update position (do more later?)
+	glm::vec3 positionIncr = linearVel_ * deltaT;
 
+	position_ += positionIncr;
 }
 
-void RigidBody::setPosition(float x, float y, float z) {
-	position_.x = x;
-	position_.y = y;
-	position_.z = z;
+/*-----------------------------------------------------------------------------
+-----------------------------SETTERS-------------------------------------------
+-----------------------------------------------------------------------------*/
+void RigidBody::setPosition(glm::vec3 position) {
+	position_ = position;
 }
 
-void RigidBody::setOrientation(float x, float y, float z) {
-	orientation_.x = x;
-	orientation_.y = y;
-	orientation_.z = z;
+void RigidBody::setOrientation(glm::vec3 orientation) {
+	orientation_ = orientation;
 }
 
-void RigidBody::setVelocity(float x, float y, float z) {
-	linearVel_.x = x;
-	linearVel_.y = y;
-	linearVel_.z = z;
+void RigidBody::setVelocity(glm::vec3 velocity) {
+	linearVel_ = velocity;
 }
 
 /*-----------------------------------------------------------------------------
@@ -42,6 +42,10 @@ void RigidBody::setVelocity(float x, float y, float z) {
 -----------------------------------------------------------------------------*/
 glm::vec3 RigidBody::getPosition() {
 	return position_;
+}
+
+glm::vec3 RigidBody::getVelocity() {
+	return linearVel_;
 }
 
 glm::vec3 RigidBody::getOrientation() {

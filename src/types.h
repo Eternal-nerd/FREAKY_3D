@@ -10,6 +10,10 @@
 #include <vector>
 #include <array>
 
+// Meters/second
+const float CAMERA_SPEED = 15.f;
+const float NOCLIP_SPEED = 30.f;
+
 const int MAX_MODELS = 512;
 
 struct UniformBufferObject {

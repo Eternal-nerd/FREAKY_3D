@@ -12,18 +12,19 @@ class RigidBody {
 public:
 	void init();
 
-	void update();
+	void update(float deltaT);
 
 	// position
 	glm::vec3 getPosition();
-	void setPosition(float x, float y, float z);
+	void setPosition(glm::vec3 position);
 
 	// orientation
 	glm::vec3 getOrientation();
-	void setOrientation(float x, float y, float z);
+	void setOrientation(glm::vec3 orientation);
 
 	// velocity
-	void setVelocity(float x, float y, float z);
+	glm::vec3 getVelocity();
+	void setVelocity(glm::vec3 velocity);
 
 	const std::string name_ = "RIGID BODY";
 

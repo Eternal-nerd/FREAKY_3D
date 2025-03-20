@@ -36,11 +36,11 @@ void Entity::scale(float x, float y, float z) {
 }
 
 void Entity::setPosition(float x, float y, float z) {
-	body_.setPosition(x, y, z);
+	body_.setPosition(glm::vec3(x, y, z));
 }
 
 void Entity::setOrientation(float x, float y, float z) {
-	body_.setOrientation(x, y, z);
+	body_.setOrientation(glm::vec3(x, y, z));
 }
 
 /*-----------------------------------------------------------------------------

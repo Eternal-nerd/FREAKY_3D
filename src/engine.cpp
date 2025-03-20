@@ -34,6 +34,13 @@ void Engine::init() {
     
     // get all rigid body ptrs from camera and game objects,
     // pass them to physics sim. and initialize model matrices
+    sim_.init(clock_);
+
+    // register camera rigid body and all entities
+    sim_.registerBody(camBody_);
+    for (auto entity : entities_) {
+        sim_.registerBody(entity.getBodyPtr());
+    }
 
 }
 
@@ -47,6 +54,9 @@ void Engine::loop() {
 	while (running_) {
 
 		handleEvents();
+
+        // step physics sim?
+        sim_.stepSimulation();
 
         if (visible_) {
             camera_.update(gfx_.getAspect());
@@ -195,7 +205,23 @@ void Engine::handleKeyEvent() {
     // TODO add physics sim that is synced with program time so that 
     // I can just update the camera's body's velocity here
     // and the sim will automatically update the position
-
+    // CAMERA SHIT
+    float sprintDiv = keys_.shift ? 1.f : 3.f;
+    glm::vec3 initialVel = camera_.getBodyPtr()->getVelocity();
+    // Z DIRECTION
+    if (keys_.w) { initialVel.z = -NOCLIP_SPEED / sprintDiv; }
+    if (keys_.s) { initialVel.z = NOCLIP_SPEED / sprintDiv; }
+    if (keys_.w == keys_.s) { initialVel.z = 0; }
+    // X DIRECTION
+    if (keys_.a) { initialVel.x = -NOCLIP_SPEED / sprintDiv; }
+    if (keys_.d) { initialVel.x = NOCLIP_SPEED / sprintDiv; }
+    if (keys_.a == keys_.d) { initialVel.x = 0; }
+    // Y DIRECTION
+    if (keys_.ctrl) { initialVel.y = -NOCLIP_SPEED / sprintDiv; }
+    if (keys_.space) { initialVel.y = NOCLIP_SPEED / sprintDiv; }
+    if (keys_.ctrl == keys_.space) { initialVel.y = 0; }
+    // UPDATE Velocity
+    camera_.getBodyPtr()->setVelocity(initialVel);
 }
 
 void Engine::togglePause() {
