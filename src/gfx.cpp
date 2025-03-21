@@ -502,6 +502,8 @@ void Gfx::createSwapchain() {
     swapChainImageFormat_ = surfaceFormat.format;
     swapChainExtent_ = extent;
 
+    // TODO update overlay extent
+
     // IMAGE VIEWS ----------------------------=====<
     util::log(name_, "creating swapchain image views");
     swapChainImageViews_.resize(swapChainImages_.size());

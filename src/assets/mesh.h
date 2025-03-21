@@ -4,8 +4,8 @@
 
 #include <string>
 
-#include "types.h"
-#include "util.h"
+#include "../types.h"
+#include "../util.h"
 
 /*
 Class for managing mesh data used to make vulkan vertex/index buffers

@@ -28,6 +28,5 @@ void Simulation::stepSimulation() {
 		bodies_[i]->update(delta);
 	}
 
-
 	lastUpdate_ = clock_->getProgramTime();
 }

@@ -45,6 +45,7 @@ void Camera::update(float aspect) {
 
 void Camera::incrementYaw(float increment) {
 	yaw_ += increment;
+	body_.setYaw(yaw_);
 }
 
 void Camera::incrementPitch(float increment) {

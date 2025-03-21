@@ -13,10 +13,10 @@ namespace fs = std::filesystem;
 void Assets::enumerateFiles() {
 	util::log(name_, "enumerating asset filenames");
 
-	fs::path toCheck = "../assets";
+	fs::path toCheck = "../res";
 
 	if (!fs::is_directory(toCheck)) {
-		throw std::runtime_error("could not find the assets/ directory");
+		throw std::runtime_error("could not find the res/ directory");
 	}
 
 	for (auto const& entry : fs::recursive_directory_iterator(toCheck)) {

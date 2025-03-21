@@ -2,12 +2,12 @@
 
 #include <vulkan/vulkan.h>
 
-#include "../lib/stb_image.h"
+#include "../../lib/stb_image.h"
 
 #include <string>
 
-#include "util.h"
-#include "types.h"
+#include "../util.h"
+#include "../types.h"
 
 class Texture {
 public:

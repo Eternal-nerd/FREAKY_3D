@@ -3,8 +3,8 @@
 #include <string>
 #include <vector>
 
-#include "util.h"
-#include "types.h"
+#include "../util.h"
+#include "../types.h"
 #include "texture.h"
 #include "mesh.h"
 

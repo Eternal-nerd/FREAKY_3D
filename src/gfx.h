@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "util.h"
-#include "assets.h"
+#include "assets/assets.h"
 
 #ifdef NDEBUG
 const bool enableValidationLayers = false;

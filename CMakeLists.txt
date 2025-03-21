@@ -20,11 +20,13 @@ set(SOURCES
 	src/gfx.cpp
 	src/util.cpp
 	src/clock.cpp
-	src/assets.cpp
-	src/texture.cpp
-	src/mesh.cpp
 	src/entity.cpp
 	src/camera.cpp
+	src/ui/overlay.cpp
+	src/ui/element.cpp
+	src/assets/assets.cpp
+	src/assets/texture.cpp
+	src/assets/mesh.cpp
 	src/phys/rigid_body.cpp
 	src/phys/simulation.cpp
 )
@@ -36,11 +38,13 @@ set(HEADERS
 	src/util.h
 	src/types.h
 	src/clock.h
-	src/assets.h
-	src/texture.h
-	src/mesh.h
 	src/entity.h
 	src/camera.h
+	src/ui/overlay.h
+	src/ui/element.h
+	src/assets/assets.h
+	src/assets/texture.h
+	src/assets/mesh.h
 	src/phys/rigid_body.h
 	src/phys/simulation.h
 

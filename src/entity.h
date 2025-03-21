@@ -5,8 +5,8 @@
 #include <string>
 
 #include "util.h"
-#include "mesh.h"
-#include "texture.h"
+#include "assets/mesh.h"
+#include "assets/texture.h"
 #include "phys/rigid_body.h"
 
 /*

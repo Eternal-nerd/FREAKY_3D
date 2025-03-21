@@ -239,7 +239,6 @@ void Engine::generateWorld() {
     // mclovin cube
     Entity e1;
     e1.init(0, assets_->getTexture("mclovin"), assets_->getMesh("cube"));
-    e1.scale(10, 10, 10);
     e1.setPosition(0,0,-10);
     e1.setOrientation(0,0,180);
     entities_.push_back(e1);
