@@ -9,6 +9,7 @@
 
 #include "util.h"
 #include "assets/assets.h"
+#include "ui/overlay.h"
 
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
@@ -124,4 +125,8 @@ private:
 	std::vector<VkDescriptorSet> descriptorSets_;
 	void createDescriptorPool(int textureCount);
 	void createDescriptorSets();
+
+	// OVERLAY -----------------------------------------======<
+	Overlay overlay_;
+	
 };

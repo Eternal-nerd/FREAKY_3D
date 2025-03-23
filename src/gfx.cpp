@@ -70,6 +70,8 @@ void Gfx::init() {
     util::log(name_, "joining asset thread");
     asset_thread.join();
     createDescriptorSets();
+
+    overlay_.init(device_, physicalDevice_, renderPass_, assets_);
 }
 
 void Gfx::startAssetPipeline() {
@@ -935,7 +937,10 @@ void Gfx::createUniformBuffers() {
 void Gfx::cleanup() {
 	util::log(name_, "cleaning up");
 
-    // very first, swapchain
+    // overlay stuff
+    overlay_.cleanup();
+
+    // swapchain
     cleanupSwapchain();
 
     // cleanup assets
