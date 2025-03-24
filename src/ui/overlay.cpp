@@ -16,6 +16,12 @@ void Overlay::init(VkDevice device, VkPhysicalDevice physicalDevice, VkRenderPas
     initPipeline();
 }
 
+void Overlay::initTextures() {
+    util::log(name_, "initializing overlay textures");
+
+    
+}
+
 void Overlay::initDescriptors() {
     util::log(name_, "initializing overlay descriptors");
 }
