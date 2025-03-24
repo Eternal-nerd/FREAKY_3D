@@ -39,7 +39,8 @@ private:
 
 	// Assets ptr
 	Assets* assets_ = nullptr;
-	std::vector<Texture*> textures_{};
+	int textureCount_ = 0;
+    std::vector<Texture*> textures_{};
 	void initTextures();
 
 	// Vulkan stuff only used by this class
