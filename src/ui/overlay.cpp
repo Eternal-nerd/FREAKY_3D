@@ -75,8 +75,36 @@ void Overlay::initDescriptors() {
         throw std::runtime_error("failed to create descriptor set layout!");
     }
  
+    // Descriptor set ---------------------------------------=============<
+    util::log(name_, "creating overlay descriptor set");
+    VkDescriptorSetAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    allocInfo.descriptorPool = descriptorPool_;
+    allocInfo.descriptorSetCount = 1;
+    allocInfo.pSetLayouts = &descriptorSetLayout_;
+
+    if (vkAllocateDescriptorSets(device_, &allocInfo, &descriptorSet_) != VK_SUCCESS) {
+        throw std::runtime_error("failed to allocate descriptor sets!");
+    }
 
 
+    // TODO
+    // Descriptor for the font image
+    /*VkDescriptorImageInfo textureDescriptor;
+    textureDescriptor.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    textureDescriptor.imageView = fontTexture_.getTextureImageView();
+    textureDescriptor.sampler = fontTexture_.getTextureSampler();
+
+    std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
+    descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrites[0].dstSet = descriptorSet_;
+    descriptorWrites[0].dstBinding = 0;
+    descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    descriptorWrites[0].descriptorCount = 1;
+    descriptorWrites[0].pImageInfo = &textureDescriptor;
+
+    vkUpdateDescriptorSets(access_.dvcePtr->getLogical(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+    */
 }
 
 void Overlay::initPipeline() {
