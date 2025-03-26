@@ -79,6 +79,46 @@ namespace std {
     };
 }
 
+struct UIVertex {
+    glm::vec3 pos;
+    glm::vec2 texCoord;
+    int texIndex;
+
+    static VkVertexInputBindingDescription getBindingDescription() {
+        VkVertexInputBindingDescription bindingDescription{};
+        bindingDescription.binding = 0;
+        bindingDescription.stride = sizeof(UIVertex);
+        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+        return bindingDescription;
+    }
+
+    static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
+
+        attributeDescriptions[0].binding = 0;
+        attributeDescriptions[0].location = 0;
+        attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+        attributeDescriptions[0].offset = offsetof(UIVertex, pos);
+
+        attributeDescriptions[1].binding = 0;
+        attributeDescriptions[1].location = 1;
+        attributeDescriptions[1].format = VK_FORMAT_R32G32_SFLOAT;
+        attributeDescriptions[1].offset = offsetof(UIVertex, texCoord);
+
+        attributeDescriptions[2].binding = 0;
+        attributeDescriptions[2].location = 2;
+        attributeDescriptions[2].format = VK_FORMAT_R32_SINT;
+        attributeDescriptions[2].offset = offsetof(UIVertex, texIndex);
+
+        return attributeDescriptions;
+    }
+
+    bool operator==(const UIVertex& other) const {
+        return pos == other.pos && texCoord == other.texCoord && texIndex == other.texIndex;
+    }
+};
+
 // used by mesh class
 struct MeshData {
     std::vector<Vertex> vertices = {};

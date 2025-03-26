@@ -1,13 +1,15 @@
-#version 450 core
+#version 450
 
-layout (location = 0) in vec2 inUV;
+#extension GL_EXT_nonuniform_qualifier : require
 
-layout (binding = 0) uniform sampler2D samplerFont;
+layout(binding = 1) uniform sampler2D texSamplers[];
 
-layout (location = 0) out vec4 outFragColor;
+layout(location = 0) in vec2 inTexCoord;
+layout(location = 1) flat in int inTexIndex;
 
-void main(void)
-{
-	float color = texture(samplerFont, inUV).r;
-	outFragColor = vec4(color);
+layout(location = 0) out vec4 outColor;
+
+void main() {
+    float color = texture(texSamplers[nonuniformEXT(inTexIndex)], fragTexCoord).r;
+    outColor = vec4(color);
 }

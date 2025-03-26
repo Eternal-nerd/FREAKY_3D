@@ -71,7 +71,7 @@ void Gfx::init() {
     asset_thread.join();
     createDescriptorSets();
 
-    overlay_.init(device_, physicalDevice_, renderPass_, assets_);
+    overlay_.init(device_, physicalDevice_, renderPass_, swapChainExtent_, assets_);
 }
 
 void Gfx::startAssetPipeline() {
@@ -505,6 +505,7 @@ void Gfx::createSwapchain() {
     swapChainExtent_ = extent;
 
     // TODO update overlay extent
+    overlay_.updateExtent(extent);
 
     // IMAGE VIEWS ----------------------------=====<
     util::log(name_, "creating swapchain image views");

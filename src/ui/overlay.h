@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <string>
+#include <assert.h>
 
 #include "../util.h"
 #include "../types.h"
@@ -19,10 +20,17 @@ class for 2d rendering (GUI/debug text)
 */
 class Overlay {
 public:
-	void init(VkDevice device, VkPhysicalDevice physicalDevice, VkRenderPass renderpass, Assets& assets);
+	void init(VkDevice device, VkPhysicalDevice physicalDevice, VkRenderPass renderpass, VkExtent2D extent, Assets& assets);
+
+	// USED BY ENGINE:
+	void beginTextUpdate();
+	void addText(const std::string& text, float xPos, float yPos);
+	void endTextUpdate();
 
 	// draw entire vertex buffer
 	void draw(VkCommandBuffer commandBuffer);
+
+	void updateExtent(VkExtent2D extent);
 
 	void cleanup();
 
@@ -56,7 +64,7 @@ private:
 	void initPipeline();
 
 	// memory mapped vertex buffer
-	Vertex* mapped_ = nullptr;
+	UIVertex* mapped_ = nullptr;
 	
 	// ui elements
 	std::vector<Element> defaultElements_{};

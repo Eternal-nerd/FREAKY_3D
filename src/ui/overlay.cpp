@@ -3,12 +3,13 @@
 /*-----------------------------------------------------------------------------
 ------------------------------INITIALIZATION-----------------------------------
 -----------------------------------------------------------------------------*/
-void Overlay::init(VkDevice device, VkPhysicalDevice physicalDevice, VkRenderPass renderpass, Assets& assets) {
+void Overlay::init(VkDevice device, VkPhysicalDevice physicalDevice, VkRenderPass renderpass, VkExtent2D extent, Assets& assets) {
 	util::log(name_, "initializing overlay");
 
 	device_ = device;
 	physicalDevice_ = physicalDevice;
 	renderpass_ = renderpass;
+    swapChainExtent_ = extent;
 	assets_ = &assets;
 
     initTextures();
@@ -33,7 +34,7 @@ void Overlay::initDescriptors() {
     util::log(name_, "initializing overlay descriptors");
 
     // Vertex buffer --------------------------------------------=========<
-    VkDeviceSize bufferSize = MAX_OVERLAY_ELEMENTS * sizeof(Vertex);
+    VkDeviceSize bufferSize = MAX_OVERLAY_ELEMENTS * sizeof(UIVertex);
 
     util::log(name_, "creating overlay vertex buffer");
     util::createBuffer(bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
@@ -109,6 +110,218 @@ void Overlay::initDescriptors() {
 
 void Overlay::initPipeline() {
     util::log(name_, "initializing overlay pipeline");
+
+    util::log(name_, "loading overlay shaders");
+    auto vertShaderCode = util::readFile("../shaders/compiled/text_vert.spv");
+    auto fragShaderCode = util::readFile("../shaders/compiled/text_frag.spv");
+
+    VkShaderModule vertShaderModule = util::createShaderModule(vertShaderCode, device_);
+    VkShaderModule fragShaderModule = util::createShaderModule(fragShaderCode, device_);
+
+    VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
+    vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+    vertShaderStageInfo.module = vertShaderModule;
+    vertShaderStageInfo.pName = "main";
+
+    VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+    fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+    fragShaderStageInfo.module = fragShaderModule;
+    fragShaderStageInfo.pName = "main";
+
+    std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+    shaderStages.push_back(vertShaderStageInfo);
+    shaderStages.push_back(fragShaderStageInfo);
+
+    // Pipeline cache
+    VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
+    pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+    if (vkCreatePipelineCache(device_, &pipelineCacheCreateInfo, nullptr, &pipelineCache_) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create pipeline cache!");
+    }
+
+    // Layout
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipelineLayoutInfo.setLayoutCount = 1;
+    pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout_;
+
+    if (vkCreatePipelineLayout(device_, &pipelineLayoutInfo, nullptr, &pipelineLayout_) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create pipeline layout!");
+    }
+
+    // Enable blending, using alpha from red channel of the font texture (see text.frag)
+    VkPipelineColorBlendAttachmentState blendAttachmentState{};
+    blendAttachmentState.blendEnable = VK_TRUE;
+    blendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+    blendAttachmentState.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+    blendAttachmentState.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    blendAttachmentState.colorBlendOp = VK_BLEND_OP_ADD;
+    blendAttachmentState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    blendAttachmentState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+    blendAttachmentState.alphaBlendOp = VK_BLEND_OP_ADD;
+
+    VkPipelineInputAssemblyStateCreateInfo inputAssemblyState{};
+    inputAssemblyState.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+    inputAssemblyState.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST; // IMPORTANT!!!
+    inputAssemblyState.primitiveRestartEnable = VK_FALSE;
+
+    VkPipelineRasterizationStateCreateInfo rasterizationState{};
+    rasterizationState.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+    rasterizationState.depthClampEnable = VK_FALSE;
+    rasterizationState.rasterizerDiscardEnable = VK_FALSE;
+    rasterizationState.polygonMode = VK_POLYGON_MODE_FILL;
+    rasterizationState.lineWidth = 1.0f;
+    rasterizationState.cullMode = VK_CULL_MODE_BACK_BIT;
+    rasterizationState.frontFace = VK_FRONT_FACE_CLOCKWISE;
+    rasterizationState.depthBiasEnable = VK_FALSE;
+
+    VkPipelineColorBlendStateCreateInfo colorBlendState{};
+    colorBlendState.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    colorBlendState.logicOpEnable = VK_FALSE;
+    colorBlendState.logicOp = VK_LOGIC_OP_COPY;
+    colorBlendState.attachmentCount = 1;
+    colorBlendState.pAttachments = &blendAttachmentState;
+
+    VkPipelineDepthStencilStateCreateInfo depthStencilState{};
+    depthStencilState.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    depthStencilState.depthTestEnable = VK_FALSE;
+    depthStencilState.depthWriteEnable = VK_FALSE;
+    depthStencilState.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+    depthStencilState.depthBoundsTestEnable = VK_FALSE;
+    depthStencilState.stencilTestEnable = VK_FALSE;
+
+    VkPipelineViewportStateCreateInfo viewportState{};
+    viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+    viewportState.viewportCount = 1;
+    viewportState.scissorCount = 1;
+
+
+    VkPipelineMultisampleStateCreateInfo multisampleState{};
+    multisampleState.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+    multisampleState.sampleShadingEnable = VK_FALSE; // remove?
+    multisampleState.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+
+    std::vector<VkDynamicState> dynamicStateEnables = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+    VkPipelineDynamicStateCreateInfo dynamicState{};
+    dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+    dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStateEnables.size());
+    dynamicState.pDynamicStates = dynamicStateEnables.data();
+
+
+    VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+    vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    auto bindingDescription = UIVertex::getBindingDescription();
+    auto attributeDescriptions = UIVertex::getAttributeDescriptions();
+    vertexInputInfo.vertexBindingDescriptionCount = 1;
+    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+    vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+    vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+
+    VkGraphicsPipelineCreateInfo pipelineCreateInfo{};
+    pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    pipelineCreateInfo.layout = pipelineLayout_;
+    pipelineCreateInfo.renderPass = renderpass_;
+    pipelineCreateInfo.pVertexInputState = &vertexInputInfo;
+    pipelineCreateInfo.pInputAssemblyState = &inputAssemblyState;
+    pipelineCreateInfo.pRasterizationState = &rasterizationState;
+    pipelineCreateInfo.pColorBlendState = &colorBlendState;
+    pipelineCreateInfo.pMultisampleState = &multisampleState;
+    pipelineCreateInfo.pViewportState = &viewportState;
+    pipelineCreateInfo.pDepthStencilState = &depthStencilState;
+    pipelineCreateInfo.pDynamicState = &dynamicState;
+    pipelineCreateInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
+    pipelineCreateInfo.pStages = shaderStages.data();
+
+    if (vkCreateGraphicsPipelines(device_, pipelineCache_, 1, &pipelineCreateInfo, nullptr, &pipeline_) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create graphics pipeline!");
+    }
+
+    vkDestroyShaderModule(device_, fragShaderModule, nullptr);
+    vkDestroyShaderModule(device_, vertShaderModule, nullptr);
+
+}
+
+/*-----------------------------------------------------------------------------
+------------------------------UPDATE-SHIT--------------------------------------
+-----------------------------------------------------------------------------*/
+void Overlay::updateExtent(VkExtent2D extent) {
+    swapChainExtent_ = extent;
+}
+
+void Overlay::beginTextUpdate() {
+    if (vkMapMemory(device_, vertexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&mapped_) != VK_SUCCESS) {
+        throw std::runtime_error("failed to map memory for overlay text update! ");
+    }
+    //numLetters_ = 0;
+}
+
+// xPos & yPos --> -1.f - 1.f?
+void Overlay::addText(const std::string& text, float xPos, float yPos) {
+    assert(mapped_ != nullptr);
+
+    // calc. letter width/height
+    //const float charW = 25.f * scale / swapChainExtent_.width;
+    //const float charH = 50.f * scale / swapChainExtent_.height;
+
+    for (char letter : text) {
+
+        // vertex 1: top left
+        /*mapped->x = xPos; // position x
+        mapped->y = yPos; // position y
+        mapped->z = getXOffset(letter); // tex coord x
+        mapped->w = getYOffset(letter); // tex coord y
+        mapped++;
+
+        // vertex 2: top right 
+        mapped->x = xPos + charW;
+        mapped->y = yPos;
+        mapped->z = getXOffset(letter) + LETTER_OFFSET_X;
+        mapped->w = getYOffset(letter);
+        mapped++;
+
+        // vertex 3: bottom left
+        mapped->x = xPos;
+        mapped->y = yPos + charH;
+        mapped->z = getXOffset(letter);
+        mapped->w = getYOffset(letter) + LETTER_OFFSET_Y;
+        mapped++;
+
+        // vertex 4: bottom right
+        mapped->x = xPos + charW;
+        mapped->y = yPos + charH;
+        mapped->z = getXOffset(letter) + LETTER_OFFSET_X;
+        mapped->w = getYOffset(letter) + LETTER_OFFSET_Y;
+        mapped++;
+
+        xPos += charW;
+
+        numLetters_++;*/
+    }
+}
+
+// unmap buffer
+void Overlay::endTextUpdate() {
+    vkUnmapMemory(device_, vertexBufferMemory_);
+    mapped_ = nullptr;
+}
+
+/*-----------------------------------------------------------------------------
+------------------------------DRAW---------------------------------------------
+-----------------------------------------------------------------------------*/
+void Overlay::draw(VkCommandBuffer commandBuffer) {
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_);
+    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout_, 0, 1, &descriptorSet_, 0, NULL);
+
+    VkDeviceSize offsets = 0;
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer_, &offsets);
+    vkCmdBindVertexBuffers(commandBuffer, 1, 1, &vertexBuffer_, &offsets);
+    // One draw command for every character. This is okay for a debug overlay, but not optimal
+    // In a real-world application one would try to batch draw commands
+    //for (uint32_t j = 0; j < numLetters_; j++) {
+    //    vkCmdDraw(commandBuffer, 4, 1, j * 4, 0);
+    //}
 }
 
 /*-----------------------------------------------------------------------------
