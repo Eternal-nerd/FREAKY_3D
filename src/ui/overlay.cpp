@@ -252,7 +252,7 @@ void Overlay::updateExtent(VkExtent2D extent) {
 
 void Overlay::beginTextUpdate() {
     if (vkMapMemory(device_, vertexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&mapped_) != VK_SUCCESS) {
-        throw std::runtime_error("failed to map memory for overlay text update! ");
+        throw std::runtime_error("failed to map memory for overlay update ");
     }
     //numLetters_ = 0;
 }

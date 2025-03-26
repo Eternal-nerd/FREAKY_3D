@@ -72,6 +72,10 @@ void Gfx::init() {
     createDescriptorSets();
 
     overlay_.init(device_, physicalDevice_, renderPass_, swapChainExtent_, assets_);
+
+    // loading external stuff -----------------------------==================<
+    util::log(name_, "loading external vulkan function ptrs");
+    vkCmdSetPolygonModeEXT = reinterpret_cast<PFN_vkCmdSetPolygonModeEXT>(vkGetDeviceProcAddr(device_, "vkCmdSetPolygonModeEXT"));
 }
 
 void Gfx::startAssetPipeline() {
@@ -169,6 +173,10 @@ VkCommandBuffer Gfx::setupCommandBuffer() {
     scissor.extent = swapChainExtent_;
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
+    // Set polygon mode and line width
+    vkCmdSetLineWidth(commandBuffer, currentLineWidth_);
+    vkCmdSetPolygonModeEXT(commandBuffer, currentPolygonMode_);
+
     // TODO where does this next line go???
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout_, 0, 1, &descriptorSets_[currentFrame_], 0, nullptr);
 
@@ -254,7 +262,7 @@ void Gfx::createDevice() {
     appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.pEngineName = "No Engine";
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.apiVersion = VK_API_VERSION_1_0;
+    appInfo.apiVersion = VK_API_VERSION_1_3;
 
     VkInstanceCreateInfo instanceCreateInfo{};
     instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -346,7 +354,25 @@ void Gfx::createDevice() {
         queueCreateInfos.push_back(queueCreateInfo);
     }
 
-    VkPhysicalDeviceFeatures deviceFeatures{};
+    util::log(name_, "checking vulkan device features");
+    VkPhysicalDeviceExtendedDynamicState3FeaturesEXT dynamicState3Features = {};
+    dynamicState3Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_FEATURES_EXT;
+
+    VkPhysicalDeviceVulkan12Features vulkan12Features = {};
+    vulkan12Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+    vulkan12Features.pNext = &dynamicState3Features;
+
+    VkPhysicalDeviceFeatures2 physicalFeatures2 = {};
+    physicalFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+    physicalFeatures2.pNext = &vulkan12Features;
+
+    vkGetPhysicalDeviceFeatures2(physicalDevice_, &physicalFeatures2);
+
+    // Logic if feature is not supported
+    if (vulkan12Features.runtimeDescriptorArray && vulkan12Features.shaderSampledImageArrayNonUniformIndexing && dynamicState3Features.extendedDynamicState3PolygonMode == VK_FALSE) {
+        throw std::runtime_error("needed features not enabled on chosen device");
+    }
+
 
     VkDeviceCreateInfo deviceCreateInfo{};
     deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -354,7 +380,8 @@ void Gfx::createDevice() {
     deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
     deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
 
-    deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
+    deviceCreateInfo.pNext = &physicalFeatures2;
+    deviceCreateInfo.pEnabledFeatures = NULL;
 
     deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
     deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
@@ -600,33 +627,23 @@ void Gfx::cleanupSwapchain() {
 -----------------------------------------------------------------------------*/
 void Gfx::togglePolygonMode() {
     //enum polygonMode_ { VK_POLYGON_MODE_FILL , VK_POLYGON_MODE_LINE, VK_POLYGON_MODE_POINT};
-    switch (currentMode_) {
+    switch (currentPolygonMode_) {
     case VK_POLYGON_MODE_FILL:
-        recreatePipeline(VK_POLYGON_MODE_LINE);
+        currentPolygonMode_=VK_POLYGON_MODE_LINE;
+        util::log(name_, "switching to VK_POLYGON_MODE_LINE");
         break;
     case VK_POLYGON_MODE_LINE:
-        recreatePipeline(VK_POLYGON_MODE_POINT);
+        currentPolygonMode_=VK_POLYGON_MODE_POINT;
+        util::log(name_, "switching to VK_POLYGON_MODE_POINT");
         break;
     case VK_POLYGON_MODE_POINT:
-        recreatePipeline(VK_POLYGON_MODE_FILL);
+        currentPolygonMode_=VK_POLYGON_MODE_FILL;
+        util::log(name_, "switching to VK_POLYGON_MODE_FILL");
         break;
     }
 }
 
-void Gfx::recreatePipeline(VkPolygonMode mode) {
-    // CLEANUP SHIT THEN RECREATE???
-
-    util::log(name_, "destroying graphics pipeline (for recreation)");
-    vkDestroyPipeline(device_, graphicsPipeline_, nullptr);
-    util::log(name_, "destroying pipeline layout (for recreation)");
-    vkDestroyPipelineLayout(device_, pipelineLayout_, nullptr);
-
-    // RECREATE
-    createGraphicsPipeline(mode);
-
-}
-
-void Gfx::createGraphicsPipeline(VkPolygonMode mode) {
+void Gfx::createGraphicsPipeline() {
     util::log(name_, "creating graphics pipeline");
     // TODO MAYBE Move this to assets or separate shader management class? 
     auto vertShaderCode = util::readFile("../shaders/compiled/vert.spv");
@@ -672,9 +689,8 @@ void Gfx::createGraphicsPipeline(VkPolygonMode mode) {
     rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     rasterizer.depthClampEnable = VK_FALSE;
     rasterizer.rasterizerDiscardEnable = VK_FALSE;
-    rasterizer.polygonMode = mode;
-    currentMode_ = mode;
-    rasterizer.lineWidth = 2.0f;
+    //rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+    //rasterizer.lineWidth = 2.0f;
     rasterizer.cullMode = VK_CULL_MODE_BACK_BIT; // _NONE;
     rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_FALSE;
@@ -709,7 +725,7 @@ void Gfx::createGraphicsPipeline(VkPolygonMode mode) {
     colorBlending.blendConstants[2] = 0.0f;
     colorBlending.blendConstants[3] = 0.0f;
 
-    std::vector<VkDynamicState> dynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+    std::vector<VkDynamicState> dynamicStates = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR, VK_DYNAMIC_STATE_LINE_WIDTH, VK_DYNAMIC_STATE_POLYGON_MODE_EXT };
     VkPipelineDynamicStateCreateInfo dynamicState{};
     dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
     dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
@@ -777,8 +793,7 @@ void Gfx::createDescriptorSetLayout(int textureCount) {
     layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
     layoutInfo.pBindings = bindings.data();
 
-    if (vkCreateDescriptorSetLayout(device_, &layoutInfo, nullptr,
-        &descriptorSetLayout_) != VK_SUCCESS) {
+    if (vkCreateDescriptorSetLayout(device_, &layoutInfo, nullptr, &descriptorSetLayout_) != VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor set layout!");
     }
 }

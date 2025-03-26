@@ -21,7 +21,7 @@ const uint32_t WIDTH = 1600;
 const uint32_t HEIGHT = 800;
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
-const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_EXT_EXTENDED_DYNAMIC_STATE_3_EXTENSION_NAME, VK_EXT_SHADER_OBJECT_EXTENSION_NAME };
 
 const std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
 
@@ -104,9 +104,11 @@ private:
 	VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
 	VkPipeline graphicsPipeline_ = VK_NULL_HANDLE;
 	void createDescriptorSetLayout(int textureCount);
-	void createGraphicsPipeline(VkPolygonMode mode = VK_POLYGON_MODE_FILL);
-	void recreatePipeline(VkPolygonMode mode);
-	VkPolygonMode currentMode_;
+	void createGraphicsPipeline();
+	VkPolygonMode currentPolygonMode_ = VK_POLYGON_MODE_FILL;
+	float currentLineWidth_ = 1.f;
+
+
 
 	// Vulkan synchronization ------------------------===<
 	std::vector<VkSemaphore> imageAvailableSemaphores_;
@@ -129,4 +131,8 @@ private:
 	// OVERLAY -----------------------------------------======<
 	Overlay overlay_;
 	
+
+
+	// EXTERNAL Vulka API function ptrs
+	PFN_vkCmdSetPolygonModeEXT vkCmdSetPolygonModeEXT{ VK_NULL_HANDLE };
 };

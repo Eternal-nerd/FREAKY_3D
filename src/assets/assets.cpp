@@ -39,7 +39,7 @@ void Assets::enumerateFiles() {
 }
 
 int Assets::getTextureCount() {
-	return textureFilenames_.size();
+	return static_cast<int>(textureFilenames_.size());
 }
 
 void Assets::init(const GfxAccess access) {
