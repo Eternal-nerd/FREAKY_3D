@@ -31,10 +31,10 @@ void Overlay::initTextures() {
 
 void Overlay::initDescriptors() {
     util::log(name_, "initializing overlay descriptors");
-    
+
     // Vertex buffer --------------------------------------------=========<
     VkDeviceSize bufferSize = MAX_OVERLAY_ELEMENTS * sizeof(Vertex);
-    
+
     util::log(name_, "creating overlay vertex buffer");
     util::createBuffer(bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
@@ -74,7 +74,7 @@ void Overlay::initDescriptors() {
     if (vkCreateDescriptorSetLayout(device_, &layoutInfo, nullptr, &descriptorSetLayout_) != VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor set layout!");
     }
- 
+
     // Descriptor set ---------------------------------------=============<
     util::log(name_, "creating overlay descriptor set");
     VkDescriptorSetAllocateInfo allocInfo{};
@@ -88,23 +88,23 @@ void Overlay::initDescriptors() {
     }
 
 
-    // TODO
-    // Descriptor for the font image
-    /*VkDescriptorImageInfo textureDescriptor;
-    textureDescriptor.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    textureDescriptor.imageView = fontTexture_.getTextureImageView();
-    textureDescriptor.sampler = fontTexture_.getTextureSampler();
+    // Descriptors for the font images -------------------------=====<
+    std::vector<VkDescriptorImageInfo> textureDescriptors(textureCount_);
+    for (int i = 0; i < textureCount_; i++) {
+        textureDescriptors[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        textureDescriptors[i].imageView = textures_[i]->getTextureImageView();
+        textureDescriptors[i].sampler = textures_[i]->getTextureSampler();
+    }
 
     std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
     descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     descriptorWrites[0].dstSet = descriptorSet_;
     descriptorWrites[0].dstBinding = 0;
     descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    descriptorWrites[0].descriptorCount = 1;
-    descriptorWrites[0].pImageInfo = &textureDescriptor;
+    descriptorWrites[0].descriptorCount = static_cast<uint32_t>(textureCount_);
+    descriptorWrites[0].pImageInfo = textureDescriptors.data();
 
-    vkUpdateDescriptorSets(access_.dvcePtr->getLogical(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-    */
+    vkUpdateDescriptorSets(device_, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 }
 
 void Overlay::initPipeline() {
