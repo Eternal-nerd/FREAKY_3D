@@ -946,6 +946,17 @@ void Gfx::createUniformBuffers() {
         vkMapMemory(device_, uniformBuffersMemory_[i], 0, bufferSize, 0, &uniformBuffersMapped_[i]);
     }
 }
+/*-----------------------------------------------------------------------------
+-----------------------------OVERLAY-------------------------------------------
+-----------------------------------------------------------------------------*/
+void Gfx::updateOverlay() {
+    overlay_.tester();
+}
+
+
+void Gfx::drawOverlay(VkCommandBuffer commandBuffer) {
+    overlay_.draw(commandBuffer);
+}
 
 /*-----------------------------------------------------------------------------
 ------------------------------CLEANUP------------------------------------------

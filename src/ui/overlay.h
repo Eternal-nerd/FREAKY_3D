@@ -12,7 +12,7 @@
 #include "../assets/texture.h"
 #include "element.h"
 
-// Max. number of chars the text overlay buffer can hold
+// Max. number of elements the text overlay buffer can hold
 #define MAX_OVERLAY_ELEMENTS 2048
 
 /*
@@ -26,6 +26,9 @@ public:
 	void beginTextUpdate();
 	void addText(const std::string& text, float xPos, float yPos);
 	void endTextUpdate();
+
+	// FIXME
+	void tester();
 
 	// draw entire vertex buffer
 	void draw(VkCommandBuffer commandBuffer);

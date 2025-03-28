@@ -10,6 +10,8 @@ layout(location = 1) flat in int inTexIndex;
 layout(location = 0) out vec4 outColor;
 
 void main() {
-    float color = texture(texSamplers[nonuniformEXT(inTexIndex)], inTexCoord).r;
-    outColor = vec4(color);
+    outColor = texture(texSamplers[nonuniformEXT(inTexIndex)], inTexCoord);
+    if (outColor.w < 0.8) {
+        discard;
+    }
 }

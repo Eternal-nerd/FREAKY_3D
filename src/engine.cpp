@@ -61,6 +61,7 @@ void Engine::loop() {
         if (visible_) {
             camera_.update(gfx_.getAspect());
             updateUBO();
+            gfx_.updateOverlay();
             // RENDER stuff
             renderScene();
         }
@@ -109,6 +110,7 @@ void Engine::renderScene() {
     }
 
     // draw text
+    gfx_.drawOverlay(commandBuffer);
 
     gfx_.submitCommandBuffer(commandBuffer);
 

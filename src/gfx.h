@@ -42,6 +42,10 @@ public:
 	float getAspect();
 	Assets& getAssets();
 
+	// overlay
+	void updateOverlay();
+	void drawOverlay(VkCommandBuffer commandBuffer);
+
     // command buffers
 	VkCommandBuffer setupCommandBuffer();
     void submitCommandBuffer(VkCommandBuffer commandBuffer);

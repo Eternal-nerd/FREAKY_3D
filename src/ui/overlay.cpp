@@ -164,7 +164,7 @@ void Overlay::initPipeline() {
 
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyState{};
     inputAssemblyState.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-    inputAssemblyState.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST; // IMPORTANT!!!
+    inputAssemblyState.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP; // IMPORTANT!!!
     inputAssemblyState.primitiveRestartEnable = VK_FALSE;
 
     VkPipelineRasterizationStateCreateInfo rasterizationState{};
@@ -174,7 +174,7 @@ void Overlay::initPipeline() {
     rasterizationState.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizationState.lineWidth = 1.0f;
     rasterizationState.cullMode = VK_CULL_MODE_BACK_BIT;
-    rasterizationState.frontFace = VK_FRONT_FACE_CLOCKWISE;
+    rasterizationState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     rasterizationState.depthBiasEnable = VK_FALSE;
 
     VkPipelineColorBlendStateCreateInfo colorBlendState{};
@@ -250,6 +250,61 @@ void Overlay::updateExtent(VkExtent2D extent) {
     swapChainExtent_ = extent;
 }
 
+void Overlay::tester() {
+    if (vkMapMemory(device_, vertexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&mapped_) != VK_SUCCESS) {
+        throw std::runtime_error("failed to map memory for overlay update ");
+    }
+
+    assert(mapped_ != nullptr);
+
+    // test txtr index
+    int index = textures_[1]->getIndex();
+    
+    // add element quads to vertex buffer memory
+    std::vector<UIVertex> vertices = {
+        { {-0.5f, -0.5f}, {0.f, 0.f}, index},
+        { {-0.5f, 0.5f}, {0.f, 1.f}, index},
+        { {0.5f, -0.5f}, {1.f, 0.f}, index},
+        { {0.5f, 0.5f}, {1.f, 1.f}, index},
+    };
+
+    // vertex 1: top left
+    mapped_->pos.x = vertices[0].pos.x; // position x
+    mapped_->pos.y = vertices[0].pos.y; // position y
+    mapped_->texCoord.x = vertices[0].texCoord.x; // tex coord x
+    mapped_->texCoord.y = vertices[0].texCoord.y; // tex coord y
+    mapped_->texIndex = vertices[0].texIndex; // tex index
+    mapped_++;
+
+    // vertex 2: top right
+    mapped_->pos.x = vertices[1].pos.x; // position x
+    mapped_->pos.y = vertices[1].pos.y; // position y
+    mapped_->texCoord.x = vertices[1].texCoord.x; // tex coord x
+    mapped_->texCoord.y = vertices[1].texCoord.y; // tex coord y
+    mapped_->texIndex = vertices[1].texIndex; // tex index
+    mapped_++;
+
+    // vertex 3: bottom left
+    mapped_->pos.x = vertices[2].pos.x; // position x
+    mapped_->pos.y = vertices[2].pos.y; // position y
+    mapped_->texCoord.x = vertices[2].texCoord.x; // tex coord x
+    mapped_->texCoord.y = vertices[2].texCoord.y; // tex coord y
+    mapped_->texIndex = vertices[2].texIndex; // tex index
+    mapped_++;
+
+    // vertex 4: bottom right
+    mapped_->pos.x = vertices[3].pos.x; // position x
+    mapped_->pos.y = vertices[3].pos.y; // position y
+    mapped_->texCoord.x = vertices[3].texCoord.x; // tex coord x
+    mapped_->texCoord.y = vertices[3].texCoord.y; // tex coord y
+    mapped_->texIndex = vertices[3].texIndex; // tex index
+    mapped_++;
+
+
+    vkUnmapMemory(device_, vertexBufferMemory_);
+    mapped_ = nullptr;
+}
+
 void Overlay::beginTextUpdate() {
     if (vkMapMemory(device_, vertexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&mapped_) != VK_SUCCESS) {
         throw std::runtime_error("failed to map memory for overlay update ");
@@ -316,7 +371,12 @@ void Overlay::draw(VkCommandBuffer commandBuffer) {
 
     VkDeviceSize offsets = 0;
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer_, &offsets);
-    vkCmdBindVertexBuffers(commandBuffer, 1, 1, &vertexBuffer_, &offsets);
+
+    vkCmdDraw(commandBuffer, 4, 1, 0, 0);
+
+    //VkDeviceSize offsets = 0;
+    //vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer_, &offsets);
+    //vkCmdBindVertexBuffers(commandBuffer, 1, 1, &vertexBuffer_, &offsets);
     // One draw command for every character. This is okay for a debug overlay, but not optimal
     // In a real-world application one would try to batch draw commands
     //for (uint32_t j = 0; j < numLetters_; j++) {
