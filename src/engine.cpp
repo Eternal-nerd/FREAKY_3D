@@ -140,11 +140,13 @@ void Engine::handleEvents() {
             // MINIMIZE/MAXIMIZE EVENTS
         case SDL_EVENT_WINDOW_HIDDEN:
         case SDL_EVENT_WINDOW_MINIMIZED:
+            util::log(name_, "window no longer visible");
             visible_ = false;
             break;
         case SDL_EVENT_WINDOW_SHOWN:
         case SDL_EVENT_WINDOW_MAXIMIZED:
         case SDL_EVENT_WINDOW_RESTORED:
+            util::log(name_, "window is now visible");
             visible_ = true;
             break;
         default: break;
@@ -202,7 +204,8 @@ void Engine::handleMouseEvent() {
 
 void Engine::handleKeyEvent() {
     if (keys_.esc) { togglePause(); }
-    if (keys_.p) { gfx_.togglePolygonMode(); }
+    if (keys_.p && !keys_.shift) { gfx_.togglePolygonMode(); }
+    if (keys_.p && keys_.shift) { gfx_.toggleOverlayWireframe(); }
 
     // TODO add physics sim that is synced with program time so that 
     // I can just update the camera's body's velocity here

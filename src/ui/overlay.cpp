@@ -15,6 +15,13 @@ void Overlay::init(VkDevice device, VkPhysicalDevice physicalDevice, VkRenderPas
     initTextures();
     initDescriptors();
     initPipeline();
+
+    generateElements();
+
+    wireframeIndex_ = assets_->getTextureIndex("green");
+
+    // loading external stuff -----------------------------==================<
+    vkCmdSetPolygonModeEXT = reinterpret_cast<PFN_vkCmdSetPolygonModeEXT>(vkGetDeviceProcAddr(device_, "vkCmdSetPolygonModeEXT"));
 }
 
 void Overlay::initTextures() {
@@ -23,6 +30,8 @@ void Overlay::initTextures() {
     textureCount_=0;
 
     // choose textures for font/ui
+    textures_.push_back(&assets_->getTexture("green"));
+    textureCount_++;
     textures_.push_back(&assets_->getTexture("font"));
     textureCount_++;
     textures_.push_back(&assets_->getTexture("set"));
@@ -171,7 +180,7 @@ void Overlay::initPipeline() {
     rasterizationState.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     rasterizationState.depthClampEnable = VK_FALSE;
     rasterizationState.rasterizerDiscardEnable = VK_FALSE;
-    rasterizationState.polygonMode = VK_POLYGON_MODE_FILL;
+    //rasterizationState.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizationState.lineWidth = 1.0f;
     rasterizationState.cullMode = VK_CULL_MODE_BACK_BIT;
     rasterizationState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
@@ -203,7 +212,7 @@ void Overlay::initPipeline() {
     multisampleState.sampleShadingEnable = VK_FALSE; // remove?
     multisampleState.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
-    std::vector<VkDynamicState> dynamicStateEnables = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+    std::vector<VkDynamicState> dynamicStateEnables = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR, VK_DYNAMIC_STATE_POLYGON_MODE_EXT };
     VkPipelineDynamicStateCreateInfo dynamicState{};
     dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
     dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStateEnables.size());
@@ -243,11 +252,43 @@ void Overlay::initPipeline() {
 
 }
 
+void Overlay::generateElements() {
+    util::log(name_, "generating overlay elements");
+
+    // default elements
+    Element e1;
+    int crosshairIndex = assets_->getTextureIndex("set");
+    std::vector<UIVertex> crosshairVertices = {
+        { {-0.05f, -0.05f}, {0.f, 0.f}, crosshairIndex},
+        { {-0.05f, 0.05f}, {0.f, 1.f}, crosshairIndex},
+        { {0.05f, -0.05f}, {1.f, 0.f}, crosshairIndex},
+        { {0.05f, 0.05f}, {1.f, 1.f}, crosshairIndex},
+    };
+    e1.init(crosshairVertices, 1.f);
+    defaultElements_.push_back(e1);
+
+
+
+}
+
 /*-----------------------------------------------------------------------------
 ------------------------------UPDATE-SHIT--------------------------------------
 -----------------------------------------------------------------------------*/
 void Overlay::updateExtent(VkExtent2D extent) {
     swapChainExtent_ = extent;
+
+    // re-scale all elements here?
+}
+
+void Overlay::toggleWireframe() {
+    if (currentPolygonMode_ == VK_POLYGON_MODE_FILL) {
+        currentPolygonMode_ = VK_POLYGON_MODE_LINE;
+        util::log(name_, "switching overlay to VK_POLYGON_MODE_LINE");
+    }
+    else {
+        currentPolygonMode_ = VK_POLYGON_MODE_FILL;
+        util::log(name_, "switching overlay to VK_POLYGON_MODE_FILL");
+    }
 }
 
 void Overlay::tester() {
@@ -257,48 +298,15 @@ void Overlay::tester() {
 
     assert(mapped_ != nullptr);
 
-    // test txtr index
-    int index = textures_[1]->getIndex();
-    
-    // add element quads to vertex buffer memory
-    std::vector<UIVertex> vertices = {
-        { {-0.5f, -0.5f}, {0.f, 0.f}, index},
-        { {-0.5f, 0.5f}, {0.f, 1.f}, index},
-        { {0.5f, -0.5f}, {1.f, 0.f}, index},
-        { {0.5f, 0.5f}, {1.f, 1.f}, index},
-    };
-
-    // vertex 1: top left
-    mapped_->pos.x = vertices[0].pos.x; // position x
-    mapped_->pos.y = vertices[0].pos.y; // position y
-    mapped_->texCoord.x = vertices[0].texCoord.x; // tex coord x
-    mapped_->texCoord.y = vertices[0].texCoord.y; // tex coord y
-    mapped_->texIndex = vertices[0].texIndex; // tex index
-    mapped_++;
-
-    // vertex 2: top right
-    mapped_->pos.x = vertices[1].pos.x; // position x
-    mapped_->pos.y = vertices[1].pos.y; // position y
-    mapped_->texCoord.x = vertices[1].texCoord.x; // tex coord x
-    mapped_->texCoord.y = vertices[1].texCoord.y; // tex coord y
-    mapped_->texIndex = vertices[1].texIndex; // tex index
-    mapped_++;
-
-    // vertex 3: bottom left
-    mapped_->pos.x = vertices[2].pos.x; // position x
-    mapped_->pos.y = vertices[2].pos.y; // position y
-    mapped_->texCoord.x = vertices[2].texCoord.x; // tex coord x
-    mapped_->texCoord.y = vertices[2].texCoord.y; // tex coord y
-    mapped_->texIndex = vertices[2].texIndex; // tex index
-    mapped_++;
-
-    // vertex 4: bottom right
-    mapped_->pos.x = vertices[3].pos.x; // position x
-    mapped_->pos.y = vertices[3].pos.y; // position y
-    mapped_->texCoord.x = vertices[3].texCoord.x; // tex coord x
-    mapped_->texCoord.y = vertices[3].texCoord.y; // tex coord y
-    mapped_->texIndex = vertices[3].texIndex; // tex index
-    mapped_++;
+    // just default elements for now
+    for (auto e : defaultElements_) {
+        if (currentPolygonMode_ == VK_POLYGON_MODE_LINE) {
+            e.map(mapped_, wireframeIndex_);
+        }
+        else {
+            e.map(mapped_);
+        }
+    }
 
 
     vkUnmapMemory(device_, vertexBufferMemory_);
@@ -367,6 +375,10 @@ void Overlay::endTextUpdate() {
 -----------------------------------------------------------------------------*/
 void Overlay::draw(VkCommandBuffer commandBuffer) {
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_);
+
+    // Set polygon mode and line width
+    vkCmdSetPolygonModeEXT(commandBuffer, currentPolygonMode_);
+
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout_, 0, 1, &descriptorSet_, 0, NULL);
 
     VkDeviceSize offsets = 0;

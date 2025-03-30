@@ -34,6 +34,7 @@ public:
 	void draw(VkCommandBuffer commandBuffer);
 
 	void updateExtent(VkExtent2D extent);
+	void toggleWireframe();
 
 	void cleanup();
 
@@ -63,6 +64,8 @@ private:
 	VkPipelineLayout pipelineLayout_;
 	VkPipelineCache pipelineCache_;
 	VkPipeline pipeline_;
+	VkPolygonMode currentPolygonMode_ = VK_POLYGON_MODE_FILL;
+	int wireframeIndex_ = -1;
 	void initDescriptors();
 	void initPipeline();
 
@@ -74,7 +77,11 @@ private:
 	std::vector<Element> statElements_{};
 	std::vector<Element> menuElements_{};
 	std::vector<Element> inventoryElements_{};
+	void generateElements();
 
 
+
+	// EXTERNAL Vulka API function ptrs
+	PFN_vkCmdSetPolygonModeEXT vkCmdSetPolygonModeEXT{ VK_NULL_HANDLE };
 
 };

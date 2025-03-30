@@ -24,6 +24,7 @@ public:
 
 	// HELPERs
 	Texture& getTexture(const std::string name);
+	int getTextureIndex(const std::string name);
 	Mesh& getMesh(const std::string name);
 
 	void playSound(int soundIndex);

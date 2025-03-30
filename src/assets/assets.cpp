@@ -163,6 +163,17 @@ Texture& Assets::getTexture(const std::string name) {
 	throw std::runtime_error("failed to find texture: " + name);
 }
 
+int Assets::getTextureIndex(const std::string name) {
+	util::log(name_, "searching for texture: " + name);
+
+	for (int i = 0; i < textureNames_.size(); i++) {
+		if (textureNames_[i] == name) {
+			return i;
+		}
+	}
+	throw std::runtime_error("failed to find texture: " + name);
+}
+
 Mesh& Assets::getMesh(const std::string name) {
 	util::log(name_, "searching for mesh: " + name);
 

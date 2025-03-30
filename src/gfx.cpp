@@ -74,7 +74,6 @@ void Gfx::init() {
     overlay_.init(device_, physicalDevice_, renderPass_, swapChainExtent_, assets_);
 
     // loading external stuff -----------------------------==================<
-    util::log(name_, "loading external vulkan function ptrs");
     vkCmdSetPolygonModeEXT = reinterpret_cast<PFN_vkCmdSetPolygonModeEXT>(vkGetDeviceProcAddr(device_, "vkCmdSetPolygonModeEXT"));
 }
 
@@ -100,6 +99,9 @@ void Gfx::toggleMouseMode(bool paused) {
     }
 }
 
+void Gfx::toggleOverlayWireframe() {
+    overlay_.toggleWireframe();
+}
 
 /*-----------------------------------------------------------------------------
 ------------------------------SYNC-MAPPING-------------------------------------
