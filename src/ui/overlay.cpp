@@ -270,7 +270,7 @@ void Overlay::generateElements() {
 
     e1.init(crosshairVertices, scale1);
 
-    defaultElements_.push_back(e1);
+    elements_.push_back(e1);
 
 
 
@@ -283,6 +283,8 @@ void Overlay::updateExtent(VkExtent2D extent) {
     swapChainExtent_ = extent;
 
     // re-scale all elements here?
+
+
 }
 
 void Overlay::toggleWireframe() {
@@ -303,8 +305,8 @@ void Overlay::tester() {
 
     assert(mapped_ != nullptr);
 
-    // just default elements for now
-    for (auto e : defaultElements_) {
+    // for each element
+    for (auto e : elements_) {
         if (currentPolygonMode_ == VK_POLYGON_MODE_LINE) {
             e.map(mapped_, wireframeIndex_);
         }

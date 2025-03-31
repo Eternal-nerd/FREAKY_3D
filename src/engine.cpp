@@ -254,6 +254,12 @@ void Engine::generateWorld() {
     e2.scale(1000.f, 1000.f, 1000.f);
     entities_.push_back(e2);
 
+    Entity e3;
+    e3.init(2, assets_->getTexture("grass"), assets_->getMesh("house"));
+    e3.setPosition(-2, 1, -5);
+    //e2.scale(1000.f, 1000.f, 1000.f);
+    entities_.push_back(e3);
+
 }
 
 /*-----------------------------------------------------------------------------

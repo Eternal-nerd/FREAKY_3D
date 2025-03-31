@@ -14,6 +14,7 @@
 
 // Max. number of elements the text overlay buffer can hold
 #define MAX_OVERLAY_ELEMENTS 2048
+// FIXME make sure this is being used properly to set buffer size
 
 /*
 class for 2d rendering (GUI/debug text)
@@ -73,10 +74,7 @@ private:
 	UIVertex* mapped_ = nullptr;
 	
 	// ui elements
-	std::vector<Element> defaultElements_{};
-	std::vector<Element> statElements_{};
-	std::vector<Element> menuElements_{};
-	std::vector<Element> inventoryElements_{};
+	std::vector<Element> elements_{};
 	void generateElements();
 
 
