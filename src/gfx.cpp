@@ -600,6 +600,12 @@ void Gfx::recreateSwapchain() {
     vkDeviceWaitIdle(device_);
     cleanupSwapchain();
     createSwapchain();
+    util::log(name_, "new extent: [" 
+        + std::to_string(swapChainExtent_.width)
+        + ", "
+        + std::to_string(swapChainExtent_.height)
+        + "]"
+    );
 }
 
 void Gfx::cleanupSwapchain() {

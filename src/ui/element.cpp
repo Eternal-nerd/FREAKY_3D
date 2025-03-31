@@ -1,6 +1,6 @@
 #include "element.h"
 
-void Element::init(const std::vector<UIVertex>& vertices, float scale) {
+void Element::init(const std::vector<UIVertex>& vertices, glm::vec2 scale) {
 	util::log(name_, "initializing ui element");
 	
 	if (vertices.size() < 1) {
@@ -36,7 +36,7 @@ void Element::updateTextureIndex(int index) {
 
 }
 
-void Element::scale(float factor) {
+void Element::scale(glm::vec2 factor) {
 	scale_ = factor;
 }
 

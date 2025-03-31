@@ -264,7 +264,12 @@ void Overlay::generateElements() {
         { {0.05f, -0.05f}, {1.f, 0.f}, crosshairIndex},
         { {0.05f, 0.05f}, {1.f, 1.f}, crosshairIndex},
     };
-    e1.init(crosshairVertices, 1.f);
+
+    // get scale from swapchain extent
+    glm::vec2 scale1 = {swapChainExtent_.width, swapChainExtent_.height};
+
+    e1.init(crosshairVertices, scale1);
+
     defaultElements_.push_back(e1);
 
 
