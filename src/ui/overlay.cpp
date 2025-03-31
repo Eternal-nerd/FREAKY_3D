@@ -20,6 +20,8 @@ void Overlay::init(VkDevice device, VkPhysicalDevice physicalDevice, VkRenderPas
 
     wireframeIndex_ = assets_->getTextureIndex("green");
 
+    scale_ = 1.f;
+
     // loading external stuff -----------------------------==================<
     vkCmdSetPolygonModeEXT = reinterpret_cast<PFN_vkCmdSetPolygonModeEXT>(vkGetDeviceProcAddr(device_, "vkCmdSetPolygonModeEXT"));
 }
@@ -43,7 +45,7 @@ void Overlay::initDescriptors() {
     util::log(name_, "initializing overlay descriptors");
 
     // Vertex buffer --------------------------------------------=========<
-    VkDeviceSize bufferSize = MAX_OVERLAY_ELEMENTS * sizeof(UIVertex);
+    VkDeviceSize bufferSize = MAX_OVERLAY_ELEMENTS * sizeof(UIVertex) * 4;
 
     util::log(name_, "creating overlay vertex buffer");
     util::createBuffer(bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
@@ -255,20 +257,11 @@ void Overlay::initPipeline() {
 void Overlay::generateElements() {
     util::log(name_, "generating overlay elements");
 
+    glm::vec2 extent = { swapChainExtent_.width, swapChainExtent_.height };
+
     // default elements
     Element e1;
-    int crosshairIndex = assets_->getTextureIndex("set");
-    std::vector<UIVertex> crosshairVertices = {
-        { {-0.05f, -0.05f}, {0.f, 0.f}, crosshairIndex},
-        { {-0.05f, 0.05f}, {0.f, 1.f}, crosshairIndex},
-        { {0.05f, -0.05f}, {1.f, 0.f}, crosshairIndex},
-        { {0.05f, 0.05f}, {1.f, 1.f}, crosshairIndex},
-    };
-
-    // get scale from swapchain extent
-    glm::vec2 scale1 = {swapChainExtent_.width, swapChainExtent_.height};
-
-    e1.init(crosshairVertices, scale1);
+    e1.init({ 0,0 }, { 60, 60 }, extent, { 0, 0, 1, 1 }, assets_->getTextureIndex("set"));
 
     elements_.push_back(e1);
 
@@ -282,9 +275,10 @@ void Overlay::generateElements() {
 void Overlay::updateExtent(VkExtent2D extent) {
     swapChainExtent_ = extent;
 
-    // re-scale all elements here?
-
-
+    // rescale elements
+    for (int i = 0; i < elements_.size(); i++) {
+        elements_[i].scale(swapChainExtent_.width, swapChainExtent_.height);
+    }
 }
 
 void Overlay::toggleWireframe() {
@@ -306,15 +300,14 @@ void Overlay::tester() {
     assert(mapped_ != nullptr);
 
     // for each element
-    for (auto e : elements_) {
+    for (int i = 0; i < elements_.size(); i++) {
         if (currentPolygonMode_ == VK_POLYGON_MODE_LINE) {
-            e.map(mapped_, wireframeIndex_);
+            elements_[i].map(mapped_, wireframeIndex_);
         }
         else {
-            e.map(mapped_);
+            elements_[i].map(mapped_);
         }
     }
-
 
     vkUnmapMemory(device_, vertexBufferMemory_);
     mapped_ = nullptr;

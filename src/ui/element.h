@@ -12,23 +12,23 @@ class to contain details about one individual ui element to be rendered by the o
 */
 class Element {
 public:
-	void init(const std::vector<UIVertex>& vertices, glm::vec2 scale);
+	// position = {x=xPos, y=yPos}
+	// size = { widthPixels, heightPixels, screenWidth, screenHeight }
+	// textureCoord = {x=xPos, y=yPos, z=xOffset, w=yOffset}
+	void init(glm::vec2 position, glm::vec2 size, glm::vec2 extent, glm::vec4 textureCoord, int texIndex);
 
-	void map(UIVertex* mapped, int overrideIndex=-1);
+	void map(UIVertex* mapped, int overrideIndex = -1);
 
 	void updateTextureIndex(int index);
 
-	void scale(glm::vec2 factor);
+	void scale(int screenWidth, int screenHeight);
 
 	const std::string name_ = "ELEMENT";
 
 private:
-	int vertexCount_ = 0;
-	std::vector<UIVertex> vertices_ = {};
-	
-	int texIndex_ = 0;
-	glm::vec2 scale_ = { 0.f, 0.f };
+	glm::vec2 position_ = { 0.f,0.f };
+	glm::vec2 size_ = { 0.f, 0.f };
 
-	glm::vec2 position_ = {0.f, 0.f};
+	std::vector<UIVertex> vertices_ = {};
 
 };

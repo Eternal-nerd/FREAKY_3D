@@ -42,6 +42,8 @@ public:
 	const std::string name_ = "OVERLAY";
 
 private:
+	float scale_ = 1.f;
+
 	// access to vulkan
 	VkPhysicalDevice physicalDevice_ = VK_NULL_HANDLE;
 	VkDevice device_ = VK_NULL_HANDLE;
