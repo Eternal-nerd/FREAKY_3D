@@ -260,10 +260,7 @@ void Overlay::generateElements() {
     // default elements
     Element e1;
     e1.init({ 0,0 }, { 400, 200 }, extent, { 0, 0, 1, 1 }, assets_->getTextureIndex("pause"));
-
-    elements_.push_back(e1);
-
-
+    menuElements_.push_back(e1);
 
 }
 
@@ -274,8 +271,12 @@ void Overlay::updateExtent(VkExtent2D extent) {
     swapChainExtent_ = extent;
 
     // rescale elements
-    for (int i = 0; i < elements_.size(); i++) {
-        elements_[i].scale(swapChainExtent_.width, swapChainExtent_.height);
+    for (int i = 0; i < defaultElements_.size(); i++) {
+        defaultElements_[i].scale(swapChainExtent_.width, swapChainExtent_.height);
+    }
+
+    for (int i = 0; i < menuElements_.size(); i++) {
+        menuElements_[i].scale(swapChainExtent_.width, swapChainExtent_.height);
     }
 }
 
@@ -290,6 +291,13 @@ void Overlay::toggleWireframe() {
     }
 }
 
+void Overlay::toggleMenu() {
+    util::log(name_, "toggling menu overlay");
+    vertexCount_ += (menuShown_) ? -4 : 4;
+    menuShown_ = !menuShown_;
+    util::log("vertex count", std::to_string(vertexCount_));
+}
+
 void Overlay::tester() {
     if (vkMapMemory(device_, vertexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&mapped_) != VK_SUCCESS) {
         throw std::runtime_error("failed to map memory for overlay update ");
@@ -297,73 +305,20 @@ void Overlay::tester() {
 
     assert(mapped_ != nullptr);
 
-    // for each element
-    for (int i = 0; i < elements_.size(); i++) {
-        if (currentPolygonMode_ == VK_POLYGON_MODE_LINE) {
-            elements_[i].map(mapped_, wireframeIndex_);
+    int wired = (currentPolygonMode_ == VK_POLYGON_MODE_LINE) ? wireframeIndex_ : -1;
+
+    // default elements
+    for (int i = 0; i < defaultElements_.size(); i++) {
+        defaultElements_[i].map(mapped_, wired);
+    }
+
+    // menu elements
+    if (menuShown_) {
+        for (int i = 0; i < menuElements_.size(); i++) {
+            menuElements_[i].map(mapped_, wired);
         }
-        else {
-            elements_[i].map(mapped_);
-        }
     }
 
-    vkUnmapMemory(device_, vertexBufferMemory_);
-    mapped_ = nullptr;
-}
-
-void Overlay::beginTextUpdate() {
-    if (vkMapMemory(device_, vertexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&mapped_) != VK_SUCCESS) {
-        throw std::runtime_error("failed to map memory for overlay update ");
-    }
-    //numLetters_ = 0;
-}
-
-// xPos & yPos --> -1.f - 1.f?
-void Overlay::addText(const std::string& text, float xPos, float yPos) {
-    assert(mapped_ != nullptr);
-
-    // calc. letter width/height
-    //const float charW = 25.f * scale / swapChainExtent_.width;
-    //const float charH = 50.f * scale / swapChainExtent_.height;
-
-    for (char letter : text) {
-
-        // vertex 1: top left
-        /*mapped->x = xPos; // position x
-        mapped->y = yPos; // position y
-        mapped->z = getXOffset(letter); // tex coord x
-        mapped->w = getYOffset(letter); // tex coord y
-        mapped++;
-
-        // vertex 2: top right 
-        mapped->x = xPos + charW;
-        mapped->y = yPos;
-        mapped->z = getXOffset(letter) + LETTER_OFFSET_X;
-        mapped->w = getYOffset(letter);
-        mapped++;
-
-        // vertex 3: bottom left
-        mapped->x = xPos;
-        mapped->y = yPos + charH;
-        mapped->z = getXOffset(letter);
-        mapped->w = getYOffset(letter) + LETTER_OFFSET_Y;
-        mapped++;
-
-        // vertex 4: bottom right
-        mapped->x = xPos + charW;
-        mapped->y = yPos + charH;
-        mapped->z = getXOffset(letter) + LETTER_OFFSET_X;
-        mapped->w = getYOffset(letter) + LETTER_OFFSET_Y;
-        mapped++;
-
-        xPos += charW;
-
-        numLetters_++;*/
-    }
-}
-
-// unmap buffer
-void Overlay::endTextUpdate() {
     vkUnmapMemory(device_, vertexBufferMemory_);
     mapped_ = nullptr;
 }
@@ -382,21 +337,16 @@ void Overlay::draw(VkCommandBuffer commandBuffer) {
     VkDeviceSize offsets = 0;
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer_, &offsets);
 
-    vkCmdDraw(commandBuffer, 4, 1, 0, 0);
-
-    //VkDeviceSize offsets = 0;
-    //vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer_, &offsets);
-    //vkCmdBindVertexBuffers(commandBuffer, 1, 1, &vertexBuffer_, &offsets);
-    // One draw command for every character. This is okay for a debug overlay, but not optimal
-    // In a real-world application one would try to batch draw commands
-    //for (uint32_t j = 0; j < numLetters_; j++) {
-    //    vkCmdDraw(commandBuffer, 4, 1, j * 4, 0);
-    //}
+    vkCmdDraw(commandBuffer, vertexCount_, 1, 0, 0);
 }
 
 /*-----------------------------------------------------------------------------
 ------------------------------CLEANUP------------------------------------------
 -----------------------------------------------------------------------------*/
+void Overlay::clearBuffer(VkCommandBuffer commandBuffer) {
+    vkCmdFillBuffer(commandBuffer, vertexBuffer_, 0, VK_WHOLE_SIZE, 0);
+}
+
 void Overlay::cleanup() {
     util::log(name_, "cleaning up overlay resources");
 

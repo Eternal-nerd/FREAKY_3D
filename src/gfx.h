@@ -39,7 +39,7 @@ public:
 	void togglePolygonMode();
 	void toggleMouseMode(bool paused);
 	void toggleOverlayWireframe();
-	void toggleOverlay();
+	void toggleMenuOverlay();
 
 	float getAspect();
 	Assets& getAssets();

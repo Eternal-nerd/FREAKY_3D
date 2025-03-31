@@ -103,6 +103,10 @@ void Gfx::toggleOverlayWireframe() {
     overlay_.toggleWireframe();
 }
 
+void Gfx::toggleMenuOverlay() {
+    overlay_.toggleMenu();
+}
+
 /*-----------------------------------------------------------------------------
 ------------------------------SYNC-MAPPING-------------------------------------
 -----------------------------------------------------------------------------*/
@@ -961,14 +965,8 @@ void Gfx::updateOverlay() {
     overlay_.tester();
 }
 
-void Gfx::toggleOverlay() {
-    overlay_.visible_ = !overlay_.visible_;
-}
-
 void Gfx::drawOverlay(VkCommandBuffer commandBuffer) {
-    if (overlay_.visible_) {
-        overlay_.draw(commandBuffer);
-    }
+    overlay_.draw(commandBuffer);
 }
 
 /*-----------------------------------------------------------------------------

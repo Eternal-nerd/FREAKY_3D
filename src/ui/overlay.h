@@ -23,23 +23,19 @@ class Overlay {
 public:
 	void init(VkDevice device, VkPhysicalDevice physicalDevice, VkRenderPass renderpass, VkExtent2D extent, Assets& assets);
 
-	// USED BY ENGINE:
-	void beginTextUpdate();
-	void addText(const std::string& text, float xPos, float yPos);
-	void endTextUpdate();
-
 	// FIXME
 	void tester();
 
 	// draw entire vertex buffer
 	void draw(VkCommandBuffer commandBuffer);
 
+	void clearBuffer(VkCommandBuffer commandBuffer);
+
 	void updateExtent(VkExtent2D extent);
 	void toggleWireframe();
+	void toggleMenu();
 
 	void cleanup();
-
-	bool visible_ = false;
 
 	const std::string name_ = "OVERLAY";
 
@@ -78,7 +74,10 @@ private:
 	UIVertex* mapped_ = nullptr;
 	
 	// ui elements
-	std::vector<Element> elements_{};
+	int vertexCount_ = 0;
+	bool menuShown_ = false;
+	std::vector<Element> defaultElements_{};
+	std::vector<Element> menuElements_{};
 	void generateElements();
 
 

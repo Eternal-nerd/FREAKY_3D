@@ -233,7 +233,7 @@ void Engine::togglePause() {
     util::log(name_, "pausing");
     paused_ = !paused_;
     gfx_.toggleMouseMode(paused_);
-    gfx_.toggleOverlay();
+    gfx_.toggleMenuOverlay();
 }
 
 /*-----------------------------------------------------------------------------
