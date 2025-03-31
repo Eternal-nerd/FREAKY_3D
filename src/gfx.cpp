@@ -961,9 +961,14 @@ void Gfx::updateOverlay() {
     overlay_.tester();
 }
 
+void Gfx::toggleOverlay() {
+    overlay_.visible_ = !overlay_.visible_;
+}
 
 void Gfx::drawOverlay(VkCommandBuffer commandBuffer) {
-    overlay_.draw(commandBuffer);
+    if (overlay_.visible_) {
+        overlay_.draw(commandBuffer);
+    }
 }
 
 /*-----------------------------------------------------------------------------

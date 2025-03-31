@@ -39,6 +39,8 @@ public:
 
 	void cleanup();
 
+	bool visible_ = false;
+
 	const std::string name_ = "OVERLAY";
 
 private:

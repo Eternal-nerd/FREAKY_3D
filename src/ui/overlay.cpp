@@ -34,9 +34,7 @@ void Overlay::initTextures() {
     // choose textures for font/ui
     textures_.push_back(&assets_->getTexture("green"));
     textureCount_++;
-    textures_.push_back(&assets_->getTexture("font"));
-    textureCount_++;
-    textures_.push_back(&assets_->getTexture("set"));
+    textures_.push_back(&assets_->getTexture("pause"));
     textureCount_++;
     
 }
@@ -261,7 +259,7 @@ void Overlay::generateElements() {
 
     // default elements
     Element e1;
-    e1.init({ 0,0 }, { 60, 60 }, extent, { 0, 0, 1, 1 }, assets_->getTextureIndex("set"));
+    e1.init({ 0,0 }, { 400, 200 }, extent, { 0, 0, 1, 1 }, assets_->getTextureIndex("pause"));
 
     elements_.push_back(e1);
 
