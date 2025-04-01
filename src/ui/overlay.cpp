@@ -18,7 +18,7 @@ void Overlay::init(VkDevice device, VkPhysicalDevice physicalDevice, VkRenderPas
 
     generateElements();
 
-    wireframeIndex_ = assets_->getTextureIndex("green");
+    wireframeIndex_ = 0;
 
     scale_ = 1.f;
 
@@ -33,6 +33,8 @@ void Overlay::initTextures() {
 
     // choose textures for font/ui
     textures_.push_back(&assets_->getTexture("green"));
+    textureCount_++;
+    textures_.push_back(&assets_->getTexture("font"));
     textureCount_++;
     textures_.push_back(&assets_->getTexture("pause"));
     textureCount_++;
@@ -258,8 +260,14 @@ void Overlay::generateElements() {
     glm::vec2 extent = { swapChainExtent_.width, swapChainExtent_.height };
 
     // default elements
+    Element e0;
+    e0.init({-0.5,-0.5}, {500,500}, extent, {0,0,1,1}, 1);
+    defaultElements_.push_back(e0);
+    vertexCount_+=4;
+
+    // menu elements
     Element e1;
-    e1.init({ 0,0 }, { 400, 200 }, extent, { 0, 0, 1, 1 }, assets_->getTextureIndex("pause"));
+    e1.init({ 0,0 }, { 400, 200 }, extent, { 0, 0, 1, 1 }, 2);
     menuElements_.push_back(e1);
 
 }
@@ -295,7 +303,7 @@ void Overlay::toggleMenu() {
     util::log(name_, "toggling menu overlay");
     vertexCount_ += (menuShown_) ? -4 : 4;
     menuShown_ = !menuShown_;
-    util::log("vertex count", std::to_string(vertexCount_));
+    util::log("overlay vertex count", std::to_string(vertexCount_));
 }
 
 void Overlay::tester() {
