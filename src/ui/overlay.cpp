@@ -53,7 +53,10 @@ void Overlay::initDescriptors() {
 
     // Index buffer --------------------------------------------=========<
     util::log(name_, "creating overlay index buffer");
-    //VkDeviceSize bufferSize = MAX_OVERLAY_ELEMENTS * sizeof(UIVertex) * 4;
+    VkDeviceSize bufferSize2 = MAX_OVERLAY_ELEMENTS * 6;
+    util::createBuffer(bufferSize2, VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
+        indexBuffer_, indexBufferMemory_, device_, physicalDevice_);
 
     // Descriptor ------------------------------------------=============<
     // Font uses a separate descriptor pool
@@ -178,7 +181,7 @@ void Overlay::initPipeline() {
 
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyState{};
     inputAssemblyState.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-    inputAssemblyState.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP; //VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST; // IMPORTANT!!!
+    inputAssemblyState.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST; // IMPORTANT!!! VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP; //
     inputAssemblyState.primitiveRestartEnable = VK_FALSE;
 
     VkPipelineRasterizationStateCreateInfo rasterizationState{};
@@ -187,7 +190,7 @@ void Overlay::initPipeline() {
     rasterizationState.rasterizerDiscardEnable = VK_FALSE;
     //rasterizationState.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizationState.lineWidth = 1.0f;
-    rasterizationState.cullMode = VK_CULL_MODE_NONE; // VK_CULL_MODE_BACK_BIT;
+    rasterizationState.cullMode = VK_CULL_MODE_BACK_BIT; // VK_CULL_MODE_NONE; // 
     rasterizationState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     rasterizationState.depthBiasEnable = VK_FALSE;
 
@@ -316,14 +319,14 @@ void Overlay::tester() {
 
     assert(mapped_ != nullptr);
 
-    drawCount_ = 0;
+    indexCount_ = 0;
 
     int wired = (currentPolygonMode_ == VK_POLYGON_MODE_LINE) ? wireframeIndex_ : -1;
 
     // default elements
     for (int i = 0; i < defaultElements_.size(); i++) {
         defaultElements_[i].map(mapped_, wired);
-        drawCount_ += 4;
+        //drawCount_ += 4;
         mapped_+=4;
     }
 
@@ -331,7 +334,7 @@ void Overlay::tester() {
     if (menuShown_) {
         for (int i = 0; i < menuElements_.size(); i++) {
             menuElements_[i].map(mapped_, wired);
-            drawCount_ += 4;
+            //drawCount_ += 4;
             mapped_ += 4;
         }
     }
@@ -354,7 +357,11 @@ void Overlay::draw(VkCommandBuffer commandBuffer) {
     VkDeviceSize offsets = 0;
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer_, &offsets);
 
-    vkCmdDraw(commandBuffer, drawCount_, 1, 0, 0);
+    vkCmdBindIndexBuffer(commandBuffer, indexBuffer_, 0, VK_INDEX_TYPE_UINT32);
+
+    //vkCmdDraw(commandBuffer, drawCount_, 1, 0, 0);
+
+    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indexCount_), 1, 0, 0, 0);
 }
 
 /*-----------------------------------------------------------------------------
@@ -370,6 +377,9 @@ void Overlay::cleanup() {
     // vertex buffer
     vkDestroyBuffer(device_, vertexBuffer_, nullptr);
     vkFreeMemory(device_, vertexBufferMemory_, nullptr);
+
+    vkDestroyBuffer(device_, indexBuffer_, nullptr);
+    vkFreeMemory(device_, indexBufferMemory_, nullptr);
 
     // descriptors/pipeline
     vkDestroyDescriptorSetLayout(device_, descriptorSetLayout_, nullptr);
