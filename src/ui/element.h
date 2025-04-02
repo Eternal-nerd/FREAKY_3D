@@ -19,8 +19,6 @@ public:
 
 	void map(UIVertex* mapped, int overrideIndex = -1);
 
-	void updateTextureIndex(int index);
-
 	void scale(int screenWidth, int screenHeight);
 
 	const std::string name_ = "ELEMENT";

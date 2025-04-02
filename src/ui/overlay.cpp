@@ -45,12 +45,15 @@ void Overlay::initDescriptors() {
     util::log(name_, "initializing overlay descriptors");
 
     // Vertex buffer --------------------------------------------=========<
-    VkDeviceSize bufferSize = MAX_OVERLAY_ELEMENTS * sizeof(UIVertex) * 4;
-
     util::log(name_, "creating overlay vertex buffer");
+    VkDeviceSize bufferSize = MAX_OVERLAY_ELEMENTS * sizeof(UIVertex) * 4;
     util::createBuffer(bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
         vertexBuffer_, vertexBufferMemory_, device_, physicalDevice_);
+
+    // Index buffer --------------------------------------------=========<
+    util::log(name_, "creating overlay index buffer");
+    //VkDeviceSize bufferSize = MAX_OVERLAY_ELEMENTS * sizeof(UIVertex) * 4;
 
     // Descriptor ------------------------------------------=============<
     // Font uses a separate descriptor pool
@@ -175,7 +178,7 @@ void Overlay::initPipeline() {
 
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyState{};
     inputAssemblyState.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-    inputAssemblyState.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP; // IMPORTANT!!!
+    inputAssemblyState.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP; //VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST; // IMPORTANT!!!
     inputAssemblyState.primitiveRestartEnable = VK_FALSE;
 
     VkPipelineRasterizationStateCreateInfo rasterizationState{};
@@ -184,7 +187,7 @@ void Overlay::initPipeline() {
     rasterizationState.rasterizerDiscardEnable = VK_FALSE;
     //rasterizationState.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizationState.lineWidth = 1.0f;
-    rasterizationState.cullMode = VK_CULL_MODE_BACK_BIT;
+    rasterizationState.cullMode = VK_CULL_MODE_NONE; // VK_CULL_MODE_BACK_BIT;
     rasterizationState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     rasterizationState.depthBiasEnable = VK_FALSE;
 
@@ -260,16 +263,18 @@ void Overlay::generateElements() {
     glm::vec2 extent = { swapChainExtent_.width, swapChainExtent_.height };
 
     // default elements
-    Element e0;
-    e0.init({-0.5,-0.5}, {500,500}, extent, {0,0,1,1}, 1);
-    defaultElements_.push_back(e0);
-    vertexCount_+=4;
+    Element tester;
+    tester.init({-0.5,-0.5}, {500,500}, extent, {0,0,1,1}, 1);
+    defaultElements_.push_back(tester);
+    
+    Element tester2;
+    tester2.init({ 0.5,-0.5 }, { 300,300 }, extent, { 0,0,1,1 }, 1);
+    defaultElements_.push_back(tester2);
 
     // menu elements
-    Element e1;
-    e1.init({ 0,0 }, { 400, 200 }, extent, { 0, 0, 1, 1 }, 2);
-    menuElements_.push_back(e1);
-
+    Element pauseBtn;
+    pauseBtn.init({ 0,0 }, { 400, 200 }, extent, { 0, 0, 1, 1 }, 2);
+    menuElements_.push_back(pauseBtn);
 }
 
 /*-----------------------------------------------------------------------------
@@ -301,9 +306,7 @@ void Overlay::toggleWireframe() {
 
 void Overlay::toggleMenu() {
     util::log(name_, "toggling menu overlay");
-    vertexCount_ += (menuShown_) ? -4 : 4;
     menuShown_ = !menuShown_;
-    util::log("overlay vertex count", std::to_string(vertexCount_));
 }
 
 void Overlay::tester() {
@@ -313,17 +316,23 @@ void Overlay::tester() {
 
     assert(mapped_ != nullptr);
 
+    drawCount_ = 0;
+
     int wired = (currentPolygonMode_ == VK_POLYGON_MODE_LINE) ? wireframeIndex_ : -1;
 
     // default elements
     for (int i = 0; i < defaultElements_.size(); i++) {
         defaultElements_[i].map(mapped_, wired);
+        drawCount_ += 4;
+        mapped_+=4;
     }
 
     // menu elements
     if (menuShown_) {
         for (int i = 0; i < menuElements_.size(); i++) {
             menuElements_[i].map(mapped_, wired);
+            drawCount_ += 4;
+            mapped_ += 4;
         }
     }
 
@@ -345,7 +354,7 @@ void Overlay::draw(VkCommandBuffer commandBuffer) {
     VkDeviceSize offsets = 0;
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer_, &offsets);
 
-    vkCmdDraw(commandBuffer, vertexCount_, 1, 0, 0);
+    vkCmdDraw(commandBuffer, drawCount_, 1, 0, 0);
 }
 
 /*-----------------------------------------------------------------------------

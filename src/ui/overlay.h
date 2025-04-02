@@ -57,8 +57,10 @@ private:
 	void initTextures();
 
 	// Vulkan stuff only used by this class
-	VkBuffer vertexBuffer_;
-	VkDeviceMemory vertexBufferMemory_;
+	VkBuffer vertexBuffer_ = VK_NULL_HANDLE;
+	VkDeviceMemory vertexBufferMemory_ = VK_NULL_HANDLE;
+	//VkBuffer indexBuffer_ = VK_NULL_HANDLE;
+	//VkDeviceMemory indexBufferMemory_ = VK_NULL_HANDLE;
 	VkDescriptorPool descriptorPool_;
 	VkDescriptorSetLayout descriptorSetLayout_;
 	VkDescriptorSet descriptorSet_;
@@ -74,7 +76,7 @@ private:
 	UIVertex* mapped_ = nullptr;
 	
 	// ui elements
-	int vertexCount_ = 0;
+	int drawCount_ = 0;
 	bool menuShown_ = false;
 	std::vector<Element> defaultElements_{};
 	std::vector<Element> menuElements_{};

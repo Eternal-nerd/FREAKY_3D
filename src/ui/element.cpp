@@ -54,14 +54,6 @@ void Element::map(UIVertex* mapped, int overrideIndex) {
 
 }
 
-void Element::updateTextureIndex(int index) {
-	// TODO
-	for (auto v : vertices_) {
-		v.texIndex = index;
-	}
-
-}
-
 void Element::scale(int screenWidth, int screenHeight) {
 	if (vertices_.size() != 4) {
 		throw std::runtime_error("unable to scale ui element (not 4 vertices)");
