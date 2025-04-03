@@ -349,11 +349,15 @@ void Overlay::tester() {
 
     indexCount_ = 0;
 
-    for (int i=0; i<3; i++) {
-        *indexMapped_=i;
+    std::vector<int> list1 = {0,1,2,2,1,3};
+    for (int i=0; i<list1.size(); i++) {
+        *indexMapped_=list1[i];
         indexMapped_++;
         indexCount_++;
     }
+
+    
+    // 0,1,2, 2,1,3 
 
     vkUnmapMemory(device_, indexBufferMemory_);
     indexMapped_ = nullptr;
