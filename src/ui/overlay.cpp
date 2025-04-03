@@ -53,7 +53,7 @@ void Overlay::initDescriptors() {
 
     // Index buffer --------------------------------------------=========<
     util::log(name_, "creating overlay index buffer");
-    VkDeviceSize bufferSize2 = MAX_OVERLAY_ELEMENTS * 6;
+    VkDeviceSize bufferSize2 = MAX_OVERLAY_ELEMENTS * 6 * sizeof(uint32_t);
     util::createBuffer(bufferSize2, VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
         indexBuffer_, indexBufferMemory_, device_, physicalDevice_);
@@ -314,12 +314,10 @@ void Overlay::toggleMenu() {
 
 void Overlay::tester() {
     if (vkMapMemory(device_, vertexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&mapped_) != VK_SUCCESS) {
-        throw std::runtime_error("failed to map memory for overlay update ");
+        throw std::runtime_error("failed to map vertex buffer memory for overlay update ");
     }
 
     assert(mapped_ != nullptr);
-
-    indexCount_ = 0;
 
     int wired = (currentPolygonMode_ == VK_POLYGON_MODE_LINE) ? wireframeIndex_ : -1;
 
@@ -341,6 +339,25 @@ void Overlay::tester() {
 
     vkUnmapMemory(device_, vertexBufferMemory_);
     mapped_ = nullptr;
+
+    // populate index buffer
+    if (vkMapMemory(device_, indexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&indexMapped_) != VK_SUCCESS) {
+        throw std::runtime_error("failed to map index buffer memory for overlay update ");
+    }
+
+    assert(indexMapped_ != nullptr);
+
+    indexCount_ = 0;
+
+    for (int i=0; i<3; i++) {
+        *indexMapped_=i;
+        indexMapped_++;
+        indexCount_++;
+    }
+
+    vkUnmapMemory(device_, indexBufferMemory_);
+    indexMapped_ = nullptr;
+
 }
 
 /*-----------------------------------------------------------------------------

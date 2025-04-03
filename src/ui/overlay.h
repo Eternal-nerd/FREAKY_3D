@@ -74,6 +74,7 @@ private:
 
 	// memory mapped vertex buffer
 	UIVertex* mapped_ = nullptr;
+    uint32_t* indexMapped_ = nullptr;
 	
 	// ui elements
 	int indexCount_ = 0;
