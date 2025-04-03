@@ -77,12 +77,11 @@ private:
     uint32_t* indexMapped_ = nullptr;
 	
 	// ui elements
-	int indexCount_ = 0;
+    int indexCount_ = 0;
 	bool menuShown_ = false;
 	std::vector<Element> defaultElements_{};
 	std::vector<Element> menuElements_{};
 	void generateElements();
-
 
 
 	// EXTERNAL Vulka API function ptrs

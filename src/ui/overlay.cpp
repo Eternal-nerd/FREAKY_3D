@@ -320,20 +320,21 @@ void Overlay::tester() {
     assert(mapped_ != nullptr);
 
     int wired = (currentPolygonMode_ == VK_POLYGON_MODE_LINE) ? wireframeIndex_ : -1;
+    int elementCount = 0;
 
     // default elements
     for (int i = 0; i < defaultElements_.size(); i++) {
         defaultElements_[i].map(mapped_, wired);
-        //drawCount_ += 4;
         mapped_+=4;
+        elementCount++;
     }
 
     // menu elements
     if (menuShown_) {
         for (int i = 0; i < menuElements_.size(); i++) {
             menuElements_[i].map(mapped_, wired);
-            //drawCount_ += 4;
             mapped_ += 4;
+            elementCount++;
         }
     }
 
@@ -347,20 +348,23 @@ void Overlay::tester() {
 
     assert(indexMapped_ != nullptr);
 
-    indexCount_ = 0;
-
-    std::vector<int> list1 = {0,1,2,2,1,3};
-    for (int i=0; i<list1.size(); i++) {
-        *indexMapped_=list1[i];
-        indexMapped_++;
-        indexCount_++;
-    }
-
+    int count = 0;
+    std::vector<int> indices = {0,1,2,2,1,3};
     
-    // 0,1,2, 2,1,3 
+    // 0,1,2, 2,1,3
+    for (int i=0; i<elementCount; i++) {
+        for (int j=0; j<indices.size(); j++) {
+            *indexMapped_=(indices[j] + (4*i));
+            indexMapped_++;
+            count++;
+        }
+
+    }
 
     vkUnmapMemory(device_, indexBufferMemory_);
     indexMapped_ = nullptr;
+
+    indexCount_ = count;
 
 }
 
@@ -379,8 +383,6 @@ void Overlay::draw(VkCommandBuffer commandBuffer) {
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer_, &offsets);
 
     vkCmdBindIndexBuffer(commandBuffer, indexBuffer_, 0, VK_INDEX_TYPE_UINT32);
-
-    //vkCmdDraw(commandBuffer, drawCount_, 1, 0, 0);
 
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indexCount_), 1, 0, 0, 0);
 }
