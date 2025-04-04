@@ -418,14 +418,14 @@ void util::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPro
     vkBindBufferMemory(device, buffer, bufferMemory, 0);
 }
 
-void util::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, GfxAccess access) {
-    VkCommandBuffer commandBuffer = beginSingleTimeCommands(access.device, access.commandPool);
+void util::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkQueue graphicsQueue) {
+    VkCommandBuffer commandBuffer = beginSingleTimeCommands(device, commandPool);
 
     VkBufferCopy copyRegion{};
     copyRegion.size = size;
     vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
-    endSingleTimeCommands(commandBuffer, access.device, access.commandPool, access.graphicsQueue);
+    endSingleTimeCommands(commandBuffer, device, commandPool, graphicsQueue);
 }
 
 /*-----------------------------------------------------------------------------

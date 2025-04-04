@@ -23,8 +23,13 @@ class Overlay {
 public:
 	void init(VkDevice device, VkPhysicalDevice physicalDevice, VkRenderPass renderpass, VkExtent2D extent, Assets& assets);
 
-	// FIXME
-	void tester();
+	// API: call start update, then can call update textbox/element methods any amt of times, then, call end update
+	void startUpdate();
+
+	void updateTextBox(int index, const std::string& newText);
+	//void updateElement(int index);
+
+	void endUpdate();
 
 	// draw entire vertex buffer
 	void draw(VkCommandBuffer commandBuffer);
@@ -73,15 +78,19 @@ private:
 	void initPipeline();
 
 	// memory mapped vertex buffer
-	UIVertex* mapped_ = nullptr;
+	UIVertex* vertexMapped_ = nullptr;
     uint32_t* indexMapped_ = nullptr;
-	
+	int indexCount_ = 0;
+	int quadCount_ = 0;
+
 	// ui elements
-    int indexCount_ = 0;
 	bool menuShown_ = false;
 	std::vector<Element> defaultElements_{};
 	std::vector<Element> menuElements_{};
 	void generateElements();
+
+	// text boxes
+
 
 
 	// EXTERNAL Vulka API function ptrs

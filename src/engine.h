@@ -37,6 +37,9 @@ private:
 	// Assets ptr
 	Assets* assets_ = nullptr;
 
+	// overlay ptr
+	Overlay* overlay_ = nullptr;
+
 	// Player Camera
 	Camera camera_;
 	RigidBody* camBody_ = nullptr;
@@ -70,6 +73,9 @@ private:
 
     // handles creating the pdated UBO for each frame
     void updateUBO();
+
+	// handles updating text
+	void updateOverlay();
 
     // draw game objects and preent image
     void renderScene();

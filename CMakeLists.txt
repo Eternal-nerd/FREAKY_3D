@@ -24,6 +24,7 @@ set(SOURCES
 	src/camera.cpp
 	src/ui/overlay.cpp
 	src/ui/element.cpp
+	src/ui/text_box.cpp
 	src/assets/assets.cpp
 	src/assets/texture.cpp
 	src/assets/mesh.cpp
@@ -42,6 +43,7 @@ set(HEADERS
 	src/camera.h
 	src/ui/overlay.h
 	src/ui/element.h
+	src/ui/text_box.h
 	src/assets/assets.h
 	src/assets/texture.h
 	src/assets/mesh.h

@@ -17,7 +17,8 @@ public:
 	// textureCoord = {x=xPos, y=yPos, z=xOffset, w=yOffset}
 	void init(glm::vec2 position, glm::vec2 size, glm::vec2 extent, glm::vec4 textureCoord, int texIndex);
 
-	void map(UIVertex* mapped, int overrideIndex = -1);
+	// returns amount to iter pointer
+	int map(UIVertex* mapped, int overrideIndex = -1);
 
 	void scale(int screenWidth, int screenHeight);
 

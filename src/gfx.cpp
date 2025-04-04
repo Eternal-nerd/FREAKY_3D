@@ -80,13 +80,7 @@ void Gfx::init() {
 void Gfx::startAssetPipeline() {
     util::log(name_, "kicking off the asset pipeline");
 
-    GfxAccess access;
-    access.physicalDevice = physicalDevice_;
-    access.device = device_;
-    access.commandPool = commandPool_;
-    access.graphicsQueue = graphicsQueue_;
-
-    assets_.init(access);
+    assets_.init(physicalDevice_, device_, commandPool_, graphicsQueue_);
 }
 
 /*-----------------------------------------------------------------------------
@@ -97,14 +91,6 @@ void Gfx::toggleMouseMode(bool paused) {
     if (!SDL_SetWindowRelativeMouseMode(window_, !paused)) {
         throw std::runtime_error("Failed to toggle mouse mode");
     }
-}
-
-void Gfx::toggleOverlayWireframe() {
-    overlay_.toggleWireframe();
-}
-
-void Gfx::toggleMenuOverlay() {
-    overlay_.toggleMenu();
 }
 
 /*-----------------------------------------------------------------------------
@@ -250,6 +236,10 @@ float Gfx::getAspect() {
 
 Assets& Gfx::getAssets() {
     return assets_;
+}
+
+Overlay& Gfx::getOverlay() {
+    return overlay_;
 }
 
 /*-----------------------------------------------------------------------------
@@ -957,16 +947,6 @@ void Gfx::createUniformBuffers() {
 
         vkMapMemory(device_, uniformBuffersMemory_[i], 0, bufferSize, 0, &uniformBuffersMapped_[i]);
     }
-}
-/*-----------------------------------------------------------------------------
------------------------------OVERLAY-------------------------------------------
------------------------------------------------------------------------------*/
-void Gfx::updateOverlay() {
-    overlay_.tester();
-}
-
-void Gfx::drawOverlay(VkCommandBuffer commandBuffer) {
-    overlay_.draw(commandBuffer);
 }
 
 /*-----------------------------------------------------------------------------

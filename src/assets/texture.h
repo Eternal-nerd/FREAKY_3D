@@ -11,7 +11,7 @@
 
 class Texture {
 public:
-	void create(int index, const std::string& filename, const GfxAccess& access);
+	void create(int index, const std::string& filename, VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkQueue graphicsQueue);
 
 	const VkImageView& getTextureImageView() const;
 	const VkSampler& getTextureSampler() const;
@@ -26,7 +26,10 @@ private:
 	int index_ = -1;
 
 	// references to vk stuff
-	GfxAccess access_;
+	VkPhysicalDevice physicalDevice_ = VK_NULL_HANDLE;
+	VkDevice device_ = VK_NULL_HANDLE;
+	VkCommandPool commandPool_ = VK_NULL_HANDLE;
+	VkQueue graphicsQueue_ = VK_NULL_HANDLE;
 
 	// name of picture file
 	const char* filename_;
@@ -37,7 +40,6 @@ private:
 	VkImageView textureImageView_ = VK_NULL_HANDLE;
 	VkSampler textureSampler_ = VK_NULL_HANDLE;
 	VkImageLayout imageLayout_;
-	VkDescriptorImageInfo descriptor_;
 
 	void createVkTexture();
 

@@ -148,13 +148,6 @@ struct TextureDetails {
     VkSampler textureSampler = VK_NULL_HANDLE;
 };
 
-struct GfxAccess {
-    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
-    VkDevice device = VK_NULL_HANDLE;
-    VkCommandPool commandPool = VK_NULL_HANDLE;
-    VkQueue graphicsQueue = VK_NULL_HANDLE;
-};
-
 // Camera config struct
 struct CameraConfig {
     float fovy = 0;

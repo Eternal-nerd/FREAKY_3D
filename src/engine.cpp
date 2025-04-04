@@ -24,6 +24,8 @@ void Engine::init() {
 
     assets_ = &gfx_.getAssets();
 
+    overlay_ = &gfx_.getOverlay();
+
     float aspect = gfx_.getAspect();
 
     camera_.init(aspect);
@@ -61,7 +63,7 @@ void Engine::loop() {
         if (visible_) {
             camera_.update(gfx_.getAspect());
             updateUBO();
-            gfx_.updateOverlay();
+            updateOverlay();
             // RENDER stuff
             renderScene();
         }
@@ -98,6 +100,14 @@ void Engine::updateUBO() {
 
 // TODO: step physics sim.
 
+void Engine::updateOverlay() {
+    overlay_->startUpdate();
+
+    // do stuff here.
+
+    overlay_->endUpdate();
+}
+
 /*-----------------------------------------------------------------------------
 -----------------------------GRAPHICS------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -105,12 +115,12 @@ void Engine::renderScene() {
     VkCommandBuffer commandBuffer = gfx_.setupCommandBuffer();
     
     // draw entities
-    for (auto e : entities_) {
-        e.draw(commandBuffer);
+    for (int i = 0; i < entities_.size(); i++) {
+        entities_[i].draw(commandBuffer);
     }
 
     // draw text
-    gfx_.drawOverlay(commandBuffer);
+    overlay_->draw(commandBuffer);
 
     gfx_.submitCommandBuffer(commandBuffer);
 
@@ -205,7 +215,7 @@ void Engine::handleMouseEvent() {
 void Engine::handleKeyEvent() {
     if (keys_.esc) { togglePause(); }
     if (keys_.p && !keys_.shift) { gfx_.togglePolygonMode(); }
-    if (keys_.p && keys_.shift) { gfx_.toggleOverlayWireframe(); }
+    if (keys_.p && keys_.shift) { overlay_->toggleWireframe(); }
 
     // TODO add physics sim that is synced with program time so that 
     // I can just update the camera's body's velocity here
@@ -233,7 +243,7 @@ void Engine::togglePause() {
     util::log(name_, "pausing");
     paused_ = !paused_;
     gfx_.toggleMouseMode(paused_);
-    gfx_.toggleMenuOverlay();
+    overlay_->toggleMenu();
 }
 
 /*-----------------------------------------------------------------------------

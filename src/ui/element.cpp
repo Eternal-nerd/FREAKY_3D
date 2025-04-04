@@ -41,8 +41,9 @@ void Element::init(glm::vec2 position, glm::vec2 size, glm::vec2 extent, glm::ve
 }
 
 
-void Element::map(UIVertex* mapped, int overrideIndex) {
+int Element::map(UIVertex* mapped, int overrideIndex) {
 	// for each vertex
+	int count = 0;
 	for (int i = 0; i < vertices_.size(); i++) {
 		mapped->pos.x = vertices_[i].pos.x; // position x
 		mapped->pos.y = vertices_[i].pos.y; // position y
@@ -50,8 +51,9 @@ void Element::map(UIVertex* mapped, int overrideIndex) {
 		mapped->texCoord.y = vertices_[i].texCoord.y; // tex coord y
 		(overrideIndex==-1) ? mapped->texIndex = vertices_[i].texIndex : mapped->texIndex = overrideIndex; // tex index
 		mapped++;
+		count++;
 	}
-
+	return count;
 }
 
 void Element::scale(int screenWidth, int screenHeight) {

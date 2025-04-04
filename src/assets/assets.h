@@ -18,7 +18,7 @@ public:
 	void enumerateFiles();
 	int getTextureCount();
 
-	void init(const GfxAccess access);
+	void init(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkQueue graphicsQueue);
 
 	TextureDetails getTextureDetails(int index);
 
@@ -35,7 +35,10 @@ public:
 
 private:
 	// vk access
-	GfxAccess access_;
+	VkPhysicalDevice physicalDevice_ = VK_NULL_HANDLE;
+	VkDevice device_ = VK_NULL_HANDLE;
+	VkCommandPool commandPool_ = VK_NULL_HANDLE;
+	VkQueue graphicsQueue_ = VK_NULL_HANDLE;
 
 	// Textures
 	std::vector<std::string> textureFilenames_{};

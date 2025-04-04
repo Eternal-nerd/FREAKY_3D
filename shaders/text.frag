@@ -11,7 +11,7 @@ layout(location = 0) out vec4 outColor;
 
 void main() {
     outColor = texture(texSamplers[nonuniformEXT(inTexIndex)], inTexCoord);
-    if (outColor.w < 0.1) {
-        discard;
+    if (outColor.w < 0.05) {
+        outColor = vec4(0, 0, 0, .4);
     }
 }

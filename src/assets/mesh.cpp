@@ -3,11 +3,15 @@
 /*-----------------------------------------------------------------------------
 ------------------------------INITIALIZATION-----------------------------------
 -----------------------------------------------------------------------------*/
-void Mesh::init(MeshData data, GfxAccess access) {
+void Mesh::init(MeshData data, VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkQueue graphicsQueue) {
 	util::log(name_, "initializing mesh");
 
 	data_ = data;
-	access_ = access;
+	
+	physicalDevice_ = physicalDevice;
+	device_ = device;
+	commandPool_ = commandPool;
+	graphicsQueue_ = graphicsQueue;
 
 	createVertexBuffer();
 	createIndexBuffer();
@@ -56,24 +60,24 @@ void Mesh::createVertexBuffer() {
 	util::createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
 		VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-		stagingBuffer, stagingBufferMemory, access_.device,
-		access_.physicalDevice);
+		stagingBuffer, stagingBufferMemory, device_,
+		physicalDevice_);
 
 	void* data;
-	vkMapMemory(access_.device, stagingBufferMemory, 0, bufferSize, 0, &data);
+	vkMapMemory(device_, stagingBufferMemory, 0, bufferSize, 0, &data);
 	memcpy(data, data_.vertices.data(), (size_t)bufferSize);
-	vkUnmapMemory(access_.device, stagingBufferMemory);
+	vkUnmapMemory(device_, stagingBufferMemory);
 
 	util::createBuffer(
 		bufferSize,
 		VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer_, vertexBufferMemory_,
-		access_.device, access_.physicalDevice);
+		device_, physicalDevice_);
 
-	util::copyBuffer(stagingBuffer, vertexBuffer_, bufferSize, access_);
+	util::copyBuffer(stagingBuffer, vertexBuffer_, bufferSize, physicalDevice_, device_, commandPool_, graphicsQueue_);
 
-	vkDestroyBuffer(access_.device, stagingBuffer, nullptr);
-	vkFreeMemory(access_.device, stagingBufferMemory, nullptr);
+	vkDestroyBuffer(device_, stagingBuffer, nullptr);
+	vkFreeMemory(device_, stagingBufferMemory, nullptr);
 }
 
 void Mesh::createIndexBuffer() {
@@ -84,24 +88,24 @@ void Mesh::createIndexBuffer() {
 	util::createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
 		VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-		stagingBuffer, stagingBufferMemory, access_.device,
-		access_.physicalDevice);
+		stagingBuffer, stagingBufferMemory, device_,
+		physicalDevice_);
 
 	void* data;
-	vkMapMemory(access_.device, stagingBufferMemory, 0, bufferSize, 0, &data);
+	vkMapMemory(device_, stagingBufferMemory, 0, bufferSize, 0, &data);
 	memcpy(data, data_.indices.data(), (size_t)bufferSize);
-	vkUnmapMemory(access_.device, stagingBufferMemory);
+	vkUnmapMemory(device_, stagingBufferMemory);
 
 	util::createBuffer(
 		bufferSize,
 		VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer_, indexBufferMemory_,
-		access_.device, access_.physicalDevice);
+		device_, physicalDevice_);
 
-	util::copyBuffer(stagingBuffer, indexBuffer_, bufferSize, access_);
+	util::copyBuffer(stagingBuffer, indexBuffer_, bufferSize, physicalDevice_, device_, commandPool_, graphicsQueue_);
 
-	vkDestroyBuffer(access_.device, stagingBuffer, nullptr);
-	vkFreeMemory(access_.device, stagingBufferMemory, nullptr);
+	vkDestroyBuffer(device_, stagingBuffer, nullptr);
+	vkFreeMemory(device_, stagingBufferMemory, nullptr);
 }
 
 
@@ -111,10 +115,10 @@ void Mesh::createIndexBuffer() {
 void Mesh::cleanup() {
 	util::log(name_, "cleaning up mesh");
 
-	vkDestroyBuffer(access_.device, indexBuffer_, nullptr);
-	vkFreeMemory(access_.device, indexBufferMemory_, nullptr);
-	vkDestroyBuffer(access_.device, vertexBuffer_, nullptr);
-	vkFreeMemory(access_.device, vertexBufferMemory_, nullptr);
+	vkDestroyBuffer(device_, indexBuffer_, nullptr);
+	vkFreeMemory(device_, indexBufferMemory_, nullptr);
+	vkDestroyBuffer(device_, vertexBuffer_, nullptr);
+	vkFreeMemory(device_, vertexBufferMemory_, nullptr);
 }
 
 

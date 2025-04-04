@@ -46,20 +46,19 @@ void Overlay::initDescriptors() {
 
     // Vertex buffer --------------------------------------------=========<
     util::log(name_, "creating overlay vertex buffer");
-    VkDeviceSize bufferSize = MAX_OVERLAY_ELEMENTS * sizeof(UIVertex) * 4;
-    util::createBuffer(bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+    VkDeviceSize vertexBufferSize = MAX_OVERLAY_ELEMENTS * sizeof(UIVertex) * 4;
+    util::createBuffer(vertexBufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
         vertexBuffer_, vertexBufferMemory_, device_, physicalDevice_);
 
     // Index buffer --------------------------------------------=========<
     util::log(name_, "creating overlay index buffer");
-    VkDeviceSize bufferSize2 = MAX_OVERLAY_ELEMENTS * 6 * sizeof(uint32_t);
-    util::createBuffer(bufferSize2, VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+    VkDeviceSize indexBufferSize = MAX_OVERLAY_ELEMENTS * 6 * sizeof(uint32_t);
+    util::createBuffer(indexBufferSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
         indexBuffer_, indexBufferMemory_, device_, physicalDevice_);
 
     // Descriptor ------------------------------------------=============<
-    // Font uses a separate descriptor pool
     util::log(name_, "creating overlay descriptor pool");
     std::array<VkDescriptorPoolSize, 1> poolSizes{};
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -104,7 +103,6 @@ void Overlay::initDescriptors() {
     if (vkAllocateDescriptorSets(device_, &allocInfo, &descriptorSet_) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate descriptor sets!");
     }
-
 
     // Descriptors for the font images -------------------------=====<
     std::vector<VkDescriptorImageInfo> textureDescriptors(textureCount_);
@@ -188,7 +186,6 @@ void Overlay::initPipeline() {
     rasterizationState.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     rasterizationState.depthClampEnable = VK_FALSE;
     rasterizationState.rasterizerDiscardEnable = VK_FALSE;
-    //rasterizationState.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizationState.lineWidth = 1.0f;
     rasterizationState.cullMode = VK_CULL_MODE_BACK_BIT; // VK_CULL_MODE_NONE; // 
     rasterizationState.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
@@ -312,34 +309,40 @@ void Overlay::toggleMenu() {
     menuShown_ = !menuShown_;
 }
 
-void Overlay::tester() {
-    if (vkMapMemory(device_, vertexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&mapped_) != VK_SUCCESS) {
+// API: call start update, then can call update textbox/element methods any amt of times, then, call end update
+void Overlay::startUpdate() {
+    quadCount_ = 0;
+
+    if (vkMapMemory(device_, vertexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&vertexMapped_) != VK_SUCCESS) {
         throw std::runtime_error("failed to map vertex buffer memory for overlay update ");
     }
 
-    assert(mapped_ != nullptr);
+    assert(vertexMapped_ != nullptr);
 
     int wired = (currentPolygonMode_ == VK_POLYGON_MODE_LINE) ? wireframeIndex_ : -1;
-    int elementCount = 0;
 
     // default elements
     for (int i = 0; i < defaultElements_.size(); i++) {
-        defaultElements_[i].map(mapped_, wired);
-        mapped_+=4;
-        elementCount++;
+        vertexMapped_ += defaultElements_[i].map(vertexMapped_, wired);
+        quadCount_++;
     }
 
     // menu elements
     if (menuShown_) {
         for (int i = 0; i < menuElements_.size(); i++) {
-            menuElements_[i].map(mapped_, wired);
-            mapped_ += 4;
-            elementCount++;
+            vertexMapped_ += menuElements_[i].map(vertexMapped_, wired);
+            quadCount_++;
         }
     }
+}
 
+void Overlay::updateTextBox(int index, const std::string& newText) {
+    // todo
+}
+
+void Overlay::endUpdate() {
     vkUnmapMemory(device_, vertexBufferMemory_);
-    mapped_ = nullptr;
+    vertexMapped_ = nullptr;
 
     // populate index buffer
     if (vkMapMemory(device_, indexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&indexMapped_) != VK_SUCCESS) {
@@ -349,12 +352,12 @@ void Overlay::tester() {
     assert(indexMapped_ != nullptr);
 
     int count = 0;
-    std::vector<int> indices = {0,1,2,2,1,3};
-    
+    std::vector<int> indices = { 0,1,2,2,1,3 };
+
     // 0,1,2, 2,1,3
-    for (int i=0; i<elementCount; i++) {
-        for (int j=0; j<indices.size(); j++) {
-            *indexMapped_=(indices[j] + (4*i));
+    for (int i = 0; i < quadCount_; i++) {
+        for (int j = 0; j < indices.size(); j++) {
+            *indexMapped_ = (indices[j] + (4 * i));
             indexMapped_++;
             count++;
         }
@@ -365,7 +368,6 @@ void Overlay::tester() {
     indexMapped_ = nullptr;
 
     indexCount_ = count;
-
 }
 
 /*-----------------------------------------------------------------------------

@@ -14,7 +14,7 @@ Could provide some vertex processing here
 class Mesh {
 public:
 
-	void init(MeshData data, GfxAccess access);
+	void init(MeshData data, VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkQueue graphicsQueue);
 
 	void setTextureIndex(int texIndex);
 
@@ -30,7 +30,12 @@ public:
 	const std::string name_ = "MESH";
 private:
 	MeshData data_;
-	GfxAccess access_;
+
+	// references to vk stuff
+	VkPhysicalDevice physicalDevice_ = VK_NULL_HANDLE;
+	VkDevice device_ = VK_NULL_HANDLE;
+	VkCommandPool commandPool_ = VK_NULL_HANDLE;
+	VkQueue graphicsQueue_ = VK_NULL_HANDLE;
 
 	VkBuffer vertexBuffer_ = VK_NULL_HANDLE;
 	VkDeviceMemory vertexBufferMemory_ = VK_NULL_HANDLE;

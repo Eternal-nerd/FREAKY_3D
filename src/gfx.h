@@ -38,15 +38,10 @@ public:
 	// config
 	void togglePolygonMode();
 	void toggleMouseMode(bool paused);
-	void toggleOverlayWireframe();
-	void toggleMenuOverlay();
 
 	float getAspect();
 	Assets& getAssets();
-
-	// overlay
-	void updateOverlay();
-	void drawOverlay(VkCommandBuffer commandBuffer);
+	Overlay& getOverlay();
 
     // command buffers
 	VkCommandBuffer setupCommandBuffer();

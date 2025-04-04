@@ -42,14 +42,19 @@ int Assets::getTextureCount() {
 	return static_cast<int>(textureFilenames_.size());
 }
 
-void Assets::init(const GfxAccess access) {
+void Assets::init(VkPhysicalDevice physicalDevice, VkDevice device, VkCommandPool commandPool, VkQueue graphicsQueue) {
 	util::log(name_, "initializing");
 
 	// textures/images -------------------------------------------====================<
-	access_ = access;
+	physicalDevice_ = physicalDevice;
+	device_ = device;
+	commandPool_ = commandPool;
+	graphicsQueue_ = graphicsQueue;
+
+
 	for (int i = 0; i < textureFilenames_.size(); i++) {
 		Texture t;
-		t.create(i, textureFilenames_[i], access_);
+		t.create(i, textureFilenames_[i], physicalDevice_, device_, commandPool_, graphicsQueue_);
 		textures_.push_back(t);
 	}
 
@@ -117,7 +122,7 @@ void Assets::loadModels() {
 	util::log(name_, "loading models");
 	for (int i = 0; i < meshFilenames_.size(); i++) {
 		Mesh m;
-		m.init(util::getObjData(meshFilenames_[i]), access_);
+		m.init(util::getObjData(meshFilenames_[i]), physicalDevice_, device_, commandPool_, graphicsQueue_);
 		meshs_.push_back(m);
 	}
 
@@ -131,20 +136,20 @@ void Assets::generateMeshs() {
 
 	// skybox mesh
 	Mesh skybox;
-	skybox.init(Geometry::InvertedTexturedCube::getMeshData(), access_);
+	skybox.init(Geometry::InvertedTexturedCube::getMeshData(), physicalDevice_, device_, commandPool_, graphicsQueue_);
 	meshs_.push_back(skybox);
 	meshNames_.push_back("skybox");
 
 
 	// FLOOR mesh
 	Mesh floor;
-	floor.init(Geometry::Plane::getMeshData(), access_);
+	floor.init(Geometry::Plane::getMeshData(), physicalDevice_, device_, commandPool_, graphicsQueue_);
 	meshs_.push_back(floor);
 	meshNames_.push_back("floor");
 
 	// cube mesh
 	Mesh cube;
-	cube.init(Geometry::TexturedCube::getMeshData(), access_);
+	cube.init(Geometry::TexturedCube::getMeshData(), physicalDevice_, device_, commandPool_, graphicsQueue_);
 	meshs_.push_back(cube);
 	meshNames_.push_back("cube");
 }
