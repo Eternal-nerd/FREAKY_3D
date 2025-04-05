@@ -1,8 +1,9 @@
 #include "element.h"
 
-void Element::init(glm::vec2 position, glm::vec2 size, glm::vec2 extent, glm::vec4 textureCoord, int texIndex) {
+void Element::init(OverlayMode mode, glm::vec2 position, glm::vec2 size, glm::vec2 extent, glm::vec4 textureCoord, int texIndex) {
 	util::log(name_, "initializing ui element");
 
+	mode_ = mode;
 	position_ = position;
 	size_ = size;
 
@@ -56,14 +57,14 @@ int Element::map(UIVertex* mapped, int overrideIndex) {
 	return count;
 }
 
-void Element::scale(int screenWidth, int screenHeight) {
+void Element::scale(glm::vec2 extent) {
 	if (vertices_.size() != 4) {
 		throw std::runtime_error("unable to scale ui element (not 4 vertices)");
 	}
 
 	// calculate x and y offsets
-	float xOffset = (size_.x / screenWidth) / 2;
-	float yOffset = (size_.y / screenHeight) / 2;
+	float xOffset = (size_.x / extent.x) / 2;
+	float yOffset = (size_.y / extent.y) / 2;
 	vertices_[0].pos.x = position_.x - xOffset;
 	vertices_[0].pos.y = position_.y - yOffset;
 

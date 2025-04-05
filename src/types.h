@@ -119,6 +119,14 @@ struct UIVertex {
     }
 };
 
+typedef enum OverlayMode {
+    OVERLAY_DEFAULT = 0,
+    OVERLAY_MENU = 1,
+    OVERLAY_STATS = 2,
+    OVERLAY_INVENTORY = 3
+} OverlayMode;
+
+
 // used by mesh class
 struct MeshData {
     std::vector<Vertex> vertices = {};

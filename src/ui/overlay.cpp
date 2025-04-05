@@ -17,6 +17,7 @@ void Overlay::init(VkDevice device, VkPhysicalDevice physicalDevice, VkRenderPas
     initPipeline();
 
     generateElements();
+    generateTextBoxes();
 
     wireframeIndex_ = 0;
 
@@ -264,17 +265,17 @@ void Overlay::generateElements() {
 
     // default elements
     Element tester;
-    tester.init({-0.5,-0.5}, {500,500}, extent, {0,0,1,1}, 1);
-    defaultElements_.push_back(tester);
-    
-    Element tester2;
-    tester2.init({ 0.5,-0.5 }, { 300,300 }, extent, { 0,0,1,1 }, 1);
-    defaultElements_.push_back(tester2);
+    tester.init(OVERLAY_DEFAULT, {-0.5,-0.5}, {500,500}, extent, {0,0,1,1}, 1);
+    elements_.push_back(tester);
 
     // menu elements
     Element pauseBtn;
-    pauseBtn.init({ 0,0 }, { 400, 200 }, extent, { 0, 0, 1, 1 }, 2);
-    menuElements_.push_back(pauseBtn);
+    pauseBtn.init(OVERLAY_MENU, { 0,0 }, { 400, 200 }, extent, { 0, 0, 1, 1 }, 2);
+    elements_.push_back(pauseBtn);
+}
+
+void Overlay::generateTextBoxes() {
+
 }
 
 /*-----------------------------------------------------------------------------
@@ -284,13 +285,10 @@ void Overlay::updateExtent(VkExtent2D extent) {
     swapChainExtent_ = extent;
 
     // rescale elements
-    for (int i = 0; i < defaultElements_.size(); i++) {
-        defaultElements_[i].scale(swapChainExtent_.width, swapChainExtent_.height);
+    for (int i = 0; i < elements_.size(); i++) {
+        elements_[i].scale({ swapChainExtent_.width, swapChainExtent_.height });
     }
 
-    for (int i = 0; i < menuElements_.size(); i++) {
-        menuElements_[i].scale(swapChainExtent_.width, swapChainExtent_.height);
-    }
 }
 
 void Overlay::toggleWireframe() {
@@ -321,19 +319,25 @@ void Overlay::startUpdate() {
 
     int wired = (currentPolygonMode_ == VK_POLYGON_MODE_LINE) ? wireframeIndex_ : -1;
 
-    // default elements
-    for (int i = 0; i < defaultElements_.size(); i++) {
-        vertexMapped_ += defaultElements_[i].map(vertexMapped_, wired);
-        quadCount_++;
-    }
-
-    // menu elements
-    if (menuShown_) {
-        for (int i = 0; i < menuElements_.size(); i++) {
-            vertexMapped_ += menuElements_[i].map(vertexMapped_, wired);
+    // elements
+    for (int i = 0; i < elements_.size(); i++) {
+        switch (elements_[i].mode_) {
+        case OVERLAY_DEFAULT:
+            vertexMapped_ += elements_[i].map(vertexMapped_, wired);
             quadCount_++;
+            break;
+        case OVERLAY_MENU:
+            if (menuShown_) {
+                vertexMapped_ += elements_[i].map(vertexMapped_, wired);
+                quadCount_++;
+            }
+            break;
         }
     }
+
+    // text boxes
+
+
 }
 
 void Overlay::updateTextBox(int index, const std::string& newText) {
