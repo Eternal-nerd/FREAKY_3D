@@ -14,8 +14,8 @@ void TextBox::init(OverlayMode mode, const std::string& message, glm::vec2 posit
 	float scaledHeight = (boxSize.y / extent.y);
 
 	vertices_.resize(message.length() * 4);
-	//util::log("REEEEEEEEE", );
-
+	util::log("vertices_.size()", std::to_string(vertices_.size()));
+	vertices_[0].pos.x = 1;
 	/*
 	// top left
 	UIVertex v1;
