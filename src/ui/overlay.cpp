@@ -285,9 +285,9 @@ void Overlay::generateTextBoxes() {
     glm::vec2 extent = { swapChainExtent_.width, swapChainExtent_.height };
 
     // default text boxes
-    TextBox tester2;
-    tester2.init(OVERLAY_DEFAULT, "testing...", { 0.5, 0.5 }, { 400,400 }, {150.f, 100.f}, extent, 0); // 1
-    textBoxes_.push_back(tester2);
+    TextBox tester3;
+    tester3.init(OVERLAY_DEFAULT, "Hello Alyscia, how are you today? ", { 0.f, 0.5 }, { 800,200 }, {30.f, 40.f}, extent, 1);
+    textBoxes_.push_back(tester3);
 }
 
 /*-----------------------------------------------------------------------------
