@@ -37,9 +37,6 @@ void Overlay::initTextures() {
     textureCount_++;
     textures_.push_back(&assets_->getTexture("font"));
     textureCount_++;
-    textures_.push_back(&assets_->getTexture("pause"));
-    textureCount_++;
-    
 }
 
 void Overlay::initDescriptors() {
@@ -267,16 +264,6 @@ void Overlay::generateElements() {
     Element tester;
     tester.init(OVERLAY_DEFAULT, {-0.5,-0.5}, {500,500}, extent, {0,0,1,1}, 1);
     elements_.push_back(tester);
-
-    Element tester2;
-    tester2.init(OVERLAY_DEFAULT, { 0.5,-0.5 }, { 500,500 }, extent, { 3* FONT_OFFSET,2* FONT_OFFSET,FONT_OFFSET,FONT_OFFSET }, 1);
-    elements_.push_back(tester2);
-
-
-    // menu elements
-    Element pauseBtn;
-    pauseBtn.init(OVERLAY_MENU, { 0,0 }, { 400, 200 }, extent, { 0, 0, 1, 1 }, 2);
-    elements_.push_back(pauseBtn);
 }
 
 void Overlay::generateTextBoxes() {
@@ -286,8 +273,13 @@ void Overlay::generateTextBoxes() {
 
     // default text boxes
     TextBox tester3;
-    tester3.init(OVERLAY_DEFAULT, "Hello Alyscia, how are you today? ", { 0.f, 0.5 }, { 800,200 }, {30.f, 40.f}, extent, 1);
+    tester3.init(OVERLAY_DEFAULT, "Hello worldy, how are you today? ", { 0.f, 0.5 }, { 800,200 }, {30.f, 40.f}, extent, 1);
     textBoxes_.push_back(tester3);
+
+    // menu textboxes
+    TextBox paused;
+    paused.init(OVERLAY_MENU, "PAUSED", { 0.f, 0.f }, { 600,200 }, { 100.f, 200.f }, extent, 1);
+    textBoxes_.push_back(paused);
 }
 
 /*-----------------------------------------------------------------------------
