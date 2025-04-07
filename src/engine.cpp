@@ -104,6 +104,7 @@ void Engine::updateOverlay() {
     overlay_->startUpdate();
 
     // do stuff here.
+    //overlay_->
 
     overlay_->endUpdate();
 }

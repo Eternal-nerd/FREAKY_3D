@@ -126,6 +126,11 @@ typedef enum OverlayMode {
     OVERLAY_INVENTORY = 3
 } OverlayMode;
 
+typedef enum OverlayPositionMode {
+    OVERLAY_POSITION_CENTERED = 0,
+    OVERLAY_POSITION_TOP_LEFT = 1
+} OverlayPositionMode;
+
 
 // used by mesh class
 struct MeshData {

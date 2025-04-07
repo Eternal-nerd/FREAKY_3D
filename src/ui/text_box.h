@@ -13,7 +13,7 @@ const float FONT_OFFSET = 0.0625f;
 class TextBox {
 public:
 	// position is top left, size and font size are in pixels.
-	void init(OverlayMode mode, const std::string& message, glm::vec2 position, glm::vec2 boxSize, glm::vec2 fontSize, glm::vec2 extent, int texIndex);
+	void init(OverlayMode mode, OverlayPositionMode positionMode, const std::string& message, glm::vec2 position, glm::vec2 boxSize, glm::vec2 fontSize, glm::vec2 extent, int texIndex);
 
 	void updateText(const std::string& message);
 
@@ -28,13 +28,21 @@ public:
 	const std::string name_ = "TEXT BOX";
 
 private:
+	OverlayPositionMode positionMode_ = OVERLAY_POSITION_CENTERED;
+
 	std::string message_ = "";
+
+	int texIndex_ = 0;
 
 	glm::vec2 position_ = { 0.f, 0.f };
 	glm::vec2 boxSize_ = { 0.f, 0.f };
 	glm::vec2 fontSize_ = { 0.f, 0.f };
 
+	glm::vec2 extent_ = { 0.f, 0.f };
+
 	std::vector<UIVertex> vertices_ = {};
+
+	void generateVertices();
 
 	float getOffsetX(char c);
 	float getOffsetY(char c);

@@ -272,13 +272,13 @@ void Overlay::generateTextBoxes() {
     glm::vec2 extent = { swapChainExtent_.width, swapChainExtent_.height };
 
     // default text boxes
-    TextBox tester3;
-    tester3.init(OVERLAY_DEFAULT, "Hello worldy, how are you today? ", { 0.f, 0.5 }, { 800,200 }, {30.f, 40.f}, extent, 1);
-    textBoxes_.push_back(tester3);
+    TextBox FPS;
+    FPS.init(OVERLAY_DEFAULT, OVERLAY_POSITION_TOP_LEFT, "TEST: 1293719284", {}, {}, {}, extent, 1);
+    textBoxes_.push_back(FPS);
 
     // menu textboxes
     TextBox paused;
-    paused.init(OVERLAY_MENU, "PAUSED", { 0.f, 0.f }, { 600,200 }, { 100.f, 200.f }, extent, 1);
+    paused.init(OVERLAY_MENU, OVERLAY_POSITION_CENTERED, "PAUSED", { 0.f, 0.f }, { 600,200 }, { 100.f, 200.f }, extent, 1);
     textBoxes_.push_back(paused);
 }
 
@@ -292,6 +292,9 @@ void Overlay::updateExtent(VkExtent2D extent) {
     for (int i = 0; i < elements_.size(); i++) {
         elements_[i].scale({ swapChainExtent_.width, swapChainExtent_.height });
     }
+
+    // rescale textboxes
+    // TODO
 
 }
 
@@ -360,6 +363,10 @@ void Overlay::startUpdate() {
 
 void Overlay::updateTextBox(int index, const std::string& newText) {
     // todo
+    if (index < 0 || index > textBoxes_.size()-1 || textBoxes_.size()==0) {
+        throw std::runtime_error("attempting to modify a textbox that doesnt exist");
+    }
+    textBoxes_[index].updateText(newText);
 }
 
 void Overlay::endUpdate() {
