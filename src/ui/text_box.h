@@ -8,8 +8,6 @@
 #include "../types.h"
 #include "../util.h"
 
-const float FONT_OFFSET = 0.0625f;
-
 class TextBox {
 public:
 	// position is top left, size and font size are in pixels.

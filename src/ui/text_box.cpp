@@ -21,6 +21,12 @@ void TextBox::updateText(const std::string& message) {
     generateVertices();
 }
 
+void TextBox::scale(glm::vec2 extent) {
+	extent_ = extent;
+
+	generateVertices();
+}
+
 void TextBox::generateVertices() {
     // calculate x and y offsets (position = TOP LEFT of box
 	float scaledWidth = (boxSize_.x / extent_.x);
@@ -51,6 +57,13 @@ void TextBox::generateVertices() {
     }
 	
 	for (int i = 0; i < message_.length(); i++) {
+
+		// newline char case
+		if (message_[i] == '\n') {
+			currentY += scaledFontHeight;
+			currentX = resetX;
+			continue;
+		}
 
 		// case where font letter will exceed boundary box
 		if (currentX + scaledFontWidth > position_.x + (scaledWidth / 2)) {
@@ -104,12 +117,8 @@ int TextBox::map(UIVertex* mapped, int overrideIndex) {
 
 }
 
-void TextBox::scale(glm::vec2 extent) {
-	// todo lol
-}
-
 int TextBox::getQuadCount() {
-	return message_.length();
+	return (int)message_.length();
 }
 
 

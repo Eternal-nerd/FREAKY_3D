@@ -16,6 +16,8 @@ const float NOCLIP_SPEED = 30.f;
 
 const int MAX_MODELS = 512;
 
+const float FONT_OFFSET = 0.0625f;
+
 struct UniformBufferObject {
     alignas(16) glm::mat4 model[MAX_MODELS];
     alignas(16) glm::mat4 view;
