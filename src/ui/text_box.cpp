@@ -1,6 +1,6 @@
 #include "text_box.h"
 
-void TextBox::init(OverlayMode mode, const std::string& message, glm::vec2 position, glm::vec2 boxSize, float fontSize, glm::vec2 extent, int texIndex) {
+void TextBox::init(OverlayMode mode, const std::string& message, glm::vec2 position, glm::vec2 boxSize, glm::vec2 fontSize, glm::vec2 extent, int texIndex) {
 	util::log(name_, "initializing ui text box");
 
 	mode_ = mode;
@@ -13,49 +13,106 @@ void TextBox::init(OverlayMode mode, const std::string& message, glm::vec2 posit
 	float scaledWidth = (boxSize.x / extent.x);
 	float scaledHeight = (boxSize.y / extent.y);
 
+	float scaledFontWidth = (fontSize.x / extent.x);
+	float scaledFontHeight = (fontSize.y / extent.y);
+
 	vertices_.resize(message.length() * 4);
-	util::log("vertices_.size()", std::to_string(vertices_.size()));
-	vertices_[0].pos.x = 1;
-	/*
-	// top left
-	UIVertex v1;
-	v1.pos = { position.x, position.y };
-	v1.texCoord = { 0, 0 };
-	v1.texIndex = texIndex;
-	vertices_.push_back(v1);
 
-	// bottom left
-	UIVertex v2;
-	v2.pos = { position.x, position.y + yOffset };
-	v2.texCoord = { 0, 1 };
-	v2.texIndex = texIndex;
-	vertices_.push_back(v2);
+	// initialize vertices in vector
+	float currentX = position.x - (scaledWidth/2);
+	float currentY = position.y - (scaledHeight/2);
+	for (int i = 0; i < message.length(); i++) {
 
-	// top right
-	UIVertex v3;
-	v3.pos = { position.x + xOffset, position.y };
-	v3.texCoord = { 1, 0 };
-	v3.texIndex = texIndex;
-	vertices_.push_back(v3);
+		// case where font letter will exceed boundary box
+		if (currentX + scaledFontWidth > position.x + (scaledWidth / 2)) {
+			util::log("HEEEEEEEEEEEEERRRE", "ye");
+		}
 
-	// bottom right
-	UIVertex v4;
-	v4.pos = { position.x + xOffset, position.y + yOffset };
-	v4.texCoord = { 1, 1 };
-	v4.texIndex = texIndex;
-	vertices_.push_back(v4);
-	*/
+		// TODO MAYBE add case for letters exceeding box height
 
+		float fontX = getOffsetX(message[i]);
+		float fontY = getOffsetY(message[i]);
+
+		// top left
+		vertices_[(i * 4) + 0].pos = { currentX, currentY };
+		vertices_[(i * 4) + 0].texCoord = { fontX, fontY};
+		vertices_[(i * 4) + 0].texIndex = texIndex;
+
+		// bottom left
+		vertices_[(i * 4) + 1].pos = { currentX, currentY + scaledFontHeight };
+		vertices_[(i * 4) + 1].texCoord = { fontX, fontY + FONT_OFFSET };
+		vertices_[(i * 4) + 1].texIndex = texIndex;
+
+		// top right
+		vertices_[(i * 4) + 2].pos = { currentX + scaledFontWidth, currentY };
+		vertices_[(i * 4) + 2].texCoord = { fontX + FONT_OFFSET, fontY };
+		vertices_[(i * 4) + 2].texIndex = texIndex;
+
+		// bottom right
+		vertices_[(i * 4) + 3].pos = { currentX + scaledFontWidth, currentY + scaledFontHeight };
+		vertices_[(i * 4) + 3].texCoord = { fontX + FONT_OFFSET, fontY + FONT_OFFSET };
+		vertices_[(i * 4) + 3].texIndex = texIndex;
+
+		currentX += scaledFontWidth;
+		currentY += scaledFontHeight;
+
+		std::cout << "letter: " << message[i] << "\n";
+		
+	}
+
+	for (int i = 0; i < vertices_.size(); i++) {
+		std::cout << "textbox vertex[" << i << "]: \n" <<
+			"pos: [" << vertices_[i].pos.x << ", " << vertices_[i].pos.y << "]\n" <<
+			"texCoord: " << vertices_[i].texCoord.x << ", " << vertices_[i].texCoord.y << "]\n" <<
+			"texIndex: " << vertices_[i].texIndex << "\n";
+	}
 }
 
 void TextBox::updateText(const std::string& message) {
 
 }
 
-int TextBox::map() {
+int TextBox::map(UIVertex* mapped, int overrideIndex) {
 	return 0;
+	// for each vertex
+	int count = 0;
+	for (int i = 0; i < vertices_.size(); i++) {
+		mapped->pos.x = vertices_[i].pos.x; // position x
+		mapped->pos.y = vertices_[i].pos.y; // position y
+		mapped->texCoord.x = vertices_[i].texCoord.x; // tex coord x
+		mapped->texCoord.y = vertices_[i].texCoord.y; // tex coord y
+		(overrideIndex == -1) ? mapped->texIndex = vertices_[i].texIndex : mapped->texIndex = overrideIndex; // tex index
+		mapped++;
+		count++;
+	}
+	return count;
+
 }
 
 void TextBox::scale(glm::vec2 extent) {
 
+}
+
+int TextBox::getQuadCount() {
+	return message_.length();
+}
+
+
+float TextBox::getOffsetX(char c) {
+	switch (c) {
+	case 'c':
+		return 0.f;
+
+	}
+
+	return 0.f;
+}
+
+float TextBox::getOffsetY(char c) {
+	switch (c) {
+	case 'c':
+		return 0.f;
+
+	}
+	return 0.f;
 }

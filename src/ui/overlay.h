@@ -94,7 +94,7 @@ private:
 	void generateTextBoxes();
 
 
-	// EXTERNAL Vulka API function ptrs
+	// EXTERNAL Vulkan API function ptrs
 	PFN_vkCmdSetPolygonModeEXT vkCmdSetPolygonModeEXT{ VK_NULL_HANDLE };
 
 };

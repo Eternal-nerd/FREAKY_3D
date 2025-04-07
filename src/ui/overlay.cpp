@@ -268,6 +268,11 @@ void Overlay::generateElements() {
     tester.init(OVERLAY_DEFAULT, {-0.5,-0.5}, {500,500}, extent, {0,0,1,1}, 1);
     elements_.push_back(tester);
 
+    Element tester2;
+    tester2.init(OVERLAY_DEFAULT, { 0.5,-0.5 }, { 500,500 }, extent, { 3* FONT_OFFSET,2* FONT_OFFSET,FONT_OFFSET,FONT_OFFSET }, 1);
+    elements_.push_back(tester2);
+
+
     // menu elements
     Element pauseBtn;
     pauseBtn.init(OVERLAY_MENU, { 0,0 }, { 400, 200 }, extent, { 0, 0, 1, 1 }, 2);
@@ -281,7 +286,7 @@ void Overlay::generateTextBoxes() {
 
     // default text boxes
     TextBox tester2;
-    tester2.init(OVERLAY_DEFAULT, "testing...", { 0.5, -0.5 }, { 400,400 }, 15.f, extent, 1);
+    tester2.init(OVERLAY_DEFAULT, "testing...", { 0.5, 0.5 }, { 400,400 }, {150.f, 100.f}, extent, 0); // 1
     textBoxes_.push_back(tester2);
 }
 
@@ -343,6 +348,20 @@ void Overlay::startUpdate() {
     }
 
     // text boxes
+    for (int i = 0; i < textBoxes_.size(); i++) {
+        switch (textBoxes_[i].mode_) {
+        case OVERLAY_DEFAULT:
+            vertexMapped_ += textBoxes_[i].map(vertexMapped_, wired);
+            quadCount_ += textBoxes_[i].getQuadCount();
+            break;
+        case OVERLAY_MENU:
+            if (menuShown_) {
+                vertexMapped_ += textBoxes_[i].map(vertexMapped_, wired);
+                quadCount_ += textBoxes_[i].getQuadCount();
+            }
+            break;
+        }
+    }
 
 
 }
