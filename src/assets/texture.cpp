@@ -1,5 +1,7 @@
 #include "texture.h"
 
+#include <iostream>
+
 /*-----------------------------------------------------------------------------
 ------------------------------INITIALIZATION-----------------------------------
 -----------------------------------------------------------------------------*/
@@ -35,7 +37,9 @@ void Texture::createVkTexture() {
 	VkDeviceSize imageSize = texWidth * texHeight * 4;
 
 	if (!pixels) {
-		throw std::runtime_error("failed to load texture image!");
+		util::log(name_, "stbi_load() call failed.");
+        std::cout << "unable to load image: " << filename_ << " -> " << stbi_failure_reason() << "\n";
+        throw std::runtime_error("failed to load texture image!");
 	}
 
 	VkBuffer stagingBuffer;

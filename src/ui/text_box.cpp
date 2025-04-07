@@ -11,31 +11,57 @@ void TextBox::init(OverlayMode mode, OverlayPositionMode positionMode, const std
 	fontSize_ = fontSize;
 	extent_ = extent;
 	texIndex_ = texIndex;
+    
+    generateVertices();
+}
 
-	// calculate x and y offsets (position = TOP LEFT of box
+void TextBox::updateText(const std::string& message) {
+	message_ = message;
+    
+    generateVertices();
+}
+
+void TextBox::generateVertices() {
+    // calculate x and y offsets (position = TOP LEFT of box
 	float scaledWidth = (boxSize_.x / extent_.x);
 	float scaledHeight = (boxSize_.y / extent_.y);
 
 	float scaledFontWidth = (fontSize_.x / extent_.x);
 	float scaledFontHeight = (fontSize_.y / extent_.y);
 
-	vertices_.resize(message.length() * 4);
+	vertices_.resize(message_.length() * 4);
 
 	// initialize vertices in vector
-	float currentX = position_.x - (scaledWidth/2);
-	float currentY = position_.y - (scaledHeight/2);
-	for (int i = 0; i < message.length(); i++) {
+    float currentX = 0.f;
+    float currentY = 0.f;
+    float resetX = 0.f;
+    switch (positionMode_) {
+    case OVERLAY_POSITION_CENTERED:
+        currentX = position_.x - (scaledWidth/2);
+	    currentY = position_.y - (scaledHeight/2);
+        resetX = position_.x -(scaledWidth/2);
+        break;
+    case OVERLAY_POSITION_TOP_LEFT:
+        currentX = position_.x;
+        currentY = position_.y;
+        resetX = position_.x;
+        break;
+    default:
+        break;
+    }
+	
+	for (int i = 0; i < message_.length(); i++) {
 
 		// case where font letter will exceed boundary box
 		if (currentX + scaledFontWidth > position_.x + (scaledWidth / 2)) {
 			currentY += scaledFontHeight;
-			currentX = position_.x - (scaledWidth / 2);
+			currentX = resetX;
 		}
 
 		// TODO MAYBE add case for letters exceeding box height
 
-		float fontX = getOffsetX(message[i]);
-		float fontY = getOffsetY(message[i]);
+		float fontX = getOffsetX(message_[i]);
+		float fontY = getOffsetY(message_[i]);
 
 		// top left
 		vertices_[(i * 4) + 0].pos = { currentX, currentY };
@@ -59,61 +85,6 @@ void TextBox::init(OverlayMode mode, OverlayPositionMode positionMode, const std
 
 		currentX += scaledFontWidth;
 	}
-}
-
-void TextBox::updateText(const std::string& message) {
-	message_ = message;
-
-	// calculate x and y offsets (position = TOP LEFT of box
-	float scaledWidth = (boxSize_.x / extent_.x);
-	float scaledHeight = (boxSize_.y / extent_.y);
-
-	float scaledFontWidth = (fontSize_.x / extent_.x);
-	float scaledFontHeight = (fontSize_.y / extent_.y);
-
-	vertices_.resize(message.length() * 4);
-
-	// initialize vertices in vector
-	float currentX = position_.x - (scaledWidth / 2);
-	float currentY = position_.y - (scaledHeight / 2);
-	for (int i = 0; i < message.length(); i++) {
-
-		// case where font letter will exceed boundary box
-		if (currentX + scaledFontWidth > position_.x + (scaledWidth / 2)) {
-			currentY += scaledFontHeight;
-			currentX = position_.x - (scaledWidth / 2);
-		}
-
-		// TODO MAYBE add case for letters exceeding box height
-
-		float fontX = getOffsetX(message[i]);
-		float fontY = getOffsetY(message[i]);
-
-		// top left
-		vertices_[(i * 4) + 0].pos = { currentX, currentY };
-		vertices_[(i * 4) + 0].texCoord = { fontX, fontY };
-		vertices_[(i * 4) + 0].texIndex = texIndex_;
-
-		// bottom left
-		vertices_[(i * 4) + 1].pos = { currentX, currentY + scaledFontHeight };
-		vertices_[(i * 4) + 1].texCoord = { fontX, fontY + FONT_OFFSET };
-		vertices_[(i * 4) + 1].texIndex = texIndex_;
-
-		// top right
-		vertices_[(i * 4) + 2].pos = { currentX + scaledFontWidth, currentY };
-		vertices_[(i * 4) + 2].texCoord = { fontX + FONT_OFFSET, fontY };
-		vertices_[(i * 4) + 2].texIndex = texIndex_;
-
-		// bottom right
-		vertices_[(i * 4) + 3].pos = { currentX + scaledFontWidth, currentY + scaledFontHeight };
-		vertices_[(i * 4) + 3].texCoord = { fontX + FONT_OFFSET, fontY + FONT_OFFSET };
-		vertices_[(i * 4) + 3].texIndex = texIndex_;
-
-		currentX += scaledFontWidth;
-	}
-}
-
-void TextBox::generateVertices() {
 
 }
 

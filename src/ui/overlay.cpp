@@ -35,7 +35,7 @@ void Overlay::initTextures() {
     // choose textures for font/ui
     textures_.push_back(&assets_->getTexture("green"));
     textureCount_++;
-    textures_.push_back(&assets_->getTexture("font"));
+    textures_.push_back(&assets_->getTexture("fontgrid"));
     textureCount_++;
 }
 
@@ -263,7 +263,7 @@ void Overlay::generateElements() {
     // default elements
     Element tester;
     tester.init(OVERLAY_DEFAULT, {-0.5,-0.5}, {500,500}, extent, {0,0,1,1}, 1);
-    elements_.push_back(tester);
+    //elements_.push_back(tester);
 }
 
 void Overlay::generateTextBoxes() {
@@ -273,13 +273,20 @@ void Overlay::generateTextBoxes() {
 
     // default text boxes
     TextBox FPS;
-    FPS.init(OVERLAY_DEFAULT, OVERLAY_POSITION_TOP_LEFT, "TEST: 1293719284", {}, {}, {}, extent, 1);
+    FPS.init(OVERLAY_DEFAULT, OVERLAY_POSITION_TOP_LEFT, "TEST: 1293719284 hewfiuewqofihewqifhewwertyEWQFEWC", {-1.f,-1.f}, {400,400}, {15.f, 30.f}, extent, 1);
     textBoxes_.push_back(FPS);
 
     // menu textboxes
     TextBox paused;
     paused.init(OVERLAY_MENU, OVERLAY_POSITION_CENTERED, "PAUSED", { 0.f, 0.f }, { 600,200 }, { 100.f, 200.f }, extent, 1);
     textBoxes_.push_back(paused);
+
+
+    // test
+    TextBox tester;
+    tester.init(OVERLAY_DEFAULT, OVERLAY_POSITION_CENTERED, "Hello Alyscia, how are you today? Test: @#$!!! 4628 r3h89238  My mind is playing tricks on me ..... Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", { 0.5f, 0.f}, {1200, 800}, {30.f, 50.f}, extent, 1);
+    textBoxes_.push_back(tester);
+
 }
 
 /*-----------------------------------------------------------------------------
