@@ -27,6 +27,10 @@ void TextBox::scale(glm::vec2 extent) {
 	generateVertices();
 }
 
+bool TextBox::compareMessage(const std::string& compareString) {
+	return (compareString == message_);
+}
+
 void TextBox::generateVertices() {
     // calculate x and y offsets (position = TOP LEFT of box
 	float scaledWidth = (boxSize_.x / extent_.x);
@@ -169,7 +173,7 @@ float TextBox::getOffsetX(char c) {
 	case 'l':
 	case '1':
 	case '_':
-	//case '':
+	case '\'':
 	//case '':
 		return FONT_OFFSET * 5;
 	case 'G':
@@ -353,7 +357,7 @@ float TextBox::getOffsetY(char c) {
 	case '$':
 	case '%':
 	case '^':
-	//case '':
+	case '\'':
 	case '&':
 	case '*':
 	case '(':

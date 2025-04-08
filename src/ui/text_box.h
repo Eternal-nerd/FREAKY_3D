@@ -14,6 +14,8 @@ public:
 	void init(OverlayMode mode, OverlayPositionMode positionMode, const std::string& message, glm::vec2 position, glm::vec2 boxSize, glm::vec2 fontSize, glm::vec2 extent, int texIndex);
 
 	void updateText(const std::string& message);
+	// returns true if passed message == this object's message
+	bool compareMessage(const std::string& compareString);
 
 	int map(UIVertex* mapped, int overrideIndex = -1);
 

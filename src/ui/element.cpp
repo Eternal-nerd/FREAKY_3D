@@ -6,6 +6,7 @@ void Element::init(OverlayMode mode, glm::vec2 position, glm::vec2 size, glm::ve
 	mode_ = mode;
 	position_ = position;
 	size_ = size;
+	extent_ = extent;
 
 	// calculate x and y offsets
 	float xOffset = (size.x / extent.x) / 2;
@@ -41,6 +42,21 @@ void Element::init(OverlayMode mode, glm::vec2 position, glm::vec2 size, glm::ve
 
 }
 
+void Element::checkHover(float xPos, float yPos) {
+	// calculate boundaries
+	float leftBound = position_.x - ((size_.x / extent_.x) / 2);
+	float rightBound = position_.x + ((size_.x / extent_.x) / 2);
+	float topBound = position_.y - ((size_.y / extent_.y) / 2);
+	float bottomBound = position_.y + ((size_.y / extent_.y) / 2);;
+
+	if (xPos < rightBound && xPos > leftBound && yPos > topBound && yPos < bottomBound) {
+		hovered_ = true;
+	}
+	else {
+		hovered_ = false;
+	}
+}
+
 
 int Element::map(UIVertex* mapped, int overrideIndex) {
 	// for each vertex
@@ -61,6 +77,8 @@ void Element::scale(glm::vec2 extent) {
 	if (vertices_.size() != 4) {
 		throw std::runtime_error("unable to scale ui element (not 4 vertices)");
 	}
+
+	extent_ = extent;
 
 	// calculate x and y offsets
 	float xOffset = (size_.x / extent.x) / 2;

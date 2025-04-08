@@ -27,8 +27,11 @@ public:
 	// API: call start update, then can call update textbox/element methods any amt of times, then, call end update
 	void startUpdate();
 
+	void updateMousePosition(float xPos, float yPos);
+
 	void updateTextBox(int index, const std::string& newText);
 	//void updateElement(int index);
+	bool checkTextBoxMessage(int index, const std::string& compareString);
 
 	void endUpdate();
 
@@ -46,8 +49,6 @@ public:
 	const std::string name_ = "OVERLAY";
 
 private:
-	float scale_ = 1.f;
-
 	// access to vulkan
 	VkPhysicalDevice physicalDevice_ = VK_NULL_HANDLE;
 	VkDevice device_ = VK_NULL_HANDLE;
@@ -83,6 +84,9 @@ private:
     uint32_t* indexMapped_ = nullptr;
 	int indexCount_ = 0;
 	int quadCount_ = 0;
+
+	// tracked mouse position [0,1]
+	glm::vec2 mousePos_ = {0.f,0.f};
 
 	// ui elements
 	bool menuShown_ = false;

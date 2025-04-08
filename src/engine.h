@@ -30,6 +30,8 @@ private:
 
 	// CLock
 	Clock clock_;
+	float fpsTime_ = 0.f;
+	int loopsMeasured_ = 0;
 
 	// Graphics
 	Gfx gfx_;
@@ -39,6 +41,7 @@ private:
 
 	// overlay ptr
 	Overlay* overlay_ = nullptr;
+	std::string fpsString_ = "";
 
 	// Player Camera
 	Camera camera_;

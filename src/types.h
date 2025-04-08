@@ -18,6 +18,13 @@ const int MAX_MODELS = 512;
 
 const float FONT_OFFSET = 0.0625f;
 
+const int FPS_MEASURE_INTERVAL = 500;
+
+struct MenuPushConstantData {
+    alignas(16) bool resumeHovered = false;
+    //float resumeCenterDistance = 0.f;
+};
+
 struct UniformBufferObject {
     alignas(16) glm::mat4 model[MAX_MODELS];
     alignas(16) glm::mat4 view;

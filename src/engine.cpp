@@ -40,7 +40,7 @@ void Engine::init() {
 
     // register camera rigid body and all entities
     sim_.registerBody(camBody_);
-    for (auto entity : entities_) {
+    for (auto &entity : entities_) {
         sim_.registerBody(entity.getBodyPtr());
     }
 
@@ -54,6 +54,7 @@ void Engine::loop() {
 
 	running_ = true;
 	while (running_) {
+        float frameStart = clock_.getProgramTime();
 
 		handleEvents();
 
@@ -64,9 +65,25 @@ void Engine::loop() {
             camera_.update(gfx_.getAspect());
             updateUBO();
             updateOverlay();
-            // RENDER stuff
+            // RENDER stuff, mesure frametime
             renderScene();
         }
+
+        // measure FPS here
+        float frameEnd = clock_.getProgramTime();
+        fpsTime_ += frameEnd - frameStart;
+        loopsMeasured_++;
+
+        if (loopsMeasured_ > FPS_MEASURE_INTERVAL) {
+            float fps = 1 / (fpsTime_ / FPS_MEASURE_INTERVAL);
+
+            fpsString_ = "FPS: " + std::to_string(fps);
+
+            fpsTime_ = 0.f;
+            loopsMeasured_ = 0;
+        }
+
+
 	}
     gfx_.deviceWaitIdle();
 }
@@ -104,7 +121,9 @@ void Engine::updateOverlay() {
     overlay_->startUpdate();
 
     // do stuff here.
-    //overlay_->
+    if (!overlay_->checkTextBoxMessage(0, fpsString_)) {
+        overlay_->updateTextBox(0, fpsString_);
+    }
 
     overlay_->endUpdate();
 }
@@ -211,6 +230,11 @@ void Engine::handleMouseEvent() {
             camera_.incrementPitch((float)event_.motion.yrel / 250);
         }
     }
+
+    float x = 0.f;
+    float y = 0.f;
+    SDL_GetMouseState(&x, &y);
+    overlay_->updateMousePosition(x, y);
 }
 
 void Engine::handleKeyEvent() {
