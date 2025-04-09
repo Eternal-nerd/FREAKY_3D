@@ -271,7 +271,7 @@ void Overlay::generateElements() {
     // default elements
     Element resumeBtn;
     resumeBtn.init(OVERLAY_MENU, {0.25f, -0.5}, {200, 100}, extent, {0,0,1,1}, 2);
-    elements_.push_back(resumeBtn);
+    //elements_.push_back(resumeBtn);
     
     Element tester;
     tester.init(OVERLAY_DEFAULT, {-0.5,-0.5}, {500,500}, extent, {0,0,1,1}, 1);
