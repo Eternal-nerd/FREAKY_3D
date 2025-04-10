@@ -19,7 +19,8 @@ const int MAX_MODELS = 512;
 const float FONT_OFFSET = 0.0625f;
 
 const int FPS_MEASURE_INTERVAL = 500;
-
+ 
+// trash unused
 struct MenuPushConstantData {
     alignas(16) bool resumeHovered = false;
     //float resumeCenterDistance = 0.f;
@@ -92,6 +93,7 @@ struct UIVertex {
     glm::vec2 pos;
     glm::vec2 texCoord;
     int texIndex;
+    int interaction;
 
     static VkVertexInputBindingDescription getBindingDescription() {
         VkVertexInputBindingDescription bindingDescription{};
@@ -102,8 +104,8 @@ struct UIVertex {
         return bindingDescription;
     }
 
-    static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions() {
-        std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
+    static std::array<VkVertexInputAttributeDescription, 4> getAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 4> attributeDescriptions{};
 
         attributeDescriptions[0].binding = 0;
         attributeDescriptions[0].location = 0;
@@ -120,11 +122,16 @@ struct UIVertex {
         attributeDescriptions[2].format = VK_FORMAT_R32_SINT;
         attributeDescriptions[2].offset = offsetof(UIVertex, texIndex);
 
+        attributeDescriptions[3].binding = 0;
+        attributeDescriptions[3].location = 3;
+        attributeDescriptions[3].format = VK_FORMAT_R32_SINT;
+        attributeDescriptions[3].offset = offsetof(UIVertex, interaction);
+
         return attributeDescriptions;
     }
 
     bool operator==(const UIVertex& other) const {
-        return pos == other.pos && texCoord == other.texCoord && texIndex == other.texIndex;
+        return pos == other.pos && texCoord == other.texCoord && texIndex == other.texIndex && other.interaction == other.interaction;
     }
 };
 

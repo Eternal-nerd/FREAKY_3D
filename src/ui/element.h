@@ -19,6 +19,8 @@ public:
 
 	void checkHover(float xPos, float yPos);
 
+	void resetInteraction();
+
 	// returns amount to iter pointer
 	int map(UIVertex* mapped, int overrideIndex = -1);
 

@@ -275,7 +275,7 @@ void Overlay::generateElements() {
     
     Element tester;
     tester.init(OVERLAY_DEFAULT, {-0.5,-0.5}, {500,500}, extent, {0,0,1,1}, 1);
-    //elements_.push_back(tester);
+    elements_.push_back(tester);
 }
 
 void Overlay::generateTextBoxes() {
@@ -292,7 +292,6 @@ void Overlay::generateTextBoxes() {
     TextBox paused;
     paused.init(OVERLAY_MENU, OVERLAY_POSITION_CENTERED, "PAUSED", { 0.f, 0.f }, { 601,200 }, { 100.f, 200.f }, extent, 1);
     textBoxes_.push_back(paused);
-
 
     // test
     TextBox tester;
@@ -341,9 +340,41 @@ void Overlay::toggleMenu() {
     menuShown_ = !menuShown_;
 }
 
+void Overlay::mouseButtonTrigger(bool state) {
+    mouseDown_ = state;
+
+    if (state) {
+        std::cout << "mouse down\n";
+    }
+    else {
+        std::cout << "mouse up\n";
+    }
+}
+
 // API: call start update, then can call update textbox/element methods any amt of times, then, call end update
 void Overlay::startUpdate() {
     quadCount_ = 0;
+
+    if (menuShown_) {
+        // check for mouse hovering over elements
+        for (int i = 0; i < elements_.size(); i++) {
+            switch (elements_[i].mode_) {
+            case OVERLAY_DEFAULT:
+                elements_[i].checkHover(mousePos_.x, mousePos_.y);
+                break;
+            case OVERLAY_MENU:
+                if (menuShown_) {
+                    elements_[i].checkHover(mousePos_.x, mousePos_.y);
+                }
+                break;
+            }
+        }
+    }
+    else {
+        for (int i = 0; i < elements_.size(); i++) {
+            elements_[i].resetInteraction();
+        }
+    }
 
     if (vkMapMemory(device_, vertexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&vertexMapped_) != VK_SUCCESS) {
         throw std::runtime_error("failed to map vertex buffer memory for overlay update ");
@@ -380,20 +411,6 @@ void Overlay::startUpdate() {
             if (menuShown_) {
                 vertexMapped_ += textBoxes_[i].map(vertexMapped_, wired);
                 quadCount_ += textBoxes_[i].getQuadCount();
-            }
-            break;
-        }
-    }
-
-    // check for mouse hovering over elements
-    for (int i = 0; i < elements_.size(); i++) {
-        switch (elements_[i].mode_) {
-        case OVERLAY_DEFAULT:
-            elements_[i].checkHover(mousePos_.x, mousePos_.y);
-            break;
-        case OVERLAY_MENU:
-            if (menuShown_) {
-                elements_[i].checkHover(mousePos_.x, mousePos_.y);
             }
             break;
         }

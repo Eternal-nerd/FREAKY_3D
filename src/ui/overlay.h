@@ -43,12 +43,15 @@ public:
 	void updateExtent(VkExtent2D extent);
 	void toggleWireframe();
 	void toggleMenu();
+	void mouseButtonTrigger(bool state);
 
 	void cleanup();
 
 	const std::string name_ = "OVERLAY";
 
 private:
+	bool mouseDown_ = false;
+
 	// access to vulkan
 	VkPhysicalDevice physicalDevice_ = VK_NULL_HANDLE;
 	VkDevice device_ = VK_NULL_HANDLE;

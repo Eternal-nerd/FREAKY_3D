@@ -69,6 +69,10 @@ void Engine::loop() {
             renderScene();
         }
 
+        // limit fps if wanted
+        //std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+
         // measure FPS here
         float frameEnd = clock_.getProgramTime();
         fpsTime_ += frameEnd - frameStart;
@@ -82,8 +86,6 @@ void Engine::loop() {
             fpsTime_ = 0.f;
             loopsMeasured_ = 0;
         }
-
-
 	}
     gfx_.deviceWaitIdle();
 }
@@ -165,6 +167,8 @@ void Engine::handleEvents() {
             handleKeyEvent();
             break;
         case SDL_EVENT_MOUSE_MOTION:
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
             handleMouseEvent();
             break;
             // MINIMIZE/MAXIMIZE EVENTS
@@ -230,11 +234,33 @@ void Engine::handleMouseEvent() {
             camera_.incrementPitch((float)event_.motion.yrel / 250);
         }
     }
+    else {
+        float x = 0.f;
+        float y = 0.f;
+        bool down = true;
+        SDL_MouseButtonFlags state = SDL_GetMouseState(&x, &y);
+        
+        switch (state) {
+        case 1:
+            break;
+        case 2:
+            break;
+        case 3:
+            break;
+        }
 
-    float x = 0.f;
-    float y = 0.f;
-    SDL_GetMouseState(&x, &y);
-    overlay_->updateMousePosition(x, y);
+        switch (event_.type) {
+        case SDL_EVENT_MOUSE_MOTION:
+            overlay_->updateMousePosition(x, y);
+            break;
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+            down = false;
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+            overlay_->mouseButtonTrigger(down);
+            break;
+        }
+        
+    }
 }
 
 void Engine::handleKeyEvent() {

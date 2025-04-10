@@ -109,8 +109,6 @@ private:
 	VkPolygonMode currentPolygonMode_ = VK_POLYGON_MODE_FILL;
 	float currentLineWidth_ = 1.f;
 
-
-
 	// Vulkan synchronization ------------------------===<
 	std::vector<VkSemaphore> imageAvailableSemaphores_;
 	std::vector<VkSemaphore> renderFinishedSemaphores_;
