@@ -15,7 +15,7 @@ public:
 	// position = {x=xPos, y=yPos}
 	// size = { widthPixels, heightPixels, screenWidth, screenHeight }
 	// textureCoord = {x=xPos, y=yPos, z=xOffset, w=yOffset}
-	void init(OverlayMode mode, glm::vec2 position, glm::vec2 size, glm::vec2 extent, glm::vec4 textureCoord, int texIndex);
+	void init(const std::string& id, OverlayMode mode, glm::vec2 position, glm::vec2 size, glm::vec2 extent, glm::vec4 textureCoord, int texIndex);
 
 	void checkHover(float xPos, float yPos);
 
@@ -27,6 +27,8 @@ public:
 	void scale(glm::vec2 extent);
 
 	bool hovered_ = false;
+
+	std::string id_ = "";
 
 	OverlayMode mode_ = OVERLAY_DEFAULT;
 

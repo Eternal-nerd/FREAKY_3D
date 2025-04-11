@@ -19,7 +19,13 @@ const int MAX_MODELS = 512;
 const float FONT_OFFSET = 0.0625f;
 
 const int FPS_MEASURE_INTERVAL = 500;
- 
+
+// used to pass updates from overlay to the engine
+struct OverlayUpdates {
+    bool unpause = false;
+    bool quit = false;
+};
+
 // trash unused
 struct MenuPushConstantData {
     alignas(16) bool resumeHovered = false;

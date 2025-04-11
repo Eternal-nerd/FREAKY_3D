@@ -37,6 +37,12 @@ void Overlay::initTextures() {
     textureCount_++;
     textures_.push_back(&assets_->getTexture("resume"));
     textureCount_++;
+    textures_.push_back(&assets_->getTexture("quit"));
+    textureCount_++;
+    textures_.push_back(&assets_->getTexture("slider_knob"));
+    textureCount_++;
+    textures_.push_back(&assets_->getTexture("slider_bar"));
+    textureCount_++;
 }
 
 void Overlay::initDescriptors() {
@@ -270,11 +276,15 @@ void Overlay::generateElements() {
 
     // default elements
     Element resumeBtn;
-    resumeBtn.init(OVERLAY_MENU, {0.25f, -0.5}, {200, 100}, extent, {0,0,1,1}, 2);
-    //elements_.push_back(resumeBtn);
+    resumeBtn.init("resume", OVERLAY_MENU, {0.5f, -0.5}, {200, 100}, extent, {0,0,1,1}, 2);
+    elements_.push_back(resumeBtn);
+
+    Element quitBtn;
+    quitBtn.init("quit", OVERLAY_MENU, { 0.5f, -0.3 }, { 200, 100 }, extent, { 0,0,1,1 }, 3);
+    elements_.push_back(quitBtn);
     
     Element tester;
-    tester.init(OVERLAY_DEFAULT, {-0.5,-0.5}, {500,500}, extent, {0,0,1,1}, 1);
+    tester.init("tester", OVERLAY_DEFAULT, {-0.5,-0.5}, {500,500}, extent, {0,0,1,1}, 1);
     elements_.push_back(tester);
 }
 
@@ -302,6 +312,51 @@ void Overlay::generateTextBoxes() {
 /*-----------------------------------------------------------------------------
 ------------------------------UPDATE-SHIT--------------------------------------
 -----------------------------------------------------------------------------*/
+OverlayUpdates Overlay::getUpdates() {
+    return updates_;
+}
+
+void Overlay::resetUpdates() {
+    updates_.unpause = false;
+}
+
+void Overlay::handleElementUpdates() {
+    // hover effects
+    if (menuShown_) {
+        // check for mouse hovering over elements
+        for (int i = 0; i < elements_.size(); i++) {
+            switch (elements_[i].mode_) {
+            case OVERLAY_DEFAULT:
+                elements_[i].checkHover(mousePos_.x, mousePos_.y);
+                break;
+            case OVERLAY_MENU:
+                if (menuShown_) {
+                    elements_[i].checkHover(mousePos_.x, mousePos_.y);
+                }
+                break;
+            }
+        }
+    }
+    else {
+        for (int i = 0; i < elements_.size(); i++) {
+            elements_[i].resetInteraction();
+        }
+    }
+
+    // onClick events
+    if (mouseRelease_) {
+        if (elements_[getElementIndex("resume")].hovered_) {
+            updates_.unpause = true;
+        }
+        if (elements_[getElementIndex("quit")].hovered_) {
+            updates_.quit = true;
+        }
+
+        // after the release has been handled
+        mouseRelease_ = false;
+    }
+}
+
 void Overlay::updateMousePosition(float xPos, float yPos) {
     mousePos_.x = -1 + (2 * (xPos / swapChainExtent_.width));
     mousePos_.y = -1 + (2 * (yPos / swapChainExtent_.height));
@@ -338,43 +393,21 @@ void Overlay::toggleWireframe() {
 void Overlay::toggleMenu() {
     util::log(name_, "toggling menu overlay");
     menuShown_ = !menuShown_;
+
+    // reset mouse position
+    mousePos_ = {0.f, 0.f};
 }
 
 void Overlay::mouseButtonTrigger(bool state) {
     mouseDown_ = state;
-
-    if (state) {
-        std::cout << "mouse down\n";
-    }
-    else {
-        std::cout << "mouse up\n";
-    }
+    mouseRelease_ = !state;
 }
 
 // API: call start update, then can call update textbox/element methods any amt of times, then, call end update
 void Overlay::startUpdate() {
     quadCount_ = 0;
 
-    if (menuShown_) {
-        // check for mouse hovering over elements
-        for (int i = 0; i < elements_.size(); i++) {
-            switch (elements_[i].mode_) {
-            case OVERLAY_DEFAULT:
-                elements_[i].checkHover(mousePos_.x, mousePos_.y);
-                break;
-            case OVERLAY_MENU:
-                if (menuShown_) {
-                    elements_[i].checkHover(mousePos_.x, mousePos_.y);
-                }
-                break;
-            }
-        }
-    }
-    else {
-        for (int i = 0; i < elements_.size(); i++) {
-            elements_[i].resetInteraction();
-        }
-    }
+    handleElementUpdates();
 
     if (vkMapMemory(device_, vertexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&vertexMapped_) != VK_SUCCESS) {
         throw std::runtime_error("failed to map vertex buffer memory for overlay update ");
@@ -487,6 +520,19 @@ void Overlay::draw(VkCommandBuffer commandBuffer) {
     vkCmdBindIndexBuffer(commandBuffer, indexBuffer_, 0, VK_INDEX_TYPE_UINT32);
 
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indexCount_), 1, 0, 0, 0);
+}
+
+/*-----------------------------------------------------------------------------
+------------------------------UTILITY------------------------------------------
+-----------------------------------------------------------------------------*/
+int Overlay::getElementIndex(const std::string& name) {
+    for (int i = 0; i < elements_.size(); i++) {
+        if (elements_[i].id_ == name) {
+            return i;
+        }
+    }
+
+    throw std::runtime_error("could not find element: " + name);
 }
 
 /*-----------------------------------------------------------------------------

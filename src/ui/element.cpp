@@ -1,8 +1,9 @@
 #include "element.h"
 
-void Element::init(OverlayMode mode, glm::vec2 position, glm::vec2 size, glm::vec2 extent, glm::vec4 textureCoord, int texIndex) {
+void Element::init(const std::string& id, OverlayMode mode, glm::vec2 position, glm::vec2 size, glm::vec2 extent, glm::vec4 textureCoord, int texIndex) {
 	util::log(name_, "initializing ui element");
 
+	id_ = id;
 	mode_ = mode;
 	position_ = position;
 	size_ = size;

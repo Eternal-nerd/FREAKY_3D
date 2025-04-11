@@ -120,6 +120,19 @@ void Engine::updateUBO() {
 // TODO: step physics sim.
 
 void Engine::updateOverlay() {
+    // need to check overlay for updates
+    OverlayUpdates updates = overlay_->getUpdates();
+    if (updates.unpause) {
+        togglePause();
+    }
+    if (updates.quit) {
+        util::log(name_, "quitting program (onClick)");
+        running_ = false;
+    }
+
+    // need to reset updates
+    overlay_->resetUpdates();
+
     overlay_->startUpdate();
 
     // do stuff here.
@@ -240,14 +253,17 @@ void Engine::handleMouseEvent() {
         bool down = true;
         SDL_MouseButtonFlags state = SDL_GetMouseState(&x, &y);
         
-        switch (state) {
-        case 1:
+        /*switch (state) {
+            case SDL_BUTTON_MIDDLE:
+            util::log(name_, "case SDL_BUTTON_MIDDLE");
             break;
-        case 2:
+        case SDL_BUTTON_LEFT:
+            util::log(name_, "case SDL_BUTTON_LEFT");
             break;
-        case 3:
+        case SDL_BUTTON_RIGHT:
+            util::log(name_, "case SDL_BUTTON_RIGHT"); // NOT WORKING?!?!?
             break;
-        }
+        }*/
 
         switch (event_.type) {
         case SDL_EVENT_MOUSE_MOTION:
@@ -259,7 +275,6 @@ void Engine::handleMouseEvent() {
             overlay_->mouseButtonTrigger(down);
             break;
         }
-        
     }
 }
 
@@ -291,7 +306,12 @@ void Engine::handleKeyEvent() {
 }
 
 void Engine::togglePause() {
-    util::log(name_, "pausing");
+    if (paused_) {
+        util::log(name_, "unpausing");
+    }
+    else {
+        util::log(name_, "pausing");
+    }
     paused_ = !paused_;
     gfx_.toggleMouseMode(paused_);
     overlay_->toggleMenu();

@@ -24,6 +24,9 @@ class Overlay {
 public:
 	void init(VkDevice device, VkPhysicalDevice physicalDevice, VkRenderPass renderpass, VkExtent2D extent, Assets& assets);
 
+	OverlayUpdates getUpdates();
+	void resetUpdates();
+
 	// API: call start update, then can call update textbox/element methods any amt of times, then, call end update
 	void startUpdate();
 
@@ -51,6 +54,9 @@ public:
 
 private:
 	bool mouseDown_ = false;
+	bool mouseRelease_ = false;
+
+	OverlayUpdates updates_;
 
 	// access to vulkan
 	VkPhysicalDevice physicalDevice_ = VK_NULL_HANDLE;
@@ -95,10 +101,14 @@ private:
 	bool menuShown_ = false;
 	std::vector<Element> elements_{};
 	void generateElements();
+	void handleElementUpdates();
 
 	// text boxes
 	std::vector<TextBox> textBoxes_{};
 	void generateTextBoxes();
+
+	// UTILITY:
+	int getElementIndex(const std::string& name);
 
 
 	// EXTERNAL Vulkan API function ptrs
