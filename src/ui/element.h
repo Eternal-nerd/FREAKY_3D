@@ -15,7 +15,7 @@ public:
 	// position = {x=xPos, y=yPos}
 	// size = { widthPixels, heightPixels, screenWidth, screenHeight }
 	// textureCoord = {x=xPos, y=yPos, z=xOffset, w=yOffset}
-	void init(const std::string& id, OverlayMode mode, glm::vec2 position, glm::vec2 size, glm::vec2 extent, glm::vec4 textureCoord, int texIndex);
+	void init(const std::string& id, OverlayMode mode, UIQuad quad, glm::vec2 extent);
 
 	void checkHover(float xPos, float yPos);
 
@@ -35,9 +35,8 @@ public:
 	const std::string name_ = "ELEMENT";
 
 private:
+	UIQuad quad_;
 
-	glm::vec2 position_ = { 0.f,0.f };
-	glm::vec2 size_ = { 0.f, 0.f };
 	glm::vec2 extent_ = { 0.f, 0.f };
 
 	std::vector<UIVertex> vertices_ = {};

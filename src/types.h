@@ -26,7 +26,7 @@ struct OverlayUpdates {
     bool quit = false;
 };
 
-// trash unused
+// trash unused IDIOT
 struct MenuPushConstantData {
     alignas(16) bool resumeHovered = false;
     //float resumeCenterDistance = 0.f;
@@ -138,6 +138,29 @@ struct UIVertex {
 
     bool operator==(const UIVertex& other) const {
         return pos == other.pos && texCoord == other.texCoord && texIndex == other.texIndex && other.interaction == other.interaction;
+    }
+};
+
+struct UIQuad {
+    glm::vec2 position;
+    glm::vec2 sizePixels;
+    // textureCoord = {x=xPos, y=yPos, z=xOffset, w=yOffset}
+    glm::vec4 textureCoord;
+    int texIndex;
+
+    bool isPointWithin(float xPos, float yPos, glm::vec2 extent) {
+        // calculate boundaries
+        float leftBound = position.x - ((sizePixels.x / extent.x) / 2);
+        float rightBound = position.x + ((sizePixels.x / extent.x) / 2);
+        float topBound = position.y - ((sizePixels.y / extent.y) / 2);
+        float bottomBound = position.y + ((sizePixels.y / extent.y) / 2);;
+
+        if (xPos < rightBound && xPos > leftBound && yPos > topBound && yPos < bottomBound) {
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 };
 

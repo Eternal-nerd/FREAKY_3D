@@ -272,17 +272,31 @@ void Overlay::generateElements() {
 
     glm::vec2 extent = { swapChainExtent_.width, swapChainExtent_.height };
 
+    UIQuad quad;
+
     // default elements
     Element resumeBtn;
-    resumeBtn.init("resume", OVERLAY_MENU, {0.5f, -0.5}, {200, 100}, extent, {0,0,1,1}, 2);
+    quad.position = { 0.5f, -0.5 };
+    quad.sizePixels = { 400, 200 };
+    quad.textureCoord = { 0,0,1,1 };
+    quad.texIndex = 2;
+    resumeBtn.init("resume", OVERLAY_MENU, quad, extent);
     elements_.push_back(resumeBtn);
 
     Element quitBtn;
-    quitBtn.init("quit", OVERLAY_MENU, { 0.5f, -0.3 }, { 200, 100 }, extent, { 0,0,1,1 }, 3);
+    quad.position = { 0.5f, 0.5 };
+    quad.sizePixels = { 400, 200 };
+    quad.textureCoord = { 0,0,1,1 };
+    quad.texIndex = 3;
+    quitBtn.init("quit", OVERLAY_MENU, quad, extent);
     elements_.push_back(quitBtn);
     
     Element tester;
-    tester.init("tester", OVERLAY_MENU, {-0.5,-0.5}, {500,500}, extent, {0,0,1,1}, 1);
+    quad.position = { -0.5,0.5 };
+    quad.sizePixels = { 500,500 };
+    quad.textureCoord = { 0,0,1,1 };
+    quad.texIndex = 1;
+    tester.init("tester", OVERLAY_MENU, quad, extent);
     elements_.push_back(tester);
 }
 
@@ -309,6 +323,24 @@ void Overlay::generateTextBoxes() {
 
 void Overlay::generateSliders() {
     util::log(name_, "generating overlay sliders");
+    
+    UIQuad knobQuad;
+    UIQuad barQuad;
+
+    knobQuad.position = { 0.f, 0.f };
+    knobQuad.sizePixels = { 50, 50 };
+    knobQuad.textureCoord = { 0,0,1,1 };
+    knobQuad.texIndex = 4;
+
+    barQuad.position = { 0.f, 0.f };
+    barQuad.sizePixels = { 800,100 };
+    barQuad.textureCoord = { 0,0,1,1 };
+    barQuad.texIndex = 4;
+
+    Slider testSlider;
+    //testSlider.init();
+    sliders_.push_back(testSlider);
+
 }
 
 /*-----------------------------------------------------------------------------
@@ -332,9 +364,7 @@ void Overlay::handleElementUpdates() {
                 elements_[i].checkHover(mousePos_.x, mousePos_.y);
                 break;
             case OVERLAY_MENU:
-                if (menuShown_) {
-                    elements_[i].checkHover(mousePos_.x, mousePos_.y);
-                }
+                elements_[i].checkHover(mousePos_.x, mousePos_.y);
                 break;
             }
         }
