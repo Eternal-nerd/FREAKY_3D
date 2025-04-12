@@ -12,6 +12,7 @@
 #include "../assets/texture.h"
 #include "element.h"
 #include "text_box.h"
+#include "slider.h"
 
 // Max. number of elements the text overlay buffer can hold
 #define MAX_OVERLAY_ELEMENTS 2048
@@ -106,6 +107,10 @@ private:
 	// text boxes
 	std::vector<TextBox> textBoxes_{};
 	void generateTextBoxes();
+
+	// sliders
+	std::vector<Slider> sliders_{};
+	void generateSliders();
 
 	// UTILITY:
 	int getElementIndex(const std::string& name);

@@ -28,7 +28,7 @@ private:
 	bool visible_ = true;
 	bool paused_ = false;
 
-	// CLock
+	// Clock
 	Clock clock_;
 	float fpsTime_ = 0.f;
 	int loopsMeasured_ = 0;

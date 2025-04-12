@@ -25,6 +25,7 @@ set(SOURCES
 	src/ui/overlay.cpp
 	src/ui/element.cpp
 	src/ui/text_box.cpp
+	src/ui/slider.cpp
 	src/assets/assets.cpp
 	src/assets/texture.cpp
 	src/assets/mesh.cpp
@@ -44,6 +45,7 @@ set(HEADERS
 	src/ui/overlay.h
 	src/ui/element.h
 	src/ui/text_box.h
+	src/ui/slider.h
 	src/assets/assets.h
 	src/assets/texture.h
 	src/assets/mesh.h

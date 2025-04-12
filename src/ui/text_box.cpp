@@ -114,6 +114,7 @@ int TextBox::map(UIVertex* mapped, int overrideIndex) {
 		mapped->texCoord.x = vertices_[i].texCoord.x; // tex coord x
 		mapped->texCoord.y = vertices_[i].texCoord.y; // tex coord y
 		(overrideIndex == -1) ? mapped->texIndex = vertices_[i].texIndex : mapped->texIndex = overrideIndex; // tex index
+		mapped->interaction = 0; // no interaction for text boxes yet
 		mapped++;
 		count++;
 	}

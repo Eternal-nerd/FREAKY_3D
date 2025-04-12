@@ -18,6 +18,7 @@ void RigidBody::init() {
 -----------------------------------------------------------------------------*/
 void RigidBody::update(float deltaT) {
 	// first, update position (do more later?)
+	// TODO THIS ONLY WORKS FOR CAMERA?
 	glm::quat yawRotation = glm::angleAxis(yaw_, glm::vec3{ 0, -1, 0 });
 	glm::mat4 yawRotM = glm::toMat4(yawRotation);
 	glm::vec3 positionIncr = glm::vec3(yawRotM * glm::vec4(linearVel_ * deltaT, 0));

@@ -72,7 +72,6 @@ void Engine::loop() {
         // limit fps if wanted
         //std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
-
         // measure FPS here
         float frameEnd = clock_.getProgramTime();
         fpsTime_ += frameEnd - frameStart;
@@ -87,6 +86,7 @@ void Engine::loop() {
             loopsMeasured_ = 0;
         }
 	}
+    
     gfx_.deviceWaitIdle();
 }
 
@@ -136,7 +136,7 @@ void Engine::updateOverlay() {
     overlay_->startUpdate();
 
     // do stuff here.
-    if (!overlay_->checkTextBoxMessage(0, fpsString_)) {
+    if (!overlay_->checkTextBoxMessage(0, fpsString_) && fpsString_ != "") {
         overlay_->updateTextBox(0, fpsString_);
     }
 
@@ -158,7 +158,6 @@ void Engine::renderScene() {
     overlay_->draw(commandBuffer);
 
     gfx_.submitCommandBuffer(commandBuffer);
-
 }
 
 

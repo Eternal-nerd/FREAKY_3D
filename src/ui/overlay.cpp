@@ -18,6 +18,7 @@ void Overlay::init(VkDevice device, VkPhysicalDevice physicalDevice, VkRenderPas
 
     generateElements();
     generateTextBoxes();
+    generateSliders();
 
     wireframeIndex_ = 0;
 
@@ -39,9 +40,7 @@ void Overlay::initTextures() {
     textureCount_++;
     textures_.push_back(&assets_->getTexture("quit"));
     textureCount_++;
-    textures_.push_back(&assets_->getTexture("slider_knob"));
-    textureCount_++;
-    textures_.push_back(&assets_->getTexture("slider_bar"));
+    textures_.push_back(&assets_->getTexture("slider"));
     textureCount_++;
 }
 
@@ -266,7 +265,6 @@ void Overlay::initPipeline() {
 
     vkDestroyShaderModule(device_, fragShaderModule, nullptr);
     vkDestroyShaderModule(device_, vertShaderModule, nullptr);
-
 }
 
 void Overlay::generateElements() {
@@ -284,7 +282,7 @@ void Overlay::generateElements() {
     elements_.push_back(quitBtn);
     
     Element tester;
-    tester.init("tester", OVERLAY_DEFAULT, {-0.5,-0.5}, {500,500}, extent, {0,0,1,1}, 1);
+    tester.init("tester", OVERLAY_MENU, {-0.5,-0.5}, {500,500}, extent, {0,0,1,1}, 1);
     elements_.push_back(tester);
 }
 
@@ -295,7 +293,7 @@ void Overlay::generateTextBoxes() {
 
     // default text boxes
     TextBox FPS;
-    FPS.init(OVERLAY_DEFAULT, OVERLAY_POSITION_TOP_LEFT, "TESTING!!!!", {-0.999f,-0.99f}, {800,200}, {25.f, 40.f}, extent, 1);
+    FPS.init(OVERLAY_DEFAULT, OVERLAY_POSITION_TOP_LEFT, "FPS INCOMING!!!", {-0.999f,-0.99f}, {800,200}, {25.f, 40.f}, extent, 1);
     textBoxes_.push_back(FPS);
 
     // menu textboxes
@@ -307,6 +305,10 @@ void Overlay::generateTextBoxes() {
     TextBox tester;
     tester.init(OVERLAY_DEFAULT, OVERLAY_POSITION_CENTERED, "Hello Alyscia, how are you today? \nTest: @#$!!! 4628 r3h89238  My mind is playing tricks on me \n.....\n\n Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", { 0.5f, 0.f}, {1200, 800}, {30.f, 50.f}, extent, 1);
     //textBoxes_.push_back(tester);
+}
+
+void Overlay::generateSliders() {
+    util::log(name_, "generating overlay sliders");
 }
 
 /*-----------------------------------------------------------------------------
@@ -351,6 +353,8 @@ void Overlay::handleElementUpdates() {
         if (elements_[getElementIndex("quit")].hovered_) {
             updates_.quit = true;
         }
+
+
 
         // after the release has been handled
         mouseRelease_ = false;
