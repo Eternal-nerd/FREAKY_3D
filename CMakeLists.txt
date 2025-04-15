@@ -25,6 +25,9 @@ set(SOURCES
 	src/ui/overlay.cpp
 	src/ui/text.cpp
 	src/ui/rectangle.cpp
+	src/ui/button.cpp
+	src/ui/slider.cpp
+	src/ui/container.cpp
 	src/assets/assets.cpp
 	src/assets/texture.cpp
 	src/assets/mesh.cpp
@@ -42,8 +45,11 @@ set(HEADERS
 	src/entity.h
 	src/camera.h
 	src/ui/overlay.h
-	src/ui/rectangle.h
 	src/ui/text.h
+	src/ui/rectangle.h
+	src/ui/button.cpp
+	src/ui/slider.cpp
+	src/ui/container.cpp
 	src/assets/assets.h
 	src/assets/texture.h
 	src/assets/mesh.h

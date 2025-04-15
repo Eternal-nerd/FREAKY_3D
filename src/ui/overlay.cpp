@@ -283,6 +283,8 @@ void Overlay::generateElements() {
 
     testRect_.rescale(.5);
 
+    testRect_.setMovable(true);
+
 }
 
 /*-----------------------------------------------------------------------------
@@ -293,6 +295,8 @@ void Overlay::updateExtent(VkExtent2D extent) {
     
     if (initialized_) {
         mapLines();
+
+        testRect_.onResize(extent_);
     }
 }
 
@@ -308,6 +312,11 @@ void Overlay::resetUpdates() {
 void Overlay::updateMousePosition(float xPos, float yPos) {
     mousePos_.x = -1 + (2 * (xPos / extent_.width));
     mousePos_.y = -1 + (2 * (yPos / extent_.height));
+
+    if (menuShown_) {
+        // call elements on mouse move
+        testRect_.onMouseMove({ mousePos_.x, mousePos_.y });
+    }
 }
 
 void Overlay::toggleWireframe() {
@@ -319,6 +328,9 @@ void Overlay::toggleWireframe() {
         currentPolygonMode_ = VK_POLYGON_MODE_FILL;
         util::log(name_, "switching overlay to VK_POLYGON_MODE_FILL");
     }
+
+    // tell elements they need update
+    testRect_.needsUpdate();
 }
 
 void Overlay::toggleMenu() {
@@ -327,18 +339,50 @@ void Overlay::toggleMenu() {
 
     // reset mouse position
     mousePos_ = {0.f, 0.f};
+
+    if (!menuShown_) {
+        // reset interactions
+        testRect_.resetInteraction();
+    }
 }
 
 void Overlay::mouseButtonTrigger(bool state) {
     mouseDown_ = state;
     mouseRelease_ = !state;
+
+    if (menuShown_) {
+        // call mousebutton for elements
+        testRect_.onMouseButton(state);
+    }
+}
+
+void Overlay::handleInputUpdates() {
+    // hover effects
+    //if (!menuShown_) {
+    //    testRect_.resetInteraction();
+    //}
+
+    // onClick events
+    /*if (mouseRelease_) {
+        if (elements_[getElementIndex("resume")].hovered_) {
+            updates_.unpause = true;
+        }
+        if (elements_[getElementIndex("quit")].hovered_) {
+            updates_.quit = true;
+        }
+
+
+
+        // after the release has been handled
+        mouseRelease_ = false;
+    }*/
 }
 
 // API: call start update, then can call update textbox/element methods any amt of times, then, call end update
 void Overlay::startUpdate() {
     quadCount_ = 0;
 
-    //handleElementUpdates();
+    //handleInputUpdates();
 
     if (vkMapMemory(device_, vertexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&vertexMapped_) != VK_SUCCESS) {
         throw std::runtime_error("failed to map vertex buffer memory for overlay update ");
@@ -351,6 +395,7 @@ void Overlay::startUpdate() {
     // FIXME TESTING
     vertexMapped_ += testRect_.map(vertexMapped_, wired);
     quadCount_++;
+
 
 }
 

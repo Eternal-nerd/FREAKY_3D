@@ -19,6 +19,11 @@ void main() {
 
     if (inInteraction == 1) {
         outColor.w = .8;
-        outColor.g += .5;
+        outColor.b += .5;
+    }
+
+    if (inInteraction == 2) {
+        outColor.w = .8;
+        outColor.r += .5;
     }
 }

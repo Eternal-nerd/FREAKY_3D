@@ -103,8 +103,15 @@ private:
 	//std::vector<>;
 	Text testText_;
 	Rectangle testRect_;
+	std::vector<Rectangle> rectangles_{};
+	std::vector<Text> text_{};
+	//std::vector<>
+
 	void generateElements();
 
+
+	// UPDATES
+	void handleInputUpdates();
 
 	// UTILITY:
 
