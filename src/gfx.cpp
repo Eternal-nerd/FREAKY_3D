@@ -648,8 +648,8 @@ void Gfx::togglePolygonMode() {
 void Gfx::createGraphicsPipeline() {
     util::log(name_, "creating graphics pipeline");
     // TODO MAYBE Move this to assets or separate shader management class? 
-    auto vertShaderCode = util::readFile("../shaders/compiled/vert.spv");
-    auto fragShaderCode = util::readFile("../shaders/compiled/frag.spv");
+    auto vertShaderCode = util::readFile("../shaders/compiled/main_vert.spv");
+    auto fragShaderCode = util::readFile("../shaders/compiled/main_frag.spv");
 
     VkShaderModule vertShaderModule = util::createShaderModule(vertShaderCode, device_);
     VkShaderModule fragShaderModule = util::createShaderModule(fragShaderCode, device_);

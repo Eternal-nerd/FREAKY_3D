@@ -136,9 +136,9 @@ void Engine::updateOverlay() {
     overlay_->startUpdate();
 
     // do stuff here.
-    if (!overlay_->checkTextBoxMessage(0, fpsString_) && fpsString_ != "") {
+    /*if (!overlay_->checkTextBoxMessage(0, fpsString_) && fpsString_ != "") {
         overlay_->updateTextBox(0, fpsString_);
-    }
+    }*/
 
     overlay_->endUpdate();
 }

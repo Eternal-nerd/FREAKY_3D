@@ -10,12 +10,12 @@
 #include "../types.h"
 #include "../assets/assets.h"
 #include "../assets/texture.h"
-#include "element.h"
-#include "text_box.h"
-#include "slider.h"
+#include "text.h"
+#include "rectangle.h"
 
 // Max. number of elements the text overlay buffer can hold
-#define MAX_OVERLAY_ELEMENTS 2048
+#define MAX_OVERLAY_QUADS 2048
+#define MAX_OVERLAY_LINES 100
 // FIXME make sure this is being used properly to set buffer size
 
 /*
@@ -42,8 +42,6 @@ public:
 	// draw entire vertex buffer
 	void draw(VkCommandBuffer commandBuffer);
 
-	void clearBuffer(VkCommandBuffer commandBuffer);
-
 	void updateExtent(VkExtent2D extent);
 	void toggleWireframe();
 	void toggleMenu();
@@ -57,6 +55,11 @@ private:
 	bool mouseDown_ = false;
 	bool mouseRelease_ = false;
 
+	// tracked mouse position [0,1]
+	glm::vec2 mousePos_ = { 0.f,0.f };
+
+	bool menuShown_ = false;
+
 	OverlayUpdates updates_;
 
 	// access to vulkan
@@ -65,7 +68,8 @@ private:
 	VkRenderPass renderpass_ = VK_NULL_HANDLE;
 
 	// extent used for scaling
-	VkExtent2D swapChainExtent_;
+	VkExtent2D extent_;
+	bool initialized_ = false;
 
 	// Assets ptr
 	Assets* assets_ = nullptr;
@@ -85,7 +89,7 @@ private:
 	VkPipelineCache pipelineCache_;
 	VkPipeline pipeline_;
 	VkPolygonMode currentPolygonMode_ = VK_POLYGON_MODE_FILL;
-	int wireframeIndex_ = -1;
+	int wireframeIndex_ = 0;
 	void initDescriptors();
 	void initPipeline();
 
@@ -95,25 +99,25 @@ private:
 	int indexCount_ = 0;
 	int quadCount_ = 0;
 
-	// tracked mouse position [0,1]
-	glm::vec2 mousePos_ = {0.f,0.f};
-
-	// ui elements
-	bool menuShown_ = false;
-	std::vector<Element> elements_{};
+	// FIXME TESTING
+	//std::vector<>;
+	Text testText_;
+	Rectangle testRect_;
 	void generateElements();
-	void handleElementUpdates();
 
-	// text boxes
-	std::vector<TextBox> textBoxes_{};
-	void generateTextBoxes();
-
-	// sliders
-	std::vector<Slider> sliders_{};
-	void generateSliders();
 
 	// UTILITY:
-	int getElementIndex(const std::string& name);
+
+
+
+	// debug drawing lines, also used for crosshair
+	// memory mapped vertex buffer
+	VkBuffer lineVertexBuffer_ = VK_NULL_HANDLE;
+	VkDeviceMemory lineVertexBufferMemory_ = VK_NULL_HANDLE;
+	UIVertex* lineVertexMapped_ = nullptr;
+	int lineCount_ = 0;
+	void mapLines();
+
 
 
 	// EXTERNAL Vulkan API function ptrs

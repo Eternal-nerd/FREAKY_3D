@@ -26,12 +26,6 @@ struct OverlayUpdates {
     bool quit = false;
 };
 
-// trash unused IDIOT
-struct MenuPushConstantData {
-    alignas(16) bool resumeHovered = false;
-    //float resumeCenterDistance = 0.f;
-};
-
 struct UniformBufferObject {
     alignas(16) glm::mat4 model[MAX_MODELS];
     alignas(16) glm::mat4 view;
@@ -141,27 +135,9 @@ struct UIVertex {
     }
 };
 
+// is this dumb? 
 struct UIQuad {
-    glm::vec2 position;
-    glm::vec2 sizePixels;
-    // textureCoord = {x=xPos, y=yPos, z=xOffset, w=yOffset}
-    glm::vec4 textureCoord;
-    int texIndex;
-
-    bool isPointWithin(float xPos, float yPos, glm::vec2 extent) {
-        // calculate boundaries
-        float leftBound = position.x - ((sizePixels.x / extent.x) / 2);
-        float rightBound = position.x + ((sizePixels.x / extent.x) / 2);
-        float topBound = position.y - ((sizePixels.y / extent.y) / 2);
-        float bottomBound = position.y + ((sizePixels.y / extent.y) / 2);;
-
-        if (xPos < rightBound && xPos > leftBound && yPos > topBound && yPos < bottomBound) {
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
+    std::array<UIVertex, 4> vertices{};
 };
 
 typedef enum OverlayMode {
@@ -170,12 +146,6 @@ typedef enum OverlayMode {
     OVERLAY_STATS = 2,
     OVERLAY_INVENTORY = 3
 } OverlayMode;
-
-typedef enum OverlayPositionMode {
-    OVERLAY_POSITION_CENTERED = 0,
-    OVERLAY_POSITION_TOP_LEFT = 1
-} OverlayPositionMode;
-
 
 // used by mesh class
 struct MeshData {

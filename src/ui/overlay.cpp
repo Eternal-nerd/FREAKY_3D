@@ -9,21 +9,25 @@ void Overlay::init(VkDevice device, VkPhysicalDevice physicalDevice, VkRenderPas
 	device_ = device;
 	physicalDevice_ = physicalDevice;
 	renderpass_ = renderpass;
-    swapChainExtent_ = extent;
+    extent_ = extent;
 	assets_ = &assets;
 
     initTextures();
     initDescriptors();
     initPipeline();
 
+    // generate elements here
     generateElements();
-    generateTextBoxes();
-    generateSliders();
+
+    // one time map of lines to draw, might make this dynamic later
+    mapLines();
 
     wireframeIndex_ = 0;
 
     // loading external stuff -----------------------------==================<
     vkCmdSetPolygonModeEXT = reinterpret_cast<PFN_vkCmdSetPolygonModeEXT>(vkGetDeviceProcAddr(device_, "vkCmdSetPolygonModeEXT"));
+
+    initialized_ = true;
 }
 
 void Overlay::initTextures() {
@@ -49,17 +53,25 @@ void Overlay::initDescriptors() {
 
     // Vertex buffer --------------------------------------------=========<
     util::log(name_, "creating overlay vertex buffer");
-    VkDeviceSize vertexBufferSize = MAX_OVERLAY_ELEMENTS * sizeof(UIVertex) * 4;
+    VkDeviceSize vertexBufferSize = MAX_OVERLAY_QUADS * sizeof(UIVertex) * 4;
     util::createBuffer(vertexBufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
         vertexBuffer_, vertexBufferMemory_, device_, physicalDevice_);
 
     // Index buffer --------------------------------------------=========<
     util::log(name_, "creating overlay index buffer");
-    VkDeviceSize indexBufferSize = MAX_OVERLAY_ELEMENTS * 6 * sizeof(uint32_t);
+    VkDeviceSize indexBufferSize = MAX_OVERLAY_QUADS * sizeof(uint32_t) * 6;
     util::createBuffer(indexBufferSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
         indexBuffer_, indexBufferMemory_, device_, physicalDevice_);
+
+    // LINE buffers 
+    // vertex
+    util::log(name_, "creating overlay line buffer");
+    VkDeviceSize lineVertexBufferSize = MAX_OVERLAY_LINES * sizeof(UIVertex) * 2;
+    util::createBuffer(lineVertexBufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        lineVertexBuffer_, lineVertexBufferMemory_, device_, physicalDevice_);
 
     // Descriptor ------------------------------------------=============<
     util::log(name_, "creating overlay descriptor pool");
@@ -130,8 +142,8 @@ void Overlay::initPipeline() {
     util::log(name_, "initializing overlay pipeline");
 
     util::log(name_, "loading overlay shaders");
-    auto vertShaderCode = util::readFile("../shaders/compiled/text_vert.spv");
-    auto fragShaderCode = util::readFile("../shaders/compiled/text_frag.spv");
+    auto vertShaderCode = util::readFile("../shaders/compiled/overlay_vert.spv");
+    auto fragShaderCode = util::readFile("../shaders/compiled/overlay_frag.spv");
 
     VkShaderModule vertShaderModule = util::createShaderModule(vertShaderCode, device_);
     VkShaderModule fragShaderModule = util::createShaderModule(fragShaderCode, device_);
@@ -159,19 +171,11 @@ void Overlay::initPipeline() {
         throw std::runtime_error("failed to create pipeline cache!");
     }
 
-    // push constants
-    /*VkPushConstantRange pushConstantRange{};
-    pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-    pushConstantRange.offset = 0;
-    pushConstantRange.size = sizeof(MenuPushConstantData);*/
-
     // Layout
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = 1;
     pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout_;
-    //pipelineLayoutInfo.pushConstantRangeCount = 1;
-    //pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
     if (vkCreatePipelineLayout(device_, &pipelineLayoutInfo, nullptr, &pipelineLayout_) != VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");
@@ -228,7 +232,12 @@ void Overlay::initPipeline() {
     multisampleState.sampleShadingEnable = VK_FALSE; // remove?
     multisampleState.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
-    std::vector<VkDynamicState> dynamicStateEnables = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR, VK_DYNAMIC_STATE_POLYGON_MODE_EXT };
+    std::vector<VkDynamicState> dynamicStateEnables = { 
+        VK_DYNAMIC_STATE_VIEWPORT, 
+        VK_DYNAMIC_STATE_SCISSOR, 
+        VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY, 
+        VK_DYNAMIC_STATE_POLYGON_MODE_EXT 
+    };
     VkPipelineDynamicStateCreateInfo dynamicState{};
     dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
     dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStateEnables.size());
@@ -270,147 +279,35 @@ void Overlay::initPipeline() {
 void Overlay::generateElements() {
     util::log(name_, "generating overlay elements");
 
-    glm::vec2 extent = { swapChainExtent_.width, swapChainExtent_.height };
+    testRect_.init("testy", OVERLAY_DEFAULT, { 0.2,0.2 }, { 400,400 }, {0,0,1,1}, 1, extent_);
 
-    UIQuad quad;
-
-    // default elements
-    Element resumeBtn;
-    quad.position = { 0.5f, -0.5 };
-    quad.sizePixels = { 400, 200 };
-    quad.textureCoord = { 0,0,1,1 };
-    quad.texIndex = 2;
-    resumeBtn.init("resume", OVERLAY_MENU, quad, extent);
-    elements_.push_back(resumeBtn);
-
-    Element quitBtn;
-    quad.position = { 0.5f, 0.5 };
-    quad.sizePixels = { 400, 200 };
-    quad.textureCoord = { 0,0,1,1 };
-    quad.texIndex = 3;
-    quitBtn.init("quit", OVERLAY_MENU, quad, extent);
-    elements_.push_back(quitBtn);
-    
-    Element tester;
-    quad.position = { -0.5,0.5 };
-    quad.sizePixels = { 500,500 };
-    quad.textureCoord = { 0,0,1,1 };
-    quad.texIndex = 1;
-    tester.init("tester", OVERLAY_MENU, quad, extent);
-    elements_.push_back(tester);
-}
-
-void Overlay::generateTextBoxes() {
-    util::log(name_, "generating overlay text boxes");
-
-    glm::vec2 extent = { swapChainExtent_.width, swapChainExtent_.height };
-
-    // default text boxes
-    TextBox FPS;
-    FPS.init(OVERLAY_DEFAULT, OVERLAY_POSITION_TOP_LEFT, "FPS INCOMING!!!", {-0.999f,-0.99f}, {800,200}, {25.f, 40.f}, extent, 1);
-    textBoxes_.push_back(FPS);
-
-    // menu textboxes
-    TextBox paused;
-    paused.init(OVERLAY_MENU, OVERLAY_POSITION_CENTERED, "PAUSED", { 0.f, 0.f }, { 601,200 }, { 100.f, 200.f }, extent, 1);
-    textBoxes_.push_back(paused);
-
-    // test
-    TextBox tester;
-    tester.init(OVERLAY_DEFAULT, OVERLAY_POSITION_CENTERED, "Hello Alyscia, how are you today? \nTest: @#$!!! 4628 r3h89238  My mind is playing tricks on me \n.....\n\n Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", { 0.5f, 0.f}, {1200, 800}, {30.f, 50.f}, extent, 1);
-    //textBoxes_.push_back(tester);
-}
-
-void Overlay::generateSliders() {
-    util::log(name_, "generating overlay sliders");
-    
-    UIQuad knobQuad;
-    UIQuad barQuad;
-
-    knobQuad.position = { 0.f, 0.f };
-    knobQuad.sizePixels = { 50, 50 };
-    knobQuad.textureCoord = { 0,0,1,1 };
-    knobQuad.texIndex = 4;
-
-    barQuad.position = { 0.f, 0.f };
-    barQuad.sizePixels = { 800,100 };
-    barQuad.textureCoord = { 0,0,1,1 };
-    barQuad.texIndex = 4;
-
-    Slider testSlider;
-    //testSlider.init();
-    sliders_.push_back(testSlider);
+    testRect_.rescale(.5);
 
 }
 
 /*-----------------------------------------------------------------------------
 ------------------------------UPDATE-SHIT--------------------------------------
 -----------------------------------------------------------------------------*/
+void Overlay::updateExtent(VkExtent2D extent) {
+    extent_ = extent;
+    
+    if (initialized_) {
+        mapLines();
+    }
+}
+
 OverlayUpdates Overlay::getUpdates() {
     return updates_;
 }
 
 void Overlay::resetUpdates() {
     updates_.unpause = false;
-}
-
-void Overlay::handleElementUpdates() {
-    // hover effects
-    if (menuShown_) {
-        // check for mouse hovering over elements
-        for (int i = 0; i < elements_.size(); i++) {
-            switch (elements_[i].mode_) {
-            case OVERLAY_DEFAULT:
-                elements_[i].checkHover(mousePos_.x, mousePos_.y);
-                break;
-            case OVERLAY_MENU:
-                elements_[i].checkHover(mousePos_.x, mousePos_.y);
-                break;
-            }
-        }
-    }
-    else {
-        for (int i = 0; i < elements_.size(); i++) {
-            elements_[i].resetInteraction();
-        }
-    }
-
-    // onClick events
-    if (mouseRelease_) {
-        if (elements_[getElementIndex("resume")].hovered_) {
-            updates_.unpause = true;
-        }
-        if (elements_[getElementIndex("quit")].hovered_) {
-            updates_.quit = true;
-        }
-
-
-
-        // after the release has been handled
-        mouseRelease_ = false;
-    }
+    updates_.quit = false; // unused lol
 }
 
 void Overlay::updateMousePosition(float xPos, float yPos) {
-    mousePos_.x = -1 + (2 * (xPos / swapChainExtent_.width));
-    mousePos_.y = -1 + (2 * (yPos / swapChainExtent_.height));
-
-    //std::cout << "x: " << scaledMousePosition_.x << " | y: " << scaledMousePosition_.y << "\n";
-}
-
-void Overlay::updateExtent(VkExtent2D extent) {
-    swapChainExtent_ = extent;
-
-    // rescale elements
-    for (int i = 0; i < elements_.size(); i++) {
-        elements_[i].scale({ swapChainExtent_.width, swapChainExtent_.height });
-    }
-
-    // rescale textboxes
-    for (int i = 0; i < textBoxes_.size(); i++) {
-        textBoxes_[i].scale({ swapChainExtent_.width, swapChainExtent_.height });
-    }
-
+    mousePos_.x = -1 + (2 * (xPos / extent_.width));
+    mousePos_.y = -1 + (2 * (yPos / extent_.height));
 }
 
 void Overlay::toggleWireframe() {
@@ -441,7 +338,7 @@ void Overlay::mouseButtonTrigger(bool state) {
 void Overlay::startUpdate() {
     quadCount_ = 0;
 
-    handleElementUpdates();
+    //handleElementUpdates();
 
     if (vkMapMemory(device_, vertexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&vertexMapped_) != VK_SUCCESS) {
         throw std::runtime_error("failed to map vertex buffer memory for overlay update ");
@@ -451,54 +348,27 @@ void Overlay::startUpdate() {
 
     int wired = (currentPolygonMode_ == VK_POLYGON_MODE_LINE) ? wireframeIndex_ : -1;
 
-    // elements
-    for (int i = 0; i < elements_.size(); i++) {
-        switch (elements_[i].mode_) {
-        case OVERLAY_DEFAULT:
-            vertexMapped_ += elements_[i].map(vertexMapped_, wired);
-            quadCount_++;
-            break;
-        case OVERLAY_MENU:
-            if (menuShown_) {
-                vertexMapped_ += elements_[i].map(vertexMapped_, wired);
-                quadCount_++;
-            }
-            break;
-        }
-    }
-
-    // text boxes
-    for (int i = 0; i < textBoxes_.size(); i++) {
-        switch (textBoxes_[i].mode_) {
-        case OVERLAY_DEFAULT:
-            vertexMapped_ += textBoxes_[i].map(vertexMapped_, wired);
-            quadCount_ += textBoxes_[i].getQuadCount();
-            break;
-        case OVERLAY_MENU:
-            if (menuShown_) {
-                vertexMapped_ += textBoxes_[i].map(vertexMapped_, wired);
-                quadCount_ += textBoxes_[i].getQuadCount();
-            }
-            break;
-        }
-    }
+    // FIXME TESTING
+    vertexMapped_ += testRect_.map(vertexMapped_, wired);
+    quadCount_++;
 
 }
 
 void Overlay::updateTextBox(int index, const std::string& newText) {
-    // todo
+    /* todo
     if (index < 0 || index > textBoxes_.size()-1 || textBoxes_.size()==0) {
         throw std::runtime_error("attempting to modify a textbox that doesnt exist");
     }
-    textBoxes_[index].updateText(newText);
+    textBoxes_[index].updateText(newText);*/
 }
 
 bool Overlay::checkTextBoxMessage(int index, const std::string& compareString) {
-    if (index < 0 || index > textBoxes_.size() - 1 || textBoxes_.size() == 0) {
+    /*if (index < 0 || index > textBoxes_.size() - 1 || textBoxes_.size() == 0) {
         throw std::runtime_error("attempting to access a textbox that doesnt exist");
     }
 
-    return (textBoxes_[index].compareMessage(compareString));
+    return (textBoxes_[index].compareMessage(compareString));*/
+    return true;
 }
 
 void Overlay::endUpdate() {
@@ -542,40 +412,78 @@ void Overlay::draw(VkCommandBuffer commandBuffer) {
 
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout_, 0, 1, &descriptorSet_, 0, NULL);
 
-    // push constants FIXMEEEE
-    //MenuPushConstantData push{};
-    //push.resumeHovered = false;// elements_[0].hovered_;
-
-    //vkCmdPushConstants(commandBuffer, pipelineLayout_, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MenuPushConstantData), &push);
-
     VkDeviceSize offsets = 0;
+    
+    // DRAW TRIANGLES
+    vkCmdSetPrimitiveTopology(commandBuffer, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer_, &offsets);
-
     vkCmdBindIndexBuffer(commandBuffer, indexBuffer_, 0, VK_INDEX_TYPE_UINT32);
-
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indexCount_), 1, 0, 0, 0);
+
+    // DRAW LINES
+    vkCmdSetPrimitiveTopology(commandBuffer, VK_PRIMITIVE_TOPOLOGY_LINE_LIST);
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &lineVertexBuffer_, &offsets);
+    vkCmdDraw(commandBuffer, static_cast<uint32_t>(lineCount_*2), 1, 0, 0);
 }
 
 /*-----------------------------------------------------------------------------
 ------------------------------UTILITY------------------------------------------
 -----------------------------------------------------------------------------*/
-int Overlay::getElementIndex(const std::string& name) {
-    for (int i = 0; i < elements_.size(); i++) {
-        if (elements_[i].id_ == name) {
-            return i;
-        }
+// LINES
+void Overlay::mapLines() {
+    util::log(name_, "mapping overlay lines");
+
+    // calculate width and height from pixels
+    float xOffset = ( 15.f / extent_.width);
+    float yOffset = ( 15.f / extent_.height);
+
+    // populate vertex buffer
+    if (vkMapMemory(device_, lineVertexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&lineVertexMapped_) != VK_SUCCESS) {
+        throw std::runtime_error("failed to map vertex buffer memory for overlay update ");
     }
 
-    throw std::runtime_error("could not find element: " + name);
+    assert(lineVertexMapped_ != nullptr);
+
+    // top crosshair vertex
+    lineVertexMapped_->pos = {0.f, yOffset};
+    lineVertexMapped_->texCoord = {}; // ????
+    lineVertexMapped_->texIndex = wireframeIndex_;
+    lineVertexMapped_->interaction = 0;
+    lineVertexMapped_++;
+    lineCount_++;
+
+    // bottom crosshair vertex
+    lineVertexMapped_->pos = { 0.f, -yOffset };
+    lineVertexMapped_->texCoord = {}; // ????
+    lineVertexMapped_->texIndex = wireframeIndex_;
+    lineVertexMapped_->interaction = 0;
+    lineVertexMapped_++;
+    lineCount_++;
+
+    // left crosshair vertex
+    lineVertexMapped_->pos = { -xOffset, 0.f };
+    lineVertexMapped_->texCoord = {}; // ????
+    lineVertexMapped_->texIndex = wireframeIndex_;
+    lineVertexMapped_->interaction = 0;
+    lineVertexMapped_++;
+    lineCount_++;
+
+    // right crosshair vertex
+    lineVertexMapped_->pos = { xOffset, 0.f };
+    lineVertexMapped_->texCoord = {}; // ????
+    lineVertexMapped_->texIndex = wireframeIndex_;
+    lineVertexMapped_->interaction = 0;
+    lineVertexMapped_++;
+    lineCount_++;
+
+    vkUnmapMemory(device_, lineVertexBufferMemory_);
+    lineVertexMapped_ = nullptr;
 }
+
 
 /*-----------------------------------------------------------------------------
 ------------------------------CLEANUP------------------------------------------
 -----------------------------------------------------------------------------*/
-void Overlay::clearBuffer(VkCommandBuffer commandBuffer) {
-    vkCmdFillBuffer(commandBuffer, vertexBuffer_, 0, VK_WHOLE_SIZE, 0);
-}
-
 void Overlay::cleanup() {
     util::log(name_, "cleaning up overlay resources");
 
@@ -583,8 +491,13 @@ void Overlay::cleanup() {
     vkDestroyBuffer(device_, vertexBuffer_, nullptr);
     vkFreeMemory(device_, vertexBufferMemory_, nullptr);
 
+    //index
     vkDestroyBuffer(device_, indexBuffer_, nullptr);
     vkFreeMemory(device_, indexBufferMemory_, nullptr);
+
+    // line vertex
+    vkDestroyBuffer(device_, lineVertexBuffer_, nullptr);
+    vkFreeMemory(device_, lineVertexBufferMemory_, nullptr);
 
     // descriptors/pipeline
     vkDestroyDescriptorSetLayout(device_, descriptorSetLayout_, nullptr);
