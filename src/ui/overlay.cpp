@@ -445,7 +445,7 @@ void Overlay::mapLines() {
     assert(lineVertexMapped_ != nullptr);
 
     // top crosshair vertex
-    lineVertexMapped_->pos = {0.f, yOffset};
+    lineVertexMapped_->pos = {0.f, -yOffset};
     lineVertexMapped_->texCoord = {}; // ????
     lineVertexMapped_->texIndex = wireframeIndex_;
     lineVertexMapped_->interaction = 0;
@@ -453,7 +453,7 @@ void Overlay::mapLines() {
     lineCount_++;
 
     // bottom crosshair vertex
-    lineVertexMapped_->pos = { 0.f, -yOffset };
+    lineVertexMapped_->pos = { 0.f, yOffset };
     lineVertexMapped_->texCoord = {}; // ????
     lineVertexMapped_->texIndex = wireframeIndex_;
     lineVertexMapped_->interaction = 0;
