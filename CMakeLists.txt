@@ -22,6 +22,7 @@ set(SOURCES
 	src/clock.cpp
 	src/entity.cpp
 	src/camera.cpp
+	src/config.cpp
 	src/ui/overlay.cpp
 	src/ui/text.cpp
 	src/ui/rectangle.cpp
@@ -44,6 +45,7 @@ set(HEADERS
 	src/clock.h
 	src/entity.h
 	src/camera.h
+	src/config.h
 	src/ui/overlay.h
 	src/ui/text.h
 	src/ui/rectangle.h

@@ -147,6 +147,12 @@ typedef enum OverlayMode {
     OVERLAY_INVENTORY = 3
 } OverlayMode;
 
+typedef enum OverlayContainerType {
+    OVERLAY_CONTAINER_COLUMN = 0,
+    OVERLAY_CONTAINER_ROW = 1,
+    OVERLAY_CONTAINER_BOX = 2,
+} OverlayContainerType;
+
 // used by mesh class
 struct MeshData {
     std::vector<Vertex> vertices = {};
