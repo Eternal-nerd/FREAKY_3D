@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include <unordered_map>
+#include <fstream>
 
 #include "types.h"
 #include "util.h"
@@ -14,7 +16,8 @@ class Config {
 public:
 	void init(const std::string filename);
 
-	std::vector<std::string> getObjectNames();
+	// name : type
+	std::unordered_map<std::string, std::string> getObjects();
 
 	int getIntAttribute(const std::string& objectName, const std::string& attributeName);
 	float getFloatAttribute(const std::string& objectName, const std::string& attributeName);
@@ -33,9 +36,17 @@ public:
 private:
 	std::string filename_ = "";
 
-	void openFile();
-	void pointToObject(const std::string& objectName);
-	void pointToAttribute(const std::string& attributeName);
-	void closeFile();
+	void parseFile();
+	// name : type
+	std::unordered_map<std::string, std::string> objects_ = {};
+
+
+	std::string getAttributeString(const std::string& objectName, const std::string& attributeName);
+
+	bool ignoreLine(const std::string& line);
+	std::string getName(const std::string& line);
+	std::string getType(const std::string& line);
+
+
 
 };

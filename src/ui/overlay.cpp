@@ -12,6 +12,8 @@ void Overlay::init(VkDevice device, VkPhysicalDevice physicalDevice, VkRenderPas
     extent_ = extent;
 	assets_ = &assets;
 
+    config_.init("../config/overlay.cfg");
+
     initTextures();
     initDescriptors();
     initPipeline();
@@ -279,12 +281,32 @@ void Overlay::initPipeline() {
 void Overlay::generateElements() {
     util::log(name_, "generating overlay elements");
 
-    testRect_.init("testy", OVERLAY_DEFAULT, { 0.2,0.2 }, { 400,400 }, {0,0,1,1}, 1, extent_);
+    // loop over stuff in the config file
+    // name : type
+    std::unordered_map<std::string, std::string> configObjects = config_.getObjects();
 
-    testRect_.rescale(.5);
-
-    testRect_.setMovable(true);
-
+    for (auto it = configObjects.begin(); it != configObjects.end(); it++) {
+        if (it->second == "Rectangle") {
+            Rectangle r;
+            r.init(it->first,
+                getMode(config_.getStringAttribute(it->first, "mode")),
+                { config_.getFloatAttribute(it->first, "positionX"), 
+                config_.getFloatAttribute(it->first, "positionY") },
+                { config_.getIntAttribute(it->first, "widthPixel"),
+                config_.getIntAttribute(it->first, "heightPixel") },
+                { config_.getFloatAttribute(it->first, "topleftX"),
+                config_.getFloatAttribute(it->first, "topleftY"),
+                config_.getFloatAttribute(it->first, "xOffset"),
+                config_.getFloatAttribute(it->first, "yOffset") },
+                config_.getIntAttribute(it->first, "texIndex"),
+                extent_
+            );
+            // set options here
+            r.rescale(config_.getFloatAttribute(it->first, "scale"));
+            r.setMovable(config_.getBoolAttribute(it->first, "movable"));
+            rectangles_.push_back(r);
+        }
+    }
 }
 
 /*-----------------------------------------------------------------------------
@@ -296,7 +318,9 @@ void Overlay::updateExtent(VkExtent2D extent) {
     if (initialized_) {
         mapLines();
 
-        testRect_.onResize(extent_);
+        for (Rectangle& r : rectangles_) {
+            r.onResize(extent_);
+        }
     }
 }
 
@@ -315,7 +339,9 @@ void Overlay::updateMousePosition(float xPos, float yPos) {
 
     if (menuShown_) {
         // call elements on mouse move
-        testRect_.onMouseMove({ mousePos_.x, mousePos_.y });
+        for (Rectangle& r : rectangles_) {
+            r.onMouseMove({ mousePos_.x, mousePos_.y });
+        }
     }
 }
 
@@ -330,7 +356,9 @@ void Overlay::toggleWireframe() {
     }
 
     // tell elements they need update
-    testRect_.needsUpdate();
+    for (Rectangle& r : rectangles_) {
+        r.needsUpdate();
+    }
 }
 
 void Overlay::toggleMenu() {
@@ -342,7 +370,9 @@ void Overlay::toggleMenu() {
 
     if (!menuShown_) {
         // reset interactions
-        testRect_.resetInteraction();
+        for (Rectangle& r : rectangles_) {
+            r.resetInteraction();
+        }
     }
 }
 
@@ -352,7 +382,9 @@ void Overlay::mouseButtonTrigger(bool state) {
 
     if (menuShown_) {
         // call mousebutton for elements
-        testRect_.onMouseButton(state);
+        for (Rectangle& r : rectangles_) {
+            r.onMouseButton(state);
+        }
     }
 }
 
@@ -392,10 +424,11 @@ void Overlay::startUpdate() {
 
     int wired = (currentPolygonMode_ == VK_POLYGON_MODE_LINE) ? wireframeIndex_ : -1;
 
-    // FIXME TESTING
-    vertexMapped_ += testRect_.map(vertexMapped_, wired);
-    quadCount_++;
-
+    // map rectangles
+    for (Rectangle& r : rectangles_) {
+        vertexMapped_ += r.map(vertexMapped_, wired);
+        quadCount_++;
+    }
 
 }
 
@@ -525,6 +558,21 @@ void Overlay::mapLines() {
     lineVertexMapped_ = nullptr;
 }
 
+OverlayMode Overlay::getMode(const std::string& modeString) {
+    if (modeString == "OVERLAY_DEFAULT") {
+        return OVERLAY_DEFAULT;
+    }
+    if (modeString == "OVERLAY_MENU") {
+        return OVERLAY_MENU;
+    }
+    if (modeString == "OVERLAY_STATS") {
+        return OVERLAY_STATS;
+    }
+    if (modeString == "OVERLAY_INVENTORY") {
+        return OVERLAY_INVENTORY;
+    }
+    throw std::runtime_error("invalid mode: " + modeString);
+}
 
 /*-----------------------------------------------------------------------------
 ------------------------------CLEANUP------------------------------------------

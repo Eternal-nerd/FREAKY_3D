@@ -5,9 +5,11 @@
 #include <vector>
 #include <string>
 #include <assert.h>
+#include <unordered_map>
 
 #include "../util.h"
 #include "../types.h"
+#include "../config.h"
 #include "../assets/assets.h"
 #include "../assets/texture.h"
 #include "text.h"
@@ -52,6 +54,8 @@ public:
 	const std::string name_ = "OVERLAY";
 
 private:
+	Config config_;
+
 	bool mouseDown_ = false;
 	bool mouseRelease_ = false;
 
@@ -102,13 +106,14 @@ private:
 	// FIXME TESTING
 	//std::vector<>;
 	Text testText_;
-	Rectangle testRect_;
 	std::vector<Rectangle> rectangles_{};
 	std::vector<Text> text_{};
 	//std::vector<>
 
 	void generateElements();
 
+	// utility
+	OverlayMode getMode(const std::string& modeString);
 
 	// UPDATES
 	void handleInputUpdates();
