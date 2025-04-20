@@ -200,3 +200,11 @@ float Rectangle::getWidth() {
 float Rectangle::getHeight() {
 	return (sizePixels_.y / extent_.height) * scale_;
 }
+
+float Rectangle::getPositionX() {
+    return position_.x;
+}
+
+float Rectangle::getPositionY() {
+    return position_.y;
+}

@@ -32,6 +32,10 @@ public:
 	float getWidth();
 	float getHeight();
 
+    // getters for updating config file
+    float getPositionX();
+    float getPositionY();
+
 	std::string id_ = "";
 
 	bool hovered_ = false;

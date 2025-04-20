@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <unordered_map>
 #include <fstream>
+#include <cstdio> 
 
 #include "types.h"
 #include "util.h"
@@ -25,11 +26,7 @@ public:
 	std::string getStringAttribute(const std::string& objectName, const std::string& attributeName);
 	std::string getObjectAttribute(const std::string& objectName, const std::string& attributeName);
 
-	void setIntAttribute(const std::string& objectName, const std::string& attributeName, int set);
-	void setFloatAttribute(const std::string& objectName, const std::string& attributeName, float set);
-	void setBoolAttribute(const std::string& objectName, const std::string& attributeName, bool set);
-	void setStringAttribute(const std::string& objectName, const std::string& attributeName, const std::string& set);
-	void setObjectAttribute(const std::string& objectName, const std::string& attributeName, const std::string& set);
+    void setAttributeString(const std::string& objectName, const std::string& attributeName, const std::string& setString);
 
 	const std::string name_ = "CONFIG";
 
@@ -46,7 +43,5 @@ private:
 	bool ignoreLine(const std::string& line);
 	std::string getName(const std::string& line);
 	std::string getType(const std::string& line);
-
-
 
 };

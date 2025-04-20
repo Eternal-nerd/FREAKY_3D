@@ -11,6 +11,7 @@ void Config::init(const std::string filename) {
 	parseFile();
 
 	// FIXME TESTING
+    //setAttributeString("testRect", "positionX", "0.1");
 
 	//std::string test = getAttributeString("TestElement", "happiness");
 
@@ -116,25 +117,72 @@ std::string Config::getObjectAttribute(const std::string& objectName, const std:
 /*-----------------------------------------------------------------------------
 ------------------------------SETTERS------------------------------------------
 -----------------------------------------------------------------------------*/
-void Config::setIntAttribute(const std::string& objectName, const std::string& attributeName, int set) {
+void Config::setAttributeString(const std::string& objectName, const std::string& attributeName, const std::string& setString) {
+    // FIXME
+    util::log("DEBUG", "Change - Object: " + objectName + ", Attribute: " + attributeName + " to -> " + setString);
 
+    // get config file contents into a string
+    std::string fileContents = "";
+    std::ifstream inFile(filename_);
+    for (char c; inFile.get(c); fileContents.push_back(c)) {}
+    inFile.close();
+
+    // find position of object in file
+    auto objectPos = fileContents.find(objectName);
+    if (objectPos == std::string::npos) {
+        throw std::runtime_error("failed to find object: " + objectName);
+    }
+
+    // find the attribute right after the object name
+    auto attributePos = fileContents.find(attributeName);
+    while (attributePos != std::string::npos) {
+        if (attributePos > objectPos) {
+            // move string pointer to 1 after equals sign
+            while (fileContents[attributePos] != '=') {
+                attributePos++;
+            }
+            // move past '='
+            attributePos++;
+            // move past whitespace
+            while (std::isspace(fileContents[attributePos]))  {
+                attributePos++;
+            }
+            // move to semicolon, incrementing count
+            int replaceCount = 0;
+            auto startPos = attributePos;
+            while (fileContents[attributePos] != ';') {
+                attributePos++;
+                replaceCount++;
+            }
+            fileContents.replace(startPos, replaceCount, setString);
+            break;
+        }
+        else {
+            // find the next one
+            attributePos = fileContents.find(attributeName, attributePos);
+        }
+    }
+    
+    // create temp file that will replace old one
+    std::string tempFilename = filename_ + ".tmp";
+    std::ofstream outFile(tempFilename);
+    if (!outFile) {
+        throw std::runtime_error("failed to open temp file for config rewrite");
+    }
+    outFile << fileContents;
+    outFile.close();
+
+    // delete original file
+    int status = std::remove(filename_.c_str());
+    if (status != 0) {
+        throw std::runtime_error("failed to remove file: " + filename_);
+    }
+
+    // rename temp file
+    std::rename(tempFilename.c_str(), filename_.c_str());
 }
 
-void Config::setFloatAttribute(const std::string& objectName, const std::string& attributeName, float set) {
 
-}
-
-void Config::setBoolAttribute(const std::string& objectName, const std::string& attributeName, bool set) {
-
-}
-
-void Config::setStringAttribute(const std::string& objectName, const std::string& attributeName, const std::string& set) {
-
-}
-
-void Config::setObjectAttribute(const std::string& objectName, const std::string& attributeName, const std::string& set) {
-
-}
 
 /*-----------------------------------------------------------------------------
 ------------------------------UTIL---------------------------------------------
