@@ -580,6 +580,14 @@ OverlayMode Overlay::getMode(const std::string& modeString) {
 void Overlay::cleanup() {
     util::log(name_, "cleaning up overlay resources");
 
+    // WRITE IMPORTANT CHANGES TO CONFIG FILE
+    
+    // FIXME NOT WORKING
+    for (Rectangle& r : rectangles_) {
+        //config_.setAttributeString(r.id_, "positionX", std::to_string(r.getPositionX()));
+        //config_.setAttributeString(r.id_, "positionY", std::to_string(r.getPositionY()));
+    }
+
     // vertex buffer
     vkDestroyBuffer(device_, vertexBuffer_, nullptr);
     vkFreeMemory(device_, vertexBufferMemory_, nullptr);
