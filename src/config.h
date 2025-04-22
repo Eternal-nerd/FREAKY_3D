@@ -37,7 +37,6 @@ private:
 	// name : type
 	std::unordered_map<std::string, std::string> objects_ = {};
 
-
 	std::string getAttributeString(const std::string& objectName, const std::string& attributeName);
 
 	bool ignoreLine(const std::string& line);

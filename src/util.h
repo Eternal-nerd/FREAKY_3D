@@ -68,4 +68,7 @@ namespace util {
 
 	// SHADERS
 	VkShaderModule createShaderModule(const std::vector<char>& code, const VkDevice& device);
+
+	//MISC
+	void checkNPos(std::string::size_type t);
 }

@@ -390,9 +390,11 @@ void Overlay::mouseButtonTrigger(bool state) {
 
 void Overlay::handleInputUpdates() {
     // hover effects
-    //if (!menuShown_) {
-    //    testRect_.resetInteraction();
-    //}
+    if (!menuShown_) {
+        for (Rectangle& r : rectangles_) {
+            r.resetInteraction();
+        }
+    }
 
     // onClick events
     /*if (mouseRelease_) {
@@ -414,7 +416,7 @@ void Overlay::handleInputUpdates() {
 void Overlay::startUpdate() {
     quadCount_ = 0;
 
-    //handleInputUpdates();
+    handleInputUpdates();
 
     if (vkMapMemory(device_, vertexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&vertexMapped_) != VK_SUCCESS) {
         throw std::runtime_error("failed to map vertex buffer memory for overlay update ");
@@ -584,8 +586,8 @@ void Overlay::cleanup() {
     
     // FIXME NOT WORKING
     for (Rectangle& r : rectangles_) {
-        //config_.setAttributeString(r.id_, "positionX", std::to_string(r.getPositionX()));
-        //config_.setAttributeString(r.id_, "positionY", std::to_string(r.getPositionY()));
+        config_.setAttributeString(r.id_, "positionX", std::to_string(r.getPositionX()));
+        config_.setAttributeString(r.id_, "positionY", std::to_string(r.getPositionY()));
     }
 
     // vertex buffer

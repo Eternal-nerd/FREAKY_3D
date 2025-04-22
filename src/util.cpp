@@ -544,3 +544,12 @@ VkShaderModule util::createShaderModule(const std::vector<char>& code, const VkD
 
     return shaderModule;
 }
+
+/*-----------------------------------------------------------------------------
+-------------------------------MISC--------------------------------------------
+-----------------------------------------------------------------------------*/
+void util::checkNPos(std::string::size_type t) {
+    if (t == std::string::npos) {
+        throw std::runtime_error("string iterator out of range");
+    }
+}

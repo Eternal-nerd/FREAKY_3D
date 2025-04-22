@@ -13,8 +13,8 @@ public:
 	void init(const std::string& id, OverlayMode mode, OverlayContainerType type, glm::vec2 position, glm::vec2 sizePixels, VkExtent2D extent);
 
 
-	std::string id_ = "";
 
+	std::string id_ = "";
 
 	OverlayMode mode_ = OVERLAY_DEFAULT;
 	OverlayContainerType type_ = OVERLAY_CONTAINER_BOX;
@@ -22,6 +22,10 @@ public:
 	const std::string name_ = "CONTAINER";
 
 private:
+	glm::vec2 sizePixels_ = {};
+	VkExtent2D extent_;
+
+	std::vector<Rectangle> rectangles_ = {};
 
 
 };
