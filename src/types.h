@@ -153,6 +153,20 @@ typedef enum OverlayContainerType {
     OVERLAY_CONTAINER_BOX = 2,
 } OverlayContainerType;
 
+typedef enum OverlayUpdateType {
+    OVERLAY_RESIZE = 0,
+    OVERLAY_MOUSE_MOVE = 1,
+    OVERLAY_MOUSE_BUTTON = 2,
+    OVERLAY_REMAP = 3,
+    OVERLAY_RESET_INTERACTION = 4,
+} OverlayUpdateType;
+
+typedef enum OverlayModifyType {
+    OVERLAY_SCALE = 0,
+    OVERLAY_MOVABLE_TRUE = 1,
+    OVERLAY_MOVABLE_FALSE = 2,
+} OverlayModifyType;
+
 // used by mesh class
 struct MeshData {
     std::vector<Vertex> vertices = {};

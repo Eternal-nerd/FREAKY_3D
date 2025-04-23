@@ -51,8 +51,8 @@ void Rectangle::init(const std::string& id, OverlayMode mode, glm::vec2 position
 /*-----------------------------------------------------------------------------
 ------------------------------UPDATES------------------------------------------
 -----------------------------------------------------------------------------*/
-void Rectangle::rescale(float scale) {
-	scale_ = scale;
+void Rectangle::scale(float scaleFactor) {
+	scale_ = scaleFactor;
 
 	// calculate x and y offsets
 	float xOffset = (sizePixels_.x / extent_.width) * scale_;
@@ -70,38 +70,13 @@ void Rectangle::rescale(float scale) {
 	updated_ = true;
 }
 
-void Rectangle::rePosition() {
-	// update top left position
-	quad_.vertices[0].pos = { position_.x, position_.y };
-	rescale(scale_); // updates other 3 vertices position
-	updated_ = true;
-}
-
-void Rectangle::updateInteraction() {
-	if (hovered_) {
-		interaction_ = 1;
-	}
-	if (dragged_ && movable_) {
-		interaction_ = 2;
-	}
-	if (!hovered_ && !dragged_) {
-		interaction_ = 0;
-	}
-
-	quad_.vertices[0].interaction = interaction_;
-	quad_.vertices[1].interaction = interaction_;
-	quad_.vertices[2].interaction = interaction_;
-	quad_.vertices[3].interaction = interaction_;
-	updated_ = true;
-}
-
 void Rectangle::setMovable(bool state) {
 	movable_ = state;
 }
 
 void Rectangle::onResize(VkExtent2D extent) {
 	extent_ = extent;
-	rescale(scale_);
+	scale(scale_);
 	updated_ = true;
 }
 
@@ -140,15 +115,6 @@ void Rectangle::onMouseMove(glm::vec2 mousePos) {
 	mousePos_ = mousePos;
 }
 
-void Rectangle::resetInteraction() {
-	hovered_ = false;
-	dragged_ = false;
-
-	updateInteraction();
-
-	updated_ = true;
-}
-
 void Rectangle::onMouseButton(bool down) {
 	if (down) {
 		if (hovered_) {
@@ -162,10 +128,18 @@ void Rectangle::onMouseButton(bool down) {
 			updateInteraction();
 		}
 	}
-
 }
 
-void Rectangle::needsUpdate() {
+void Rectangle::resetInteraction() {
+	hovered_ = false;
+	dragged_ = false;
+
+	updateInteraction();
+
+	updated_ = true;
+}
+
+void Rectangle::needsRemap() {
 	updated_ = true;
 }
 
@@ -193,18 +167,46 @@ int Rectangle::map(UIVertex* mapped, int overrideIndex) {
 /*-----------------------------------------------------------------------------
 ------------------------------GETTERS------------------------------------------
 -----------------------------------------------------------------------------*/
-float Rectangle::getWidth() {
-	return (sizePixels_.x / extent_.width) * scale_;
+glm::vec2 Rectangle::getDimensions() {
+	return {(sizePixels_.x / extent_.width) * scale_, (sizePixels_.y / extent_.height)* scale_};
 }
 
-float Rectangle::getHeight() {
-	return (sizePixels_.y / extent_.height) * scale_;
+glm::vec2 Rectangle::getPosition() {
+    return { position_.x, position_.y};
 }
 
-float Rectangle::getPositionX() {
-    return position_.x;
+/*-----------------------------------------------------------------------------
+------------------------------GETTERS------------------------------------------
+-----------------------------------------------------------------------------*/
+void Rectangle::setPosition(glm::vec2 position) {
+	position_ = position;
+	rePosition();
 }
 
-float Rectangle::getPositionY() {
-    return position_.y;
+/*-----------------------------------------------------------------------------
+------------------------------PRIVATE-HELPERS----------------------------------
+-----------------------------------------------------------------------------*/
+void Rectangle::rePosition() {
+	// update top left position
+	quad_.vertices[0].pos = { position_.x, position_.y };
+	scale(scale_); // updates other 3 vertices position
+	updated_ = true;
+}
+
+void Rectangle::updateInteraction() {
+	if (hovered_) {
+		interaction_ = 1;
+	}
+	if (dragged_ && movable_) {
+		interaction_ = 2;
+	}
+	if (!hovered_ && !dragged_) {
+		interaction_ = 0;
+	}
+
+	quad_.vertices[0].interaction = interaction_;
+	quad_.vertices[1].interaction = interaction_;
+	quad_.vertices[2].interaction = interaction_;
+	quad_.vertices[3].interaction = interaction_;
+	updated_ = true;
 }

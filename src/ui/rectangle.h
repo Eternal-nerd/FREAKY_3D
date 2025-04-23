@@ -17,8 +17,8 @@ public:
 	// returns the number of vertices (aka how much to increment pointer)
 	int map(UIVertex* mapped, int overrideIndex = -1);
 
-	void rescale(float scale);
-
+	// modify attributes
+	void scale(float scaleFactor);
 	void setMovable(bool state);
 
 	// events
@@ -26,15 +26,16 @@ public:
 	void onMouseMove(glm::vec2 mousePos);
 	void onMouseButton(bool down);
 	void resetInteraction();
-	void needsUpdate();
+	void needsRemap();
 
 	// getters for if in container
-	float getWidth();
-	float getHeight();
+	glm::vec2 getDimensions();
 
     // getters for updating config file
-    float getPositionX();
-    float getPositionY();
+	glm::vec2 getPosition();
+
+	// setter for moving in container
+	void setPosition(glm::vec2 position);
 
 	std::string id_ = "";
 
@@ -62,8 +63,8 @@ private:
 	// for dragging
 	bool movable_ = false;
 	glm::vec2 mousePos_ = {0.f,0.f};
-	void rePosition(); // maybe make public?
 
 	// helper
 	void updateInteraction();
+	void rePosition(); 
 };

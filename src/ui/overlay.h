@@ -12,8 +12,9 @@
 #include "../config.h"
 #include "../assets/assets.h"
 #include "../assets/texture.h"
-#include "text.h"
 #include "rectangle.h"
+#include "container.h"
+#include "text.h"
 
 // Max. number of elements the text overlay buffer can hold
 #define MAX_OVERLAY_QUADS 2048
@@ -61,7 +62,6 @@ private:
 
 	// tracked mouse position [0,1]
 	glm::vec2 mousePos_ = { 0.f,0.f };
-
 	bool menuShown_ = false;
 
 	OverlayUpdates updates_;
@@ -105,7 +105,7 @@ private:
 
 	// FIXME TESTING
 	//std::vector<>;
-	Text testText_;
+	Container testContainer_;
 	std::vector<Rectangle> rectangles_{};
 	std::vector<Text> text_{};
 	//std::vector<>
@@ -117,6 +117,7 @@ private:
 
 	// UPDATES
 	void handleInputUpdates();
+	//void 
 
 	// UTILITY:
 

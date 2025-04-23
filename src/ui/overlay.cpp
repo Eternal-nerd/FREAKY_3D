@@ -286,6 +286,7 @@ void Overlay::generateElements() {
     std::unordered_map<std::string, std::string> configObjects = config_.getObjects();
 
     for (auto it = configObjects.begin(); it != configObjects.end(); it++) {
+        // Rectangles
         if (it->second == "Rectangle") {
             Rectangle r;
             r.init(it->first,
@@ -302,11 +303,22 @@ void Overlay::generateElements() {
                 extent_
             );
             // set options here
-            r.rescale(config_.getFloatAttribute(it->first, "scale"));
+            r.scale(config_.getFloatAttribute(it->first, "scale"));
             r.setMovable(config_.getBoolAttribute(it->first, "movable"));
             rectangles_.push_back(r);
         }
+        // TODO
+        else {}
     }
+
+    // FIXME TESTING!!!
+    testContainer_.init("testcontainer", OVERLAY_DEFAULT, OVERLAY_CONTAINER_BOX, {0.f,0.f}, {500,500}, extent_);
+    for (int i = 0; i < 26; i++) {
+        testContainer_.addRectangle(rectangles_[0]);
+    }
+
+    testContainer_.setMovable(true);
+
 }
 
 /*-----------------------------------------------------------------------------
@@ -321,6 +333,9 @@ void Overlay::updateExtent(VkExtent2D extent) {
         for (Rectangle& r : rectangles_) {
             r.onResize(extent_);
         }
+
+        // FIXME 
+        testContainer_.onResize(extent_);
     }
 }
 
@@ -342,6 +357,9 @@ void Overlay::updateMousePosition(float xPos, float yPos) {
         for (Rectangle& r : rectangles_) {
             r.onMouseMove({ mousePos_.x, mousePos_.y });
         }
+
+        // FIXME
+        testContainer_.onMouseMove({ mousePos_.x, mousePos_.y });
     }
 }
 
@@ -357,8 +375,11 @@ void Overlay::toggleWireframe() {
 
     // tell elements they need update
     for (Rectangle& r : rectangles_) {
-        r.needsUpdate();
+        r.needsRemap();
     }
+
+    // FIXME
+    testContainer_.needsRemap();
 }
 
 void Overlay::toggleMenu() {
@@ -373,6 +394,10 @@ void Overlay::toggleMenu() {
         for (Rectangle& r : rectangles_) {
             r.resetInteraction();
         }
+
+        // FIXME
+        testContainer_.resetInteraction();
+
     }
 }
 
@@ -385,16 +410,19 @@ void Overlay::mouseButtonTrigger(bool state) {
         for (Rectangle& r : rectangles_) {
             r.onMouseButton(state);
         }
+
+        //FIXME
+        testContainer_.onMouseButton(state);
     }
 }
 
 void Overlay::handleInputUpdates() {
     // hover effects
-    if (!menuShown_) {
+    /*if (!menuShown_) {
         for (Rectangle& r : rectangles_) {
             r.resetInteraction();
         }
-    }
+    }*/
 
     // onClick events
     /*if (mouseRelease_) {
@@ -416,7 +444,7 @@ void Overlay::handleInputUpdates() {
 void Overlay::startUpdate() {
     quadCount_ = 0;
 
-    handleInputUpdates();
+    //handleInputUpdates();
 
     if (vkMapMemory(device_, vertexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&vertexMapped_) != VK_SUCCESS) {
         throw std::runtime_error("failed to map vertex buffer memory for overlay update ");
@@ -431,6 +459,11 @@ void Overlay::startUpdate() {
         vertexMapped_ += r.map(vertexMapped_, wired);
         quadCount_++;
     }
+
+    // FIXME container
+    int offset = testContainer_.map(vertexMapped_, wired);
+    vertexMapped_ += offset;
+    quadCount_ += offset / 4;
 
 }
 
@@ -584,10 +617,10 @@ void Overlay::cleanup() {
 
     // WRITE IMPORTANT CHANGES TO CONFIG FILE
     
-    // FIXME NOT WORKING
+    // FIXME
     for (Rectangle& r : rectangles_) {
-        config_.setAttributeString(r.id_, "positionX", std::to_string(r.getPositionX()));
-        config_.setAttributeString(r.id_, "positionY", std::to_string(r.getPositionY()));
+        config_.setAttributeString(r.id_, "positionX", std::to_string(r.getPosition().x));
+        config_.setAttributeString(r.id_, "positionY", std::to_string(r.getPosition().y));
     }
 
     // vertex buffer
