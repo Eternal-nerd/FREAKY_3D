@@ -9,7 +9,7 @@ void Overlay::init(VkDevice device, VkPhysicalDevice physicalDevice, VkRenderPas
 	device_ = device;
 	physicalDevice_ = physicalDevice;
 	renderpass_ = renderpass;
-    extent_ = extent;
+    state_.extent = extent;
 	assets_ = &assets;
 
     config_.init("../config/overlay.cfg");
@@ -21,15 +21,12 @@ void Overlay::init(VkDevice device, VkPhysicalDevice physicalDevice, VkRenderPas
     // generate elements here
     generateElements();
 
-    // one time map of lines to draw, might make this dynamic later
-    mapLines();
-
     wireframeIndex_ = 0;
 
     // loading external stuff -----------------------------==================<
     vkCmdSetPolygonModeEXT = reinterpret_cast<PFN_vkCmdSetPolygonModeEXT>(vkGetDeviceProcAddr(device_, "vkCmdSetPolygonModeEXT"));
 
-    initialized_ = true;
+    state_.initialized = true;
 }
 
 void Overlay::initTextures() {
@@ -289,8 +286,7 @@ void Overlay::generateElements() {
         // Rectangles
         if (it->second == "Rectangle") {
             Rectangle r;
-            r.init(it->first,
-                getMode(config_.getStringAttribute(it->first, "mode")),
+            r.init(state_, nullptr, it->first,
                 { config_.getFloatAttribute(it->first, "positionX"), 
                 config_.getFloatAttribute(it->first, "positionY") },
                 { config_.getIntAttribute(it->first, "widthPixel"),
@@ -299,12 +295,10 @@ void Overlay::generateElements() {
                 config_.getFloatAttribute(it->first, "topleftY"),
                 config_.getFloatAttribute(it->first, "xOffset"),
                 config_.getFloatAttribute(it->first, "yOffset") },
-                config_.getIntAttribute(it->first, "texIndex"),
-                extent_
+                config_.getIntAttribute(it->first, "texIndex")
             );
             // set options here
-            r.scale(config_.getFloatAttribute(it->first, "scale"));
-            r.setMovable(config_.getBoolAttribute(it->first, "movable"));
+            //r.setMovable(config_.getBoolAttribute(it->first, "movable"));
             rectangles_.push_back(r);
         }
         // TODO
@@ -312,12 +306,10 @@ void Overlay::generateElements() {
     }
 
     // FIXME TESTING!!!
-    testContainer_.init("testcontainer", OVERLAY_DEFAULT, OVERLAY_CONTAINER_BOX, {0.f,0.f}, {500,500}, extent_);
+    testContainer_.init(state_, nullptr, "testcontainer", OVERLAY_CONTAINER_BOX, {0.f,0.f}, {500,500});
     for (int i = 0; i < 26; i++) {
         testContainer_.addRectangle(rectangles_[0]);
     }
-
-    testContainer_.setMovable(true);
 
 }
 
@@ -325,17 +317,17 @@ void Overlay::generateElements() {
 ------------------------------UPDATE-SHIT--------------------------------------
 -----------------------------------------------------------------------------*/
 void Overlay::updateExtent(VkExtent2D extent) {
-    extent_ = extent;
+    state_.extent = extent;
     
-    if (initialized_) {
-        mapLines();
+    if (state_.initialized) {
+        crosshairMapped_ = false;
 
         for (Rectangle& r : rectangles_) {
-            r.onResize(extent_);
+            r.scale();
         }
 
         // FIXME 
-        testContainer_.onResize(extent_);
+        testContainer_.scale();
     }
 }
 
@@ -349,17 +341,22 @@ void Overlay::resetUpdates() {
 }
 
 void Overlay::updateMousePosition(float xPos, float yPos) {
-    mousePos_.x = -1 + (2 * (xPos / extent_.width));
-    mousePos_.y = -1 + (2 * (yPos / extent_.height));
+    // update old position
+    state_.oldMousePos.x = state_.mousePos.x;
+    state_.oldMousePos.y = state_.mousePos.y;
+    
+    // update current position
+    state_.mousePos.x = -1 + (2 * (xPos / state_.extent.width));
+    state_.mousePos.y = -1 + (2 * (yPos / state_.extent.height));
 
-    if (menuShown_) {
+    if (state_.menuShown) {
         // call elements on mouse move
         for (Rectangle& r : rectangles_) {
-            r.onMouseMove({ mousePos_.x, mousePos_.y });
+            r.onMouseMove();
         }
 
         // FIXME
-        testContainer_.onMouseMove({ mousePos_.x, mousePos_.y });
+        testContainer_.onMouseMove();
     }
 }
 
@@ -384,12 +381,12 @@ void Overlay::toggleWireframe() {
 
 void Overlay::toggleMenu() {
     util::log(name_, "toggling menu overlay");
-    menuShown_ = !menuShown_;
+    state_.menuShown = !state_.menuShown;
 
     // reset mouse position
-    mousePos_ = {0.f, 0.f};
+    state_.mousePos = {0.f, 0.f};
 
-    if (!menuShown_) {
+    if (!state_.menuShown) {
         // reset interactions
         for (Rectangle& r : rectangles_) {
             r.resetInteraction();
@@ -402,17 +399,16 @@ void Overlay::toggleMenu() {
 }
 
 void Overlay::mouseButtonTrigger(bool state) {
-    mouseDown_ = state;
-    mouseRelease_ = !state;
+    state_.mouseDown = state;
 
-    if (menuShown_) {
+    if (state_.menuShown) {
         // call mousebutton for elements
         for (Rectangle& r : rectangles_) {
-            r.onMouseButton(state);
+            r.onMouseButton();
         }
 
         //FIXME
-        testContainer_.onMouseButton(state);
+        testContainer_.onMouseButton();
     }
 }
 
@@ -452,6 +448,17 @@ void Overlay::startUpdate() {
 
     assert(vertexMapped_ != nullptr);
 
+    // map line buffer
+    if (vkMapMemory(device_, lineVertexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&lineVertexMapped_) != VK_SUCCESS) {
+        throw std::runtime_error("failed to map vertex buffer memory for overlay update ");
+    }
+
+    assert(lineVertexMapped_ != nullptr);
+
+    if (!crosshairMapped_) {
+        mapCrosshair();
+    }
+
     int wired = (currentPolygonMode_ == VK_POLYGON_MODE_LINE) ? wireframeIndex_ : -1;
 
     // map rectangles
@@ -464,6 +471,11 @@ void Overlay::startUpdate() {
     int offset = testContainer_.map(vertexMapped_, wired);
     vertexMapped_ += offset;
     quadCount_ += offset / 4;
+
+    // MAP CONTAINER BORDER
+    offset = testContainer_.mapLines(lineVertexMapped_);
+    lineVertexMapped_ += offset;
+    lineCount_ += offset/2;
 
 }
 
@@ -485,8 +497,13 @@ bool Overlay::checkTextBoxMessage(int index, const std::string& compareString) {
 }
 
 void Overlay::endUpdate() {
+    // vertex buffer
     vkUnmapMemory(device_, vertexBufferMemory_);
     vertexMapped_ = nullptr;
+
+    // line buffer
+    vkUnmapMemory(device_, lineVertexBufferMemory_);
+    lineVertexMapped_ = nullptr;
 
     // populate index buffer
     if (vkMapMemory(device_, indexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&indexMapped_) != VK_SUCCESS) {
@@ -543,19 +560,14 @@ void Overlay::draw(VkCommandBuffer commandBuffer) {
 ------------------------------UTILITY------------------------------------------
 -----------------------------------------------------------------------------*/
 // LINES
-void Overlay::mapLines() {
-    util::log(name_, "mapping overlay lines");
-
-    // calculate width and height from pixels
-    float xOffset = ( 15.f / extent_.width);
-    float yOffset = ( 15.f / extent_.height);
-
-    // populate vertex buffer
-    if (vkMapMemory(device_, lineVertexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&lineVertexMapped_) != VK_SUCCESS) {
-        throw std::runtime_error("failed to map vertex buffer memory for overlay update ");
-    }
+void Overlay::mapCrosshair() {
+    util::log(name_, "mapping overlay crosshair");
 
     assert(lineVertexMapped_ != nullptr);
+
+    // calculate width and height from pixels
+    float xOffset = ( 15.f / state_.extent.width);
+    float yOffset = ( 15.f / state_.extent.height);
 
     // top crosshair vertex
     lineVertexMapped_->pos = {0.f, -yOffset};
@@ -589,8 +601,7 @@ void Overlay::mapLines() {
     lineVertexMapped_++;
     lineCount_++;
 
-    vkUnmapMemory(device_, lineVertexBufferMemory_);
-    lineVertexMapped_ = nullptr;
+    crosshairMapped_ = true;
 }
 
 OverlayMode Overlay::getMode(const std::string& modeString) {
@@ -621,7 +632,10 @@ void Overlay::cleanup() {
     for (Rectangle& r : rectangles_) {
         config_.setAttributeString(r.id_, "positionX", std::to_string(r.getPosition().x));
         config_.setAttributeString(r.id_, "positionY", std::to_string(r.getPosition().y));
+        r.cleanup();
     }
+
+    testContainer_.cleanup();
 
     // vertex buffer
     vkDestroyBuffer(device_, vertexBuffer_, nullptr);

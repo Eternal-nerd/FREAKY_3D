@@ -20,10 +20,64 @@ const float FONT_OFFSET = 0.0625f;
 
 const int FPS_MEASURE_INTERVAL = 500;
 
+typedef enum OverlayMode {
+    OVERLAY_DEFAULT = 0,
+    OVERLAY_MENU = 1,
+    OVERLAY_STATS = 2,
+    OVERLAY_INVENTORY = 3
+} OverlayMode;
+
+typedef enum OverlayContainerType {
+    OVERLAY_CONTAINER_COLUMN = 0,
+    OVERLAY_CONTAINER_ROW = 1,
+    OVERLAY_CONTAINER_BOX = 2,
+} OverlayContainerType;
+
+typedef enum OverlayUpdateType {
+    OVERLAY_RESIZE = 0,
+    OVERLAY_MOUSE_MOVE = 1,
+    OVERLAY_MOUSE_BUTTON = 2,
+    OVERLAY_REMAP = 3,
+    OVERLAY_RESET_INTERACTION = 4,
+} OverlayUpdateType;
+
+typedef enum OverlayModifyType {
+    OVERLAY_SCALE = 0,
+    OVERLAY_MOVABLE_TRUE = 1,
+    OVERLAY_MOVABLE_FALSE = 2,
+} OverlayModifyType;
+
 // used to pass updates from overlay to the engine
 struct OverlayUpdates {
     bool unpause = false;
     bool quit = false;
+};
+
+struct OverlayState {
+    bool initialized = false;
+
+    // mouse stuff
+    bool mouseDown = false;
+    glm::vec2 mousePos = { 0.f,0.f };
+    glm::vec2 oldMousePos = { 0.f,0.f };
+
+    // state stuff
+    bool menuShown = false;
+    float scale = 1.f;
+
+    // screen size stuff
+    VkExtent2D extent;
+};
+
+struct OverlayElementState {
+    OverlayMode mode = OVERLAY_DEFAULT;
+
+    bool hovered = false;
+    bool dragged = false;
+    int interaction = 0;
+
+    bool updated = true;
+    bool movable = false;
 };
 
 struct UniformBufferObject {
@@ -139,33 +193,6 @@ struct UIVertex {
 struct UIQuad {
     std::array<UIVertex, 4> vertices{};
 };
-
-typedef enum OverlayMode {
-    OVERLAY_DEFAULT = 0,
-    OVERLAY_MENU = 1,
-    OVERLAY_STATS = 2,
-    OVERLAY_INVENTORY = 3
-} OverlayMode;
-
-typedef enum OverlayContainerType {
-    OVERLAY_CONTAINER_COLUMN = 0,
-    OVERLAY_CONTAINER_ROW = 1,
-    OVERLAY_CONTAINER_BOX = 2,
-} OverlayContainerType;
-
-typedef enum OverlayUpdateType {
-    OVERLAY_RESIZE = 0,
-    OVERLAY_MOUSE_MOVE = 1,
-    OVERLAY_MOUSE_BUTTON = 2,
-    OVERLAY_REMAP = 3,
-    OVERLAY_RESET_INTERACTION = 4,
-} OverlayUpdateType;
-
-typedef enum OverlayModifyType {
-    OVERLAY_SCALE = 0,
-    OVERLAY_MOVABLE_TRUE = 1,
-    OVERLAY_MOVABLE_FALSE = 2,
-} OverlayModifyType;
 
 // used by mesh class
 struct MeshData {

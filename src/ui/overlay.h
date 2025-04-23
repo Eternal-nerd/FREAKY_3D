@@ -56,13 +56,9 @@ public:
 
 private:
 	Config config_;
-
-	bool mouseDown_ = false;
-	bool mouseRelease_ = false;
-
-	// tracked mouse position [0,1]
-	glm::vec2 mousePos_ = { 0.f,0.f };
-	bool menuShown_ = false;
+	
+	// extent is in here
+	OverlayState state_;
 
 	OverlayUpdates updates_;
 
@@ -70,10 +66,6 @@ private:
 	VkPhysicalDevice physicalDevice_ = VK_NULL_HANDLE;
 	VkDevice device_ = VK_NULL_HANDLE;
 	VkRenderPass renderpass_ = VK_NULL_HANDLE;
-
-	// extent used for scaling
-	VkExtent2D extent_;
-	bool initialized_ = false;
 
 	// Assets ptr
 	Assets* assets_ = nullptr;
@@ -123,13 +115,14 @@ private:
 
 
 
-	// debug drawing lines, also used for crosshair
+	// debug drawing lines, also used for crosshair, also border of containers
 	// memory mapped vertex buffer
 	VkBuffer lineVertexBuffer_ = VK_NULL_HANDLE;
 	VkDeviceMemory lineVertexBufferMemory_ = VK_NULL_HANDLE;
 	UIVertex* lineVertexMapped_ = nullptr;
 	int lineCount_ = 0;
-	void mapLines();
+	bool crosshairMapped_ = false;
+	void mapCrosshair();
 
 
 

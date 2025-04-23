@@ -10,7 +10,7 @@
 
 class Container {
 public:
-	void init(const std::string& id, OverlayMode mode, OverlayContainerType type, glm::vec2 position, glm::vec2 sizePixels, VkExtent2D extent);
+	void init(OverlayState& state, OverlayElementState* elementState, const std::string& id, OverlayContainerType type, glm::vec2 position, glm::vec2 sizePixels);
 
 	// add rectangles
 	void addRectangle(Rectangle rectangle);
@@ -18,43 +18,42 @@ public:
 	// returns the number of vertices (aka how much to increment pointer)
 	int map(UIVertex* mapped, int overrideIndex = -1);
 
-	// modify attributes
-	void scale(float scaleFactor);
-	void setMovable(bool state);
+	int mapLines(UIVertex* mapped);
 
 	// events
-	void onResize(VkExtent2D extent);
-	void onMouseMove(glm::vec2 mousePos);
-	void onMouseButton(bool down);
+	void scale();
+	void onMouseMove();
+	void onMouseButton();
 	void resetInteraction();
 	void needsRemap();
 
 	// getters for if in container
-	glm::vec2 getDimensions();
+	//glm::vec2 getDimensions();
 
 	// getters for updating config file
-	glm::vec2 getPosition();
+	//glm::vec2 getPosition();
 
-	bool hovered_ = false;
-	bool dragged_ = false;
-	int interaction_ = 0;
+	void cleanup();
+
+	bool unique_ = false;
 
 	std::string id_ = "";
 
-	OverlayMode mode_ = OVERLAY_DEFAULT;
 	OverlayContainerType type_ = OVERLAY_CONTAINER_BOX;
 
 	const std::string name_ = "CONTAINER";
 
 private:
+	OverlayState* state_;
+	OverlayElementState* elementState_;
+
 	glm::vec2 position_ = { 0.f, 0.f };
 	glm::vec2 sizePixels_ = { 0.f, 0.f };
-	VkExtent2D extent_;
 
-	float scale_ = 1.f;
-	bool movable_ = false;
 
 	std::vector<Rectangle> rectangles_ = {};
+
+	std::vector<UIVertex> borderLines_ = {};
 
 	float rightBoundary_ = 0.f;
 	float bottomBoundary_ = 0.f;
@@ -62,4 +61,6 @@ private:
 	glm::vec2 insertPosition_ = { 0.f, 0.f };
 
 	void resetRectanglePositions();
+	void updateInteraction();
+	void rePosition();
 };

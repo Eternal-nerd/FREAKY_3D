@@ -3,25 +3,69 @@
 /*-----------------------------------------------------------------------------
 ------------------------------INITIALIZATION-----------------------------------
 -----------------------------------------------------------------------------*/
-void Container::init(const std::string& id, OverlayMode mode, OverlayContainerType type, glm::vec2 position, glm::vec2 sizePixels, VkExtent2D extent) {
+void Container::init(OverlayState& state, OverlayElementState* elementState, const std::string& id, OverlayContainerType type, glm::vec2 position, glm::vec2 sizePixels) {
+	util::log(name_, "initializing overlay container");
+	
+	state_ = &state;
+	elementState_ = elementState;
+
+	if (elementState_ == nullptr) {
+		unique_ = true;
+		elementState_ = new OverlayElementState;
+		elementState_->dragged = false;
+		elementState_->hovered = false;
+		elementState_->interaction = 0;
+		elementState_->movable = true; // FIXME
+		elementState_->updated = true;
+
+	}
+	else {
+		unique_ = false;
+	}
+
 	id_ = id;
-	mode_ = mode;
 	type_ = type;
 	position_ = position;
 	sizePixels_ = sizePixels;
-	extent_ = extent;
 
 	// calculate boundaries
-	rightBoundary_ = position_.x + (sizePixels_.x / extent_.width);
-	bottomBoundary_ = position_.y + (sizePixels_.y / extent_.height);
+	rightBoundary_ = position_.x + (sizePixels_.x / state_->extent.width);
+	bottomBoundary_ = position_.y + (sizePixels_.y / state_->extent.height);
 
 	insertPosition_ = position_;
 
-	// immovable by default
-	movable_ = false;
+	// create border lines
+	borderLines_.resize(8); // 8 vertices needed for 4 lines
+	// top line
+	borderLines_[0].texIndex = 0; // wireframe index
+	borderLines_[0].pos = { position_.x, position_.y};
+	borderLines_[1].texIndex = 0;
+	borderLines_[1].pos = { position_.x + rightBoundary_, position_.y };
+
+	// left line
+	borderLines_[2].texIndex = 0;
+	borderLines_[2].pos = { position_.x, position_.y };
+	borderLines_[3].texIndex = 0; 
+	borderLines_[3].pos = { position_.x, position_.y + bottomBoundary_ };
+
+	// right line
+	borderLines_[4].texIndex = 0;
+	borderLines_[4].pos = { position_.x + rightBoundary_, position_.y };
+	borderLines_[5].texIndex = 0;
+	borderLines_[5].pos = { position_.x + rightBoundary_, position_.y + bottomBoundary_ };
+	
+	// bottom line
+	borderLines_[6].texIndex = 0;
+	borderLines_[6].pos = { position_.x, position_.y + bottomBoundary_ };
+	borderLines_[7].texIndex = 0;
+	borderLines_[7].pos = { position_.x + rightBoundary_, position_.y + bottomBoundary_ };
 }
 
 void Container::addRectangle(Rectangle rectangle) {
+
+	// give rectangle shared state
+	rectangle.replaceElementState(elementState_);
+
 	// either place the rectangle above or below previous ones
 	// for box mode: 
 	glm::vec2 dimensions = rectangle.getDimensions();
@@ -47,10 +91,9 @@ void Container::addRectangle(Rectangle rectangle) {
 		break;
 	}
 
-	// only should be movable if container is
-	rectangle.setMovable(movable_);
-
 	rectangles_.push_back(rectangle);
+
+	util::log("DEBUG", "rectangles_.size(): " + std::to_string(rectangles_.size()));
 }
 
 void Container::resetRectanglePositions() {
@@ -89,56 +132,86 @@ void Container::resetRectanglePositions() {
 int Container::map(UIVertex* mapped, int overrideIndex) {
 	int retVal = 0;
 	for (Rectangle& r : rectangles_) {
-		r.map(mapped, overrideIndex);
-		mapped += 4;
-		retVal += 4;
+		int incr = r.map(mapped, overrideIndex);
+		mapped += incr;
+		retVal += incr;
 	}
 	return retVal;
+}
+
+int Container::mapLines(UIVertex* mapped) {
+	//if (elementState_->updated) {
+		for (UIVertex& point : borderLines_) {
+			mapped->texIndex = point.texIndex;
+			mapped->pos = point.pos;
+			mapped++;
+		}
+	//}
+	//elementState_->updated = false;
+	return 8;
 }
 
 
 /*-----------------------------------------------------------------------------
 ------------------------------UPDATES------------------------------------------
 -----------------------------------------------------------------------------*/
-// modify attributes
-void Container::scale(float scaleFactor) {
-	scale_ = scaleFactor;
+// events
+void Container::scale() {
+	// scale rectangles
+	for (Rectangle& r : rectangles_) {
+		r.scale();
+	}
 
 	// scale boundaries
-	rightBoundary_ = position_.x + ((sizePixels_.x / extent_.width) * scale_);
-	bottomBoundary_ = position_.y + ((sizePixels_.y / extent_.height) * scale_);
+	rightBoundary_ = position_.x + ((sizePixels_.x / state_->extent.width) * state_->scale);
+	bottomBoundary_ = position_.y + ((sizePixels_.y / state_->extent.height) * state_->scale);
 
 	resetRectanglePositions();
 }
 
-void Container::setMovable(bool state) {
-	movable_ = state;
-	for (Rectangle& r : rectangles_) {
-		r.setMovable(state);
+void Container::onMouseMove() {
+	// check if mouse is within borders
+	float left = position_.x;
+	float right = position_.x + ((sizePixels_.x / state_->extent.width) * state_->scale);
+	float top = position_.y;
+	float bottom = position_.y + ((sizePixels_.y / state_->extent.height) * state_->scale);
+	
+	bool oldHover = elementState_->hovered;
+
+	elementState_->hovered = util::withinBorders(state_->mousePos, { left, right, top, bottom });
+
+	// NEED TO do drag interaction here
+	if (elementState_->dragged) {
+		if (elementState_->movable) {
+			float xDelta = state_->mousePos.x - state_->oldMousePos.x;
+			float yDelta = state_->mousePos.y - state_->oldMousePos.y;
+			position_.x += xDelta;
+			position_.y += yDelta;
+			resetRectanglePositions();
+		}
 	}
+	else {
+		if (oldHover != elementState_->hovered) {
+			updateInteraction();
+		}
+	}
+	
+	// tell rectangles to update
+	updateInteraction();
 }
 
-// events
-void Container::onResize(VkExtent2D extent) {
-	extent_ = extent;
-
-	for (Rectangle& r : rectangles_) {
-		r.onResize(extent);
+void Container::onMouseButton() {
+	if (state_->mouseDown) {
+		if (elementState_->hovered) {
+			elementState_->dragged = true;
+			updateInteraction();
+		}
 	}
-
-	scale(scale_);
-
-}
-
-void Container::onMouseMove(glm::vec2 mousePos) {
-	for (Rectangle& r : rectangles_) {
-		r.onMouseMove(mousePos);
-	}
-}
-
-void Container::onMouseButton(bool down) {
-	for (Rectangle& r : rectangles_) {
-		r.onMouseButton(down);
+	else {
+		if (elementState_->dragged) {
+			elementState_->dragged = false;
+			updateInteraction();
+		}
 	}
 }
 
@@ -154,14 +227,34 @@ void Container::needsRemap() {
 	}
 }
 
+void Container::updateInteraction() {
+	for (Rectangle& r : rectangles_) {
+		r.updateInteraction();
+	}
+}
+
+
+
 
 /*-----------------------------------------------------------------------------
 ------------------------------GETTERS------------------------------------------
 -----------------------------------------------------------------------------*/
-glm::vec2 Container::getDimensions() {
+/*glm::vec2 Container::getDimensions() {
 	return {};
 }
 
 glm::vec2 Container::getPosition() {
 	return {};
+}*/
+
+
+/*-----------------------------------------------------------------------------
+------------------------------CLEANUP------------------------------------------
+-----------------------------------------------------------------------------*/
+void Container::cleanup() {
+	util::log(name_, "cleaning up Rectangle resources");
+
+	if (unique_) {
+		delete elementState_;
+	}
 }

@@ -71,4 +71,6 @@ namespace util {
 
 	//MISC
 	void checkNPos(std::string::size_type t);
+	// borders: leftbound, rightbound, topbound, bottombound
+	bool withinBorders(glm::vec2 toCheck, glm::vec4 borders);
 }

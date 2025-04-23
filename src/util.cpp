@@ -553,3 +553,8 @@ void util::checkNPos(std::string::size_type t) {
         throw std::runtime_error("string iterator out of range");
     }
 }
+
+// borders: leftbound, rightbound, topbound, bottombound
+bool util::withinBorders(glm::vec2 toCheck, glm::vec4 borders) {
+    return (toCheck.x < borders.y && toCheck.x > borders.x && toCheck.y > borders.z && toCheck.y < borders.w);
+}
