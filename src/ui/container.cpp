@@ -28,37 +28,11 @@ void Container::init(OverlayState& state, OverlayElementState* elementState, con
 	position_ = position;
 	sizePixels_ = sizePixels;
 
-	// calculate boundaries
-	rightBoundary_ = position_.x + (sizePixels_.x / state_->extent.width);
-	bottomBoundary_ = position_.y + (sizePixels_.y / state_->extent.height);
-
 	insertPosition_ = position_;
 
 	// create border lines
 	borderLines_.resize(8); // 8 vertices needed for 4 lines
-	// top line
-	borderLines_[0].texIndex = 0; // wireframe index
-	borderLines_[0].pos = { position_.x, position_.y};
-	borderLines_[1].texIndex = 0;
-	borderLines_[1].pos = { position_.x + rightBoundary_, position_.y };
-
-	// left line
-	borderLines_[2].texIndex = 0;
-	borderLines_[2].pos = { position_.x, position_.y };
-	borderLines_[3].texIndex = 0; 
-	borderLines_[3].pos = { position_.x, position_.y + bottomBoundary_ };
-
-	// right line
-	borderLines_[4].texIndex = 0;
-	borderLines_[4].pos = { position_.x + rightBoundary_, position_.y };
-	borderLines_[5].texIndex = 0;
-	borderLines_[5].pos = { position_.x + rightBoundary_, position_.y + bottomBoundary_ };
-	
-	// bottom line
-	borderLines_[6].texIndex = 0;
-	borderLines_[6].pos = { position_.x, position_.y + bottomBoundary_ };
-	borderLines_[7].texIndex = 0;
-	borderLines_[7].pos = { position_.x + rightBoundary_, position_.y + bottomBoundary_ };
+	createBorderLines();
 }
 
 void Container::addRectangle(Rectangle rectangle) {
@@ -72,7 +46,7 @@ void Container::addRectangle(Rectangle rectangle) {
 	switch (type_) {
 	case OVERLAY_CONTAINER_BOX:
 		// check if rectangle would exceed right boundary, if it does, move to next row
-		if (insertPosition_.x + dimensions.x > rightBoundary_) {
+		if (insertPosition_.x + dimensions.x > position_.x + xOffset_) {
 			insertPosition_.x = position_.x;
 			insertPosition_.y += dimensions.y;   // THIS will be a problem if adding different height rectangles
 		}
@@ -92,8 +66,6 @@ void Container::addRectangle(Rectangle rectangle) {
 	}
 
 	rectangles_.push_back(rectangle);
-
-	util::log("DEBUG", "rectangles_.size(): " + std::to_string(rectangles_.size()));
 }
 
 void Container::resetRectanglePositions() {
@@ -105,7 +77,7 @@ void Container::resetRectanglePositions() {
 		switch (type_) {
 		case OVERLAY_CONTAINER_BOX:
 			// check if rectangle would exceed right boundary, if it does, move to next row
-			if (insertPosition_.x + dimensions.x > rightBoundary_) {
+			if (insertPosition_.x + dimensions.x > position_.x + xOffset_) {
 				insertPosition_.x = position_.x;
 				insertPosition_.y += dimensions.y;   // THIS will be a problem if adding different height rectangles
 			}
@@ -141,11 +113,11 @@ int Container::map(UIVertex* mapped, int overrideIndex) {
 
 int Container::mapLines(UIVertex* mapped) {
 	//if (elementState_->updated) {
-		for (UIVertex& point : borderLines_) {
-			mapped->texIndex = point.texIndex;
-			mapped->pos = point.pos;
-			mapped++;
-		}
+	for (UIVertex& point : borderLines_) {
+		mapped->texIndex = point.texIndex;
+		mapped->pos = point.pos;
+		mapped++;
+	}
 	//}
 	//elementState_->updated = false;
 	return 8;
@@ -163,8 +135,8 @@ void Container::scale() {
 	}
 
 	// scale boundaries
-	rightBoundary_ = position_.x + ((sizePixels_.x / state_->extent.width) * state_->scale);
-	bottomBoundary_ = position_.y + ((sizePixels_.y / state_->extent.height) * state_->scale);
+	xOffset_ = (sizePixels_.x / state_->extent.width) * state_->scale;
+	yOffset_ = (sizePixels_.y / state_->extent.height) * state_->scale;
 
 	resetRectanglePositions();
 }
@@ -187,7 +159,7 @@ void Container::onMouseMove() {
 			float yDelta = state_->mousePos.y - state_->oldMousePos.y;
 			position_.x += xDelta;
 			position_.y += yDelta;
-			resetRectanglePositions();
+			rePosition();
 		}
 	}
 	else {
@@ -233,8 +205,43 @@ void Container::updateInteraction() {
 	}
 }
 
+void Container::rePosition() {
+	// border box
+	createBorderLines();
+	
+	// rectangles
+	resetRectanglePositions();
+}
 
+void Container::createBorderLines() {
+	// calculate boundaries FIXME
+	xOffset_ = sizePixels_.x / state_->extent.width;
+	yOffset_ = sizePixels_.y / state_->extent.height;
 
+	// top line
+	borderLines_[0].texIndex = 0; // wireframe index
+	borderLines_[0].pos = { position_.x, position_.y };
+	borderLines_[1].texIndex = 0;
+	borderLines_[1].pos = { position_.x + xOffset_, position_.y };
+
+	// left line
+	borderLines_[2].texIndex = 0;
+	borderLines_[2].pos = { position_.x, position_.y };
+	borderLines_[3].texIndex = 0;
+	borderLines_[3].pos = { position_.x, position_.y + yOffset_ };
+
+	// right line
+	borderLines_[4].texIndex = 0;
+	borderLines_[4].pos = { position_.x + xOffset_, position_.y };
+	borderLines_[5].texIndex = 0;
+	borderLines_[5].pos = { position_.x + xOffset_, position_.y + yOffset_ };
+
+	// bottom line
+	borderLines_[6].texIndex = 0;
+	borderLines_[6].pos = { position_.x, position_.y + yOffset_ };
+	borderLines_[7].texIndex = 0;
+	borderLines_[7].pos = { position_.x + xOffset_, position_.y + yOffset_ };
+}
 
 /*-----------------------------------------------------------------------------
 ------------------------------GETTERS------------------------------------------

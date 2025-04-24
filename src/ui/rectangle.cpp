@@ -150,15 +150,15 @@ void Rectangle::needsRemap() {
 int Rectangle::map(UIVertex* mapped, int overrideIndex) {
 	// for each vertex
 	//if (elementState_->updated) {
-		for (int i = 0; i < 4; i++) {
-			mapped->pos.x = quad_.vertices[i].pos.x; // position x
-			mapped->pos.y = quad_.vertices[i].pos.y; // position y
-			mapped->texCoord.x = quad_.vertices[i].texCoord.x; // tex coord x
-			mapped->texCoord.y = quad_.vertices[i].texCoord.y; // tex coord y
-			(overrideIndex == -1) ? mapped->texIndex = quad_.vertices[i].texIndex : mapped->texIndex = overrideIndex; // tex index
-			mapped->interaction = quad_.vertices[i].interaction; // for checking hover
-			mapped++;
-		}
+	for (int i = 0; i < 4; i++) {
+		mapped->pos.x = quad_.vertices[i].pos.x; // position x
+		mapped->pos.y = quad_.vertices[i].pos.y; // position y
+		mapped->texCoord.x = quad_.vertices[i].texCoord.x; // tex coord x
+		mapped->texCoord.y = quad_.vertices[i].texCoord.y; // tex coord y
+		(overrideIndex == -1) ? mapped->texIndex = quad_.vertices[i].texIndex : mapped->texIndex = overrideIndex; // tex index
+		mapped->interaction = quad_.vertices[i].interaction; // for checking hover
+		mapped++;
+	}
 	//}
 	//elementState_->updated = false;
 	return 4;

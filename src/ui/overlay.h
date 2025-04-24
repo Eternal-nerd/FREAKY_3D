@@ -102,6 +102,9 @@ private:
 	std::vector<Text> text_{};
 	//std::vector<>
 
+	// Actual elements that will exist:
+	// textbox, slider, button, 
+
 	void generateElements();
 
 	// utility

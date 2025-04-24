@@ -17,7 +17,6 @@ public:
 
 	// returns the number of vertices (aka how much to increment pointer)
 	int map(UIVertex* mapped, int overrideIndex = -1);
-
 	int mapLines(UIVertex* mapped);
 
 	// events
@@ -50,17 +49,18 @@ private:
 	glm::vec2 position_ = { 0.f, 0.f };
 	glm::vec2 sizePixels_ = { 0.f, 0.f };
 
-
 	std::vector<Rectangle> rectangles_ = {};
 
 	std::vector<UIVertex> borderLines_ = {};
 
-	float rightBoundary_ = 0.f;
-	float bottomBoundary_ = 0.f;
+	float xOffset_ = 0.f;
+	float yOffset_ = 0.f;
 
 	glm::vec2 insertPosition_ = { 0.f, 0.f };
 
 	void resetRectanglePositions();
 	void updateInteraction();
 	void rePosition();
+
+	void createBorderLines();
 };

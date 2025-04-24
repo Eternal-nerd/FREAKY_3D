@@ -306,7 +306,8 @@ void Overlay::generateElements() {
     }
 
     // FIXME TESTING!!!
-    testContainer_.init(state_, nullptr, "testcontainer", OVERLAY_CONTAINER_BOX, {0.f,0.f}, {500,500});
+    // POSITION DOESNT WORK
+    testContainer_.init(state_, nullptr, "testcontainer", OVERLAY_CONTAINER_BOX, {0.0f,0.0f}, {500,500});
     for (int i = 0; i < 26; i++) {
         testContainer_.addRectangle(rectangles_[0]);
     }
@@ -455,9 +456,9 @@ void Overlay::startUpdate() {
 
     assert(lineVertexMapped_ != nullptr);
 
-    if (!crosshairMapped_) {
-        mapCrosshair();
-    }
+    //if (!crosshairMapped_) {
+    mapCrosshair();
+    //}
 
     int wired = (currentPolygonMode_ == VK_POLYGON_MODE_LINE) ? wireframeIndex_ : -1;
 
@@ -561,7 +562,7 @@ void Overlay::draw(VkCommandBuffer commandBuffer) {
 -----------------------------------------------------------------------------*/
 // LINES
 void Overlay::mapCrosshair() {
-    util::log(name_, "mapping overlay crosshair");
+    //util::log(name_, "mapping overlay crosshair");
 
     assert(lineVertexMapped_ != nullptr);
 
