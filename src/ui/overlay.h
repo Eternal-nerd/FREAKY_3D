@@ -95,9 +95,7 @@ private:
 	int indexCount_ = 0;
 	int quadCount_ = 0;
 
-	// FIXME TESTING
-	//std::vector<>;
-	Container testContainer_;
+	// ELEMENTS
 	std::vector<Rectangle> rectangles_{};
 	std::vector<Text> text_{};
 	//std::vector<>

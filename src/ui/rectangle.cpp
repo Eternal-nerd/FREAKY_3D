@@ -84,9 +84,6 @@ void Rectangle::scale() {
 	elementState_->updated = true;
 }
 
-// borders: leftbound, topbound, rightbound, bottombound
-//bool withinBorders(glm::vec2 toCheck, glm::vec4 borders);
-
 void Rectangle::onMouseMove() {
 	// calculate boundaries
 	float left = position_.x;

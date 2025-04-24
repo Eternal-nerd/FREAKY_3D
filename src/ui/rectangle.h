@@ -31,7 +31,7 @@ public:
 	// getters for if in container
 	glm::vec2 getDimensions();
 
-    // getters for updating config file
+    // getters for updating config file - REMOVE?
 	glm::vec2 getPosition();
 
 	// setter for moving in container

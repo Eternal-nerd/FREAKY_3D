@@ -98,6 +98,10 @@ void Container::resetRectanglePositions() {
 	}
 }
 
+void Container::clear() {
+	rectangles_.clear();
+}
+
 /*-----------------------------------------------------------------------------
 ------------------------------MAPPING-TO-BUFFER--------------------------------
 -----------------------------------------------------------------------------*/
@@ -130,15 +134,12 @@ int Container::mapLines(UIVertex* mapped) {
 // events
 void Container::scale() {
 	// scale rectangles
+	// FIXME WHY DOES THIS DO NOTHING
 	for (Rectangle& r : rectangles_) {
-		r.scale();
+		//r.scale();
 	}
 
-	// scale boundaries
-	xOffset_ = (sizePixels_.x / state_->extent.width) * state_->scale;
-	yOffset_ = (sizePixels_.y / state_->extent.height) * state_->scale;
-
-	resetRectanglePositions();
+	rePosition();
 }
 
 void Container::onMouseMove() {
@@ -215,8 +216,8 @@ void Container::rePosition() {
 
 void Container::createBorderLines() {
 	// calculate boundaries FIXME
-	xOffset_ = sizePixels_.x / state_->extent.width;
-	yOffset_ = sizePixels_.y / state_->extent.height;
+	xOffset_ = (sizePixels_.x / state_->extent.width) * state_->scale;
+	yOffset_ = (sizePixels_.y / state_->extent.height) * state_->scale;
 
 	// top line
 	borderLines_[0].texIndex = 0; // wireframe index
@@ -254,12 +255,16 @@ glm::vec2 Container::getPosition() {
 	return {};
 }*/
 
+glm::vec2 Container::getPosition() {
+	return position_;
+}
+
 
 /*-----------------------------------------------------------------------------
 ------------------------------CLEANUP------------------------------------------
 -----------------------------------------------------------------------------*/
 void Container::cleanup() {
-	util::log(name_, "cleaning up Rectangle resources");
+	util::log(name_, "cleaning up Container resources");
 
 	if (unique_) {
 		delete elementState_;

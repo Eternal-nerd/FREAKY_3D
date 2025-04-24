@@ -301,15 +301,24 @@ void Overlay::generateElements() {
             //r.setMovable(config_.getBoolAttribute(it->first, "movable"));
             rectangles_.push_back(r);
         }
+        // text boxes
+        else if (it->second == "Text") {
+            Text t;
+            t.init(state_, nullptr, it->first,
+                config_.getStringAttribute(it->first, "message"), // message
+                { config_.getFloatAttribute(it->first, "positionX"),
+                config_.getFloatAttribute(it->first, "positionY") }, // position
+                { config_.getFloatAttribute(it->first, "boxWidthPixel"),
+                config_.getFloatAttribute(it->first, "boxHeightPixel") }, // box size
+                { config_.getFloatAttribute(it->first, "fontWidthPixel"),
+                config_.getFloatAttribute(it->first, "fontHeightPixel") }, // font size
+                config_.getIntAttribute(it->first, "texIndex")                
+            );
+            text_.push_back(t);
+        }
+    
         // TODO
         else {}
-    }
-
-    // FIXME TESTING!!!
-    // POSITION DOESNT WORK
-    testContainer_.init(state_, nullptr, "testcontainer", OVERLAY_CONTAINER_BOX, {0.0f,0.0f}, {500,500});
-    for (int i = 0; i < 26; i++) {
-        testContainer_.addRectangle(rectangles_[0]);
     }
 
 }
@@ -327,8 +336,10 @@ void Overlay::updateExtent(VkExtent2D extent) {
             r.scale();
         }
 
-        // FIXME 
-        testContainer_.scale();
+        for (Text& t : text_) {
+            t.scale();
+        }
+
     }
 }
 
@@ -339,26 +350,6 @@ OverlayUpdates Overlay::getUpdates() {
 void Overlay::resetUpdates() {
     updates_.unpause = false;
     updates_.quit = false; // unused lol
-}
-
-void Overlay::updateMousePosition(float xPos, float yPos) {
-    // update old position
-    state_.oldMousePos.x = state_.mousePos.x;
-    state_.oldMousePos.y = state_.mousePos.y;
-    
-    // update current position
-    state_.mousePos.x = -1 + (2 * (xPos / state_.extent.width));
-    state_.mousePos.y = -1 + (2 * (yPos / state_.extent.height));
-
-    if (state_.menuShown) {
-        // call elements on mouse move
-        for (Rectangle& r : rectangles_) {
-            r.onMouseMove();
-        }
-
-        // FIXME
-        testContainer_.onMouseMove();
-    }
 }
 
 void Overlay::toggleWireframe() {
@@ -376,8 +367,10 @@ void Overlay::toggleWireframe() {
         r.needsRemap();
     }
 
-    // FIXME
-    testContainer_.needsRemap();
+    for (Text& t : text_) {
+        t.needsRemap();
+    }
+
 }
 
 void Overlay::toggleMenu() {
@@ -393,8 +386,9 @@ void Overlay::toggleMenu() {
             r.resetInteraction();
         }
 
-        // FIXME
-        testContainer_.resetInteraction();
+        for (Text& t : text_) {
+            t.resetInteraction();
+        }
 
     }
 }
@@ -408,10 +402,33 @@ void Overlay::mouseButtonTrigger(bool state) {
             r.onMouseButton();
         }
 
-        //FIXME
-        testContainer_.onMouseButton();
+        for (Text& t : text_) {
+            t.onMouseButton();
+        }
     }
 }
+
+void Overlay::updateMousePosition(float xPos, float yPos) {
+    // update old position
+    state_.oldMousePos.x = state_.mousePos.x;
+    state_.oldMousePos.y = state_.mousePos.y;
+
+    // update current position
+    state_.mousePos.x = -1 + (2 * (xPos / state_.extent.width));
+    state_.mousePos.y = -1 + (2 * (yPos / state_.extent.height));
+
+    if (state_.menuShown) {
+        // call elements on mouse move
+        for (Rectangle& r : rectangles_) {
+            r.onMouseMove();
+        }
+
+        for (Text& t : text_) {
+            t.onMouseMove();
+        }
+    }
+}
+
 
 void Overlay::handleInputUpdates() {
     // hover effects
@@ -467,17 +484,18 @@ void Overlay::startUpdate() {
         vertexMapped_ += r.map(vertexMapped_, wired);
         quadCount_++;
     }
+    
+    // Text boxes
+    int offset = 0;
+    for (Text& t : text_) {
+        offset = t.map(vertexMapped_, wired);
+        vertexMapped_ += offset;
+        quadCount_ += offset / 4;
 
-    // FIXME container
-    int offset = testContainer_.map(vertexMapped_, wired);
-    vertexMapped_ += offset;
-    quadCount_ += offset / 4;
-
-    // MAP CONTAINER BORDER
-    offset = testContainer_.mapLines(lineVertexMapped_);
-    lineVertexMapped_ += offset;
-    lineCount_ += offset/2;
-
+        offset = t.mapLines(lineVertexMapped_);
+        lineVertexMapped_ += offset;
+        lineCount_ += offset / 2;
+    }
 }
 
 void Overlay::updateTextBox(int index, const std::string& newText) {
@@ -636,7 +654,12 @@ void Overlay::cleanup() {
         r.cleanup();
     }
 
-    testContainer_.cleanup();
+    for (Text& t : text_) {
+        config_.setAttributeString(t.id_, "positionX", std::to_string(t.getPosition().x));
+        config_.setAttributeString(t.id_, "positionY", std::to_string(t.getPosition().y));
+        t.cleanup();
+    }
+
 
     // vertex buffer
     vkDestroyBuffer(device_, vertexBuffer_, nullptr);

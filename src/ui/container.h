@@ -15,6 +15,11 @@ public:
 	// add rectangles
 	void addRectangle(Rectangle rectangle);
 
+	// remove all rectangles from container
+	void clear();
+
+	glm::vec2 getPosition();
+
 	// returns the number of vertices (aka how much to increment pointer)
 	int map(UIVertex* mapped, int overrideIndex = -1);
 	int mapLines(UIVertex* mapped);
