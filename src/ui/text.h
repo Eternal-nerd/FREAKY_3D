@@ -13,7 +13,9 @@ class Text {
 public:
 	void init(OverlayState& state, OverlayElementState* elementState, const std::string& id, const std::string message, glm::vec2 position, glm::vec2 sizePixels, glm::vec2 fontSize, int texIndex);
 
+	// update
 	void updateMessage(const std::string& message);
+	void setBorder(bool state);
 
 	glm::vec2 getPosition();
 
@@ -36,8 +38,8 @@ public:
 	const std::string name_ = "TEXT";
 
 private:
-	OverlayState* state_;
-	OverlayElementState* elementState_;
+	OverlayState* state_ = nullptr;
+	OverlayElementState* elementState_ = nullptr;
 
 	std::string message_ = "";
 	glm::vec2 position_ = { 0.f, 0.f };

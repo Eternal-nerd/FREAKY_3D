@@ -114,12 +114,17 @@ int Container::map(UIVertex* mapped, int overrideIndex) {
 }
 
 int Container::mapLines(UIVertex* mapped) {
-	for (UIVertex& point : borderLines_) {
-		mapped->texIndex = point.texIndex;
-		mapped->pos = point.pos;
-		mapped++;
+	if (border_) {
+		for (UIVertex& point : borderLines_) {
+			mapped->texIndex = point.texIndex;
+			mapped->pos = point.pos;
+			mapped++;
+		}
+		return 8;
 	}
-	return 8;
+	else {
+		return 0;
+	}
 }
 
 /*-----------------------------------------------------------------------------
@@ -233,7 +238,7 @@ void Container::createBorderLines() {
 }
 
 /*-----------------------------------------------------------------------------
-------------------------------GETTERS------------------------------------------
+------------------------------SETTERS-GETTERS----------------------------------
 -----------------------------------------------------------------------------*/
 glm::vec2 Container::getPosition() {
 	return position_;

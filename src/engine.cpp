@@ -112,12 +112,13 @@ void Engine::loop() {
 /*-----------------------------------------------------------------------------
 -----------------------------UPDATE-STUFF--------------------------------------
 -----------------------------------------------------------------------------*/
+// TODO: consider moving data to heap?
 void Engine::updateUBO() {
     float time = clock_.getProgramTime();
     
     // FIXME animations
-    entities_[0].setOrientation(10*time, 20*time, 30*time);
-    //entities_[1].setOrientation(10 * time, 20 * time, 30 * time);
+    entities_[0].setOrientation(30*time, 60*time, 90*time);
+    //entities_[3].setOrientation(270.f, 0.f, 10.f * time);
 
     UniformBufferObject ubo{};
 
@@ -170,6 +171,56 @@ void Engine::renderScene() {
     overlay_->draw(commandBuffer);
 
     gfx_.submitCommandBuffer(commandBuffer);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------WORLD-GEN-----------------------------------------
+-----------------------------------------------------------------------------*/
+// TODO: make from config file
+void Engine::generateWorld() {
+    util::log(name_, "generating game world");
+
+    // mclovin cube
+    Entity cube;
+    cube.init(0, assets_->getTexture("mclovin"), assets_->getMesh("cube"));
+    cube.setPosition(0.f, 2.f, -5.f);
+    cube.setOrientation(0.f, 0.f, 180.f);
+    entities_.push_back(cube);
+
+    // skybox
+    Entity skybox;
+    skybox.init(1, assets_->getTexture("skybox"), assets_->getMesh("skybox"));
+    skybox.scale(1000.f, 1000.f, 1000.f);
+    entities_.push_back(skybox);
+
+    // Floor
+    Entity floor;
+    floor.init(2, assets_->getTexture("grass"), assets_->getMesh("floor"));
+    floor.setOrientation(270.f, 0.f, 0.f);
+    floor.scale(100.f, 100.f, 0.f);
+    entities_.push_back(floor);
+
+    // viking room model
+    Entity viking;
+    viking.init(3, assets_->getTexture("viking_room"), assets_->getMesh("viking_room"));
+    viking.setPosition(20.f, 0.1f, 0.f);
+    viking.setOrientation(270.f, 0.f, 180.f);
+    viking.scale(3.f, 3.f, 3.f);
+    entities_.push_back(viking);
+
+    // house
+    Entity house;
+    house.init(4, assets_->getTexture("wood"), assets_->getMesh("house"));
+    house.setPosition(-30.f, 0.f, 0.f);
+    house.scale(0.1f, 0.1f, 0.1f);
+    entities_.push_back(house);
+
+    // font texture 
+    Entity font;
+    font.init(5, assets_->getTexture("fontgrid"), assets_->getMesh("square"));
+    font.setPosition(-5.f, 2.f, -10.f);
+    font.scale(3.f, 3.f, 0.f);
+    entities_.push_back(font);
 }
 
 
@@ -263,7 +314,7 @@ void Engine::handleMouseEvent() {
         float y = 0.f;
         bool down = true;
         SDL_MouseButtonFlags state = SDL_GetMouseState(&x, &y);
-        
+
         /*switch (state) {
             case SDL_BUTTON_MIDDLE:
             util::log(name_, "case SDL_BUTTON_MIDDLE");
@@ -294,26 +345,29 @@ void Engine::handleKeyEvent() {
     if (keys_.p && !keys_.shift) { gfx_.togglePolygonMode(); }
     if (keys_.p && keys_.shift) { overlay_->toggleWireframe(); }
 
-    // TODO add physics sim that is synced with program time so that 
-    // I can just update the camera's body's velocity here
-    // and the sim will automatically update the position
-    // CAMERA SHIT
-    float sprintDiv = keys_.shift ? 1.f : 3.f;
-    glm::vec3 initialVel = camera_.getBodyPtr()->getVelocity();
-    // Z DIRECTION
-    if (keys_.w) { initialVel.z = -NOCLIP_SPEED / sprintDiv; }
-    if (keys_.s) { initialVel.z = NOCLIP_SPEED / sprintDiv; }
-    if (keys_.w == keys_.s) { initialVel.z = 0; }
-    // X DIRECTION
-    if (keys_.a) { initialVel.x = -NOCLIP_SPEED / sprintDiv; }
-    if (keys_.d) { initialVel.x = NOCLIP_SPEED / sprintDiv; }
-    if (keys_.a == keys_.d) { initialVel.x = 0; }
-    // Y DIRECTION
-    if (keys_.ctrl) { initialVel.y = -NOCLIP_SPEED / sprintDiv; }
-    if (keys_.space) { initialVel.y = NOCLIP_SPEED / sprintDiv; }
-    if (keys_.ctrl == keys_.space) { initialVel.y = 0; }
-    // UPDATE Velocity
-    camera_.getBodyPtr()->setVelocity(initialVel);
+    // only capture movement input while unpaused
+    if (!paused_) {
+        // TODO add physics sim that is synced with program time so that 
+        // I can just update the camera's body's velocity here
+        // and the sim will automatically update the position
+        // CAMERA SHIT
+        float sprintDiv = keys_.shift ? 1.f : 3.f;
+        glm::vec3 initialVel = camera_.getBodyPtr()->getVelocity();
+        // Z DIRECTION
+        if (keys_.w) { initialVel.z = -NOCLIP_SPEED / sprintDiv; }
+        if (keys_.s) { initialVel.z = NOCLIP_SPEED / sprintDiv; }
+        if (keys_.w == keys_.s) { initialVel.z = 0; }
+        // X DIRECTION
+        if (keys_.a) { initialVel.x = -NOCLIP_SPEED / sprintDiv; }
+        if (keys_.d) { initialVel.x = NOCLIP_SPEED / sprintDiv; }
+        if (keys_.a == keys_.d) { initialVel.x = 0; }
+        // Y DIRECTION
+        if (keys_.ctrl) { initialVel.y = -NOCLIP_SPEED / sprintDiv; }
+        if (keys_.space) { initialVel.y = NOCLIP_SPEED / sprintDiv; }
+        if (keys_.ctrl == keys_.space) { initialVel.y = 0; }
+        // UPDATE Velocity
+        camera_.getBodyPtr()->setVelocity(initialVel);
+    }
 }
 
 void Engine::togglePause() {
@@ -326,27 +380,6 @@ void Engine::togglePause() {
     paused_ = !paused_;
     gfx_.toggleMouseMode(paused_);
     overlay_->toggleMenu();
-}
-
-/*-----------------------------------------------------------------------------
------------------------------WORLD-GEN-----------------------------------------
------------------------------------------------------------------------------*/
-void Engine::generateWorld() {
-    util::log(name_, "generating game world");
-
-    // mclovin cube
-    Entity e1;
-    e1.init(0, assets_->getTexture("mclovin"), assets_->getMesh("cube"));
-    e1.setPosition(0,0,-10);
-    e1.setOrientation(0,0,180);
-    entities_.push_back(e1);
-
-    // skybox
-    Entity e2;
-    e2.init(1, assets_->getTexture("skybox"), assets_->getMesh("skybox"));
-    e2.scale(1000.f, 1000.f, 1000.f);
-    entities_.push_back(e2);
-
 }
 
 /*-----------------------------------------------------------------------------

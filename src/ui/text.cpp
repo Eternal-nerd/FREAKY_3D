@@ -69,7 +69,7 @@ void Text::updateMessage(const std::string& message) {
 	if (message != message_) {
 		if (message_.length() < message.length()) {
 			// need to add rectangles
-			int dif = message.length() - message_.length();
+			int dif = (int)message.length() - (int)message_.length();
 			for (int i = 0; i < dif; i++) {
 				Rectangle r;
 				r.init(
@@ -85,7 +85,7 @@ void Text::updateMessage(const std::string& message) {
 		}
 		if (message_.length() > message.length()) {
 			// need to remove rectangles
-			int dif = message_.length() - message.length();
+			int dif = (int)message_.length() - (int)message.length();
 			container_.removeRectangles(dif);
 		}
 		message_ = message;
@@ -96,6 +96,10 @@ void Text::updateMessage(const std::string& message) {
 
 glm::vec2 Text::getPosition() {
 	return position_;
+}
+
+void Text::setBorder(bool state) {
+	container_.border_ = state;
 }
 
 /*-----------------------------------------------------------------------------

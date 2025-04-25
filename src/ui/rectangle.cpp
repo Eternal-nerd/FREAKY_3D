@@ -4,7 +4,7 @@
 ------------------------------INITIALIZATION-----------------------------------
 -----------------------------------------------------------------------------*/
 void Rectangle::init(OverlayState& state, OverlayElementState* elementState, const std::string& id, glm::vec2 position, glm::vec2 sizePixels, glm::vec4 texCoords, int texIndex) {
-	//util::log(name_, "initializing overlay rectangle");
+	util::log(name_, "initializing overlay rectangle");
 
 	state_ = &state;
 	elementState_ = elementState;

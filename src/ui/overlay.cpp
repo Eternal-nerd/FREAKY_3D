@@ -322,6 +322,7 @@ void Overlay::generateElements() {
                 config_.getFloatAttribute(it->first, "fontHeightPixel") }, // font size
                 config_.getIntAttribute(it->first, "texIndex")                
             );
+            t.setBorder(config_.getBoolAttribute(it->first, "border"));
             text_.push_back(t);
         }
     

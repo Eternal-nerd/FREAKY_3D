@@ -21,7 +21,7 @@ void Camera::init(float aspect) {
 
 	// init physical body
 	body_.init();
-	body_.setPosition(glm::vec3(0.f, 0.f, 5.f));
+	body_.setPosition(glm::vec3(0.f, 2.f, 5.f));
 
 	// init view matrix
 	view_ = glm::translate(glm::mat4(1), body_.getPosition());

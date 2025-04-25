@@ -152,6 +152,12 @@ void Assets::generateMeshs() {
 	cube.init(Geometry::TexturedCube::getMeshData(), physicalDevice_, device_, commandPool_, graphicsQueue_);
 	meshs_.push_back(cube);
 	meshNames_.push_back("cube");
+
+	// square mesh
+	Mesh square;
+	square.init(Geometry::Plane::getMeshData(), physicalDevice_, device_, commandPool_, graphicsQueue_);
+	meshs_.push_back(square);
+	meshNames_.push_back("square");
 }
 
 /*-----------------------------------------------------------------------------
