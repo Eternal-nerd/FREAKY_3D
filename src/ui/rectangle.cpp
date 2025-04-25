@@ -4,7 +4,7 @@
 ------------------------------INITIALIZATION-----------------------------------
 -----------------------------------------------------------------------------*/
 void Rectangle::init(OverlayState& state, OverlayElementState* elementState, const std::string& id, glm::vec2 position, glm::vec2 sizePixels, glm::vec4 texCoords, int texIndex) {
-	util::log(name_, "initializing overlay rectangle");
+	//util::log(name_, "initializing overlay rectangle");
 
 	state_ = &state;
 	elementState_ = elementState;
@@ -16,7 +16,6 @@ void Rectangle::init(OverlayState& state, OverlayElementState* elementState, con
 		elementState_->hovered = false;
 		elementState_->interaction = 0;
 		elementState_->movable = true; // FIXME
-		elementState_->updated = true;
 
 	}
 	else {
@@ -54,14 +53,6 @@ void Rectangle::init(OverlayState& state, OverlayElementState* elementState, con
 	quad_.vertices[3].texCoord = { texCoords.x + texCoords.z, texCoords.y + texCoords.w };
 	quad_.vertices[3].texIndex = texIndex;
 	quad_.vertices[3].interaction = elementState_->interaction;
-
-}
-
-void Rectangle::replaceElementState(OverlayElementState* elementState) {
-	// new ptr shouldnt be null
-	assert(elementState != nullptr);
-
-	elementState_ = elementState;
 }
 
 /*-----------------------------------------------------------------------------
@@ -80,8 +71,6 @@ void Rectangle::scale() {
 
 	// bottom right
 	quad_.vertices[3].pos = { position_.x + xOffset, position_.y + yOffset };
-
-	elementState_->updated = true;
 }
 
 void Rectangle::onMouseMove() {
@@ -132,21 +121,13 @@ void Rectangle::resetInteraction() {
 	elementState_->dragged = false;
 
 	updateInteraction();
-
-	elementState_->updated = true;
 }
-
-void Rectangle::needsRemap() {
-	elementState_->updated = true;
-}
-
 
 /*-----------------------------------------------------------------------------
 ------------------------------MAPPING-TO-BUFFER--------------------------------
 -----------------------------------------------------------------------------*/
 int Rectangle::map(UIVertex* mapped, int overrideIndex) {
 	// for each vertex
-	//if (elementState_->updated) {
 	for (int i = 0; i < 4; i++) {
 		mapped->pos.x = quad_.vertices[i].pos.x; // position x
 		mapped->pos.y = quad_.vertices[i].pos.y; // position y
@@ -156,8 +137,6 @@ int Rectangle::map(UIVertex* mapped, int overrideIndex) {
 		mapped->interaction = quad_.vertices[i].interaction; // for checking hover
 		mapped++;
 	}
-	//}
-	//elementState_->updated = false;
 	return 4;
 }
 
@@ -173,11 +152,25 @@ glm::vec2 Rectangle::getPosition() {
 }
 
 /*-----------------------------------------------------------------------------
-------------------------------GETTERS------------------------------------------
+------------------------------SETTERS------------------------------------------
 -----------------------------------------------------------------------------*/
 void Rectangle::setPosition(glm::vec2 position) {
 	position_ = position;
 	rePosition();
+}
+
+void Rectangle::setTextureCoords(glm::vec4 texCoords) {
+	// top left
+	quad_.vertices[0].texCoord = { texCoords.x, texCoords.y };
+
+	// bottom left
+	quad_.vertices[1].texCoord = { texCoords.x, texCoords.y + texCoords.w };
+
+	// top right
+	quad_.vertices[2].texCoord = { texCoords.x + texCoords.z, texCoords.y };
+
+	// bottom right
+	quad_.vertices[3].texCoord = { texCoords.x + texCoords.z, texCoords.y + texCoords.w };
 }
 
 /*-----------------------------------------------------------------------------
@@ -187,7 +180,6 @@ void Rectangle::rePosition() {
 	// update top left position
 	quad_.vertices[0].pos = { position_.x, position_.y };
 	scale(); // updates other 3 vertices position
-	elementState_->updated = true;
 }
 
 void Rectangle::updateInteraction() {
@@ -205,7 +197,6 @@ void Rectangle::updateInteraction() {
 	quad_.vertices[1].interaction = elementState_->interaction;
 	quad_.vertices[2].interaction = elementState_->interaction;
 	quad_.vertices[3].interaction = elementState_->interaction;
-	elementState_->updated = true;
 }
 
 /*-----------------------------------------------------------------------------

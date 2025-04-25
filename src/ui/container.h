@@ -15,8 +15,8 @@ public:
 	// add rectangles
 	void addRectangle(Rectangle rectangle);
 
-	// remove all rectangles from container
-	void clear();
+	// remove rectangles from container
+	void removeRectangles(int amount);
 
 	glm::vec2 getPosition();
 
@@ -29,17 +29,12 @@ public:
 	void onMouseMove();
 	void onMouseButton();
 	void resetInteraction();
-	void needsRemap();
-
-	// getters for if in container
-	//glm::vec2 getDimensions();
-
-	// getters for updating config file
-	//glm::vec2 getPosition();
 
 	void cleanup();
 
 	bool unique_ = false;
+
+	std::vector<Rectangle> rectangles_ = {};
 
 	std::string id_ = "";
 
@@ -53,8 +48,6 @@ private:
 
 	glm::vec2 position_ = { 0.f, 0.f };
 	glm::vec2 sizePixels_ = { 0.f, 0.f };
-
-	std::vector<Rectangle> rectangles_ = {};
 
 	std::vector<UIVertex> borderLines_ = {};
 

@@ -16,8 +16,6 @@ void Container::init(OverlayState& state, OverlayElementState* elementState, con
 		elementState_->hovered = false;
 		elementState_->interaction = 0;
 		elementState_->movable = true; // FIXME
-		elementState_->updated = true;
-
 	}
 	else {
 		unique_ = false;
@@ -36,10 +34,6 @@ void Container::init(OverlayState& state, OverlayElementState* elementState, con
 }
 
 void Container::addRectangle(Rectangle rectangle) {
-
-	// give rectangle shared state
-	rectangle.replaceElementState(elementState_);
-
 	// either place the rectangle above or below previous ones
 	// for box mode: 
 	glm::vec2 dimensions = rectangle.getDimensions();
@@ -98,9 +92,13 @@ void Container::resetRectanglePositions() {
 	}
 }
 
-void Container::clear() {
-	rectangles_.clear();
+void Container::removeRectangles(int amount) {
+	for (int i = 0; i < amount; i++) {
+		rectangles_.pop_back();
+	}
+	resetRectanglePositions();
 }
+
 
 /*-----------------------------------------------------------------------------
 ------------------------------MAPPING-TO-BUFFER--------------------------------
@@ -116,17 +114,13 @@ int Container::map(UIVertex* mapped, int overrideIndex) {
 }
 
 int Container::mapLines(UIVertex* mapped) {
-	//if (elementState_->updated) {
 	for (UIVertex& point : borderLines_) {
 		mapped->texIndex = point.texIndex;
 		mapped->pos = point.pos;
 		mapped++;
 	}
-	//}
-	//elementState_->updated = false;
 	return 8;
 }
-
 
 /*-----------------------------------------------------------------------------
 ------------------------------UPDATES------------------------------------------
@@ -194,12 +188,6 @@ void Container::resetInteraction() {
 	}
 }
 
-void Container::needsRemap() {
-	for (Rectangle& r : rectangles_) {
-		r.needsRemap();
-	}
-}
-
 void Container::updateInteraction() {
 	for (Rectangle& r : rectangles_) {
 		r.updateInteraction();
@@ -247,17 +235,14 @@ void Container::createBorderLines() {
 /*-----------------------------------------------------------------------------
 ------------------------------GETTERS------------------------------------------
 -----------------------------------------------------------------------------*/
-/*glm::vec2 Container::getDimensions() {
-	return {};
-}
-
-glm::vec2 Container::getPosition() {
-	return {};
-}*/
-
 glm::vec2 Container::getPosition() {
 	return position_;
 }
+
+/*-----------------------------------------------------------------------------
+------------------------------HELPER-------------------------------------------
+-----------------------------------------------------------------------------*/
+//
 
 
 /*-----------------------------------------------------------------------------

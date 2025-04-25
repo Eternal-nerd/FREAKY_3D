@@ -18,24 +18,22 @@ public:
 	// returns the number of vertices (aka how much to increment pointer)
 	int map(UIVertex* mapped, int overrideIndex = -1);
 
-	void replaceElementState(OverlayElementState* elementState);
-
 	// events
 	void scale();
 	void onMouseMove();
 	void onMouseButton();
 	void resetInteraction();
-	void needsRemap();
 	void updateInteraction();
 
 	// getters for if in container
 	glm::vec2 getDimensions();
 
-    // getters for updating config file - REMOVE?
+    // getters for updating config file
 	glm::vec2 getPosition();
 
 	// setter for moving in container
 	void setPosition(glm::vec2 position);
+	void setTextureCoords(glm::vec4 texCoords);
 
 	void cleanup();
 

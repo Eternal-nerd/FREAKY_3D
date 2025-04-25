@@ -24,6 +24,7 @@ set(SOURCES
 	src/camera.cpp
 	src/config.cpp
 	src/ui/overlay.cpp
+	src/ui/crosshair.cpp
 	src/ui/text.cpp
 	src/ui/rectangle.cpp
 	src/ui/button.cpp
@@ -47,6 +48,7 @@ set(HEADERS
 	src/camera.h
 	src/config.h
 	src/ui/overlay.h
+	src/ui/crosshair.h
 	src/ui/text.h
 	src/ui/rectangle.h
 	src/ui/button.cpp

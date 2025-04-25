@@ -52,6 +52,12 @@ void Engine::init() {
 void Engine::loop() {
 	util::log(name_, "beginning the main loop");
 
+    // FIXME 
+    std::string testt = "abcdefghijklmnopqrstuvwxyz";
+    int idx = 1;
+    bool upward = true;
+    // END FIXME
+
 	running_ = true;
 	while (running_) {
         float frameStart = clock_.getProgramTime();
@@ -81,9 +87,22 @@ void Engine::loop() {
             float fps = 1 / (fpsTime_ / FPS_MEASURE_INTERVAL);
 
             fpsString_ = "FPS: " + std::to_string(fps);
+            overlay_->updateTextBox("FPS", fpsString_);
 
             fpsTime_ = 0.f;
             loopsMeasured_ = 0;
+
+            // FIXME
+            overlay_->updateTextBox("testing", testt.substr(0, idx));
+            if (upward) {
+                idx++;
+                upward = !(idx == testt.length());
+            }
+            else {
+                idx--;
+                upward = idx == 0;
+            }
+            // END FIXME
         }
 	}
     
@@ -133,14 +152,7 @@ void Engine::updateOverlay() {
     // need to reset updates
     overlay_->resetUpdates();
 
-    overlay_->startUpdate();
-
-    // do stuff here.
-    /*if (!overlay_->checkTextBoxMessage(0, fpsString_) && fpsString_ != "") {
-        overlay_->updateTextBox(0, fpsString_);
-    }*/
-
-    overlay_->endUpdate();
+    overlay_->update();
 }
 
 /*-----------------------------------------------------------------------------

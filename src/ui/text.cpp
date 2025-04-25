@@ -16,7 +16,6 @@ void Text::init(OverlayState& state, OverlayElementState* elementState, const st
 		elementState_->hovered = false;
 		elementState_->interaction = 0;
 		elementState_->movable = true; // FIXME
-		elementState_->updated = true;
 
 	}
 	else {
@@ -35,41 +34,64 @@ void Text::init(OverlayState& state, OverlayElementState* elementState, const st
 
 	// initialize container with letter rectangles for each letter in "message"
 	populateContainer();
+	populateCoords();
 }
 
 void Text::populateContainer() {
-	// empty container
-	container_.clear();
-
 	// for each letter in message:
 	for (int i = 0; i < message_.length(); i++) {
 		Rectangle r;
 		r.init(
 			*state_, elementState_, // shared states
-			std::to_string(i), // id of rectangle dont matter
+			"", // id of rectangle dont matter
 			{}, // position is managed by container, doesnt matter
 			fontSize_, // make the rectangle as big as fontsize
 			// texture coords
-			{ getOffsetX(message_[i]), getOffsetY(message_[i]), FONT_OFFSET, FONT_OFFSET }, // texture cords
+			{}, // texture cords
 			texIndex_
 		);
 		container_.addRectangle(r);
 	}
 }
 
+// sets texture coords for each rectangle
+void Text::populateCoords() {
+	// for each letter in message:
+	for (int i = 0; i < message_.length(); i++) {
+		container_.rectangles_[i].setTextureCoords({ getOffsetX(message_[i]), getOffsetY(message_[i]), FONT_OFFSET, FONT_OFFSET });
+	}
+}
 
 /*-----------------------------------------------------------------------------
 ------------------------------GET-SET-MESSAGE----------------------------------
 -----------------------------------------------------------------------------*/
 void Text::updateMessage(const std::string& message) {
 	if (message != message_) {
+		if (message_.length() < message.length()) {
+			// need to add rectangles
+			int dif = message.length() - message_.length();
+			for (int i = 0; i < dif; i++) {
+				Rectangle r;
+				r.init(
+					*state_, elementState_, // shared states
+					"", // id of rectangle dont matter
+					{}, // position is managed by container, doesnt matter
+					fontSize_, // make the rectangle as big as fontsize
+					{}, // texture cords
+					texIndex_
+				);
+				container_.addRectangle(r);
+			}
+		}
+		if (message_.length() > message.length()) {
+			// need to remove rectangles
+			int dif = message_.length() - message.length();
+			container_.removeRectangles(dif);
+		}
 		message_ = message;
-		populateContainer();
+		populateCoords();
+		state_->updatedTri = true;
 	}
-}
-
-std::string Text::getMessage() {
-	return message_;
 }
 
 glm::vec2 Text::getPosition() {
@@ -86,7 +108,6 @@ int Text::map(UIVertex* mapped, int overrideIndex) {
 int Text::mapLines(UIVertex* mapped) {
 	return container_.mapLines(mapped);
 }
-
 
 /*-----------------------------------------------------------------------------
 ------------------------------UPDATES------------------------------------------
@@ -109,10 +130,10 @@ void Text::resetInteraction() {
 	container_.resetInteraction();
 }
 
-void Text::needsRemap() {
-	container_.needsRemap();
-}
-
+/*-----------------------------------------------------------------------------
+------------------------------HELPER-------------------------------------------
+-----------------------------------------------------------------------------*/
+//
 
 /*-----------------------------------------------------------------------------
 ------------------------------CLEANUP------------------------------------------

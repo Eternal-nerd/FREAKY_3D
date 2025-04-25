@@ -14,7 +14,6 @@ public:
 	void init(OverlayState& state, OverlayElementState* elementState, const std::string& id, const std::string message, glm::vec2 position, glm::vec2 sizePixels, glm::vec2 fontSize, int texIndex);
 
 	void updateMessage(const std::string& message);
-	std::string getMessage();
 
 	glm::vec2 getPosition();
 
@@ -27,7 +26,6 @@ public:
 	void onMouseMove();
 	void onMouseButton();
 	void resetInteraction();
-	void needsRemap();
 
 	void cleanup();
 
@@ -35,14 +33,13 @@ public:
 
 	std::string id_ = "";
 
-	std::string message_ = "";
-
 	const std::string name_ = "TEXT";
 
 private:
 	OverlayState* state_;
 	OverlayElementState* elementState_;
 
+	std::string message_ = "";
 	glm::vec2 position_ = { 0.f, 0.f };
 	glm::vec2 sizePixels_ = { 0.f, 0.f };
 	glm::vec2 fontSize_ = { 0.f, 0.f };
@@ -50,7 +47,11 @@ private:
 
 	Container container_;
 
+	// inits container with blank rectangles for each letter in initial string
 	void populateContainer();
+	// sets texture coords for each rectangle
+	void populateCoords();
+
 
 	// specific font texture
 	float getOffsetX(char c);

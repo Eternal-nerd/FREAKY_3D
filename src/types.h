@@ -18,7 +18,7 @@ const int MAX_MODELS = 512;
 
 const float FONT_OFFSET = 0.0625f;
 
-const int FPS_MEASURE_INTERVAL = 500;
+const int FPS_MEASURE_INTERVAL = 1000;
 
 typedef enum OverlayMode {
     OVERLAY_DEFAULT = 0,
@@ -67,6 +67,9 @@ struct OverlayState {
 
     // screen size stuff
     VkExtent2D extent;
+
+    bool updatedTri = true;
+    bool updatedLine = true;
 };
 
 struct OverlayElementState {
@@ -76,7 +79,6 @@ struct OverlayElementState {
     bool dragged = false;
     int interaction = 0;
 
-    bool updated = true;
     bool movable = false;
 };
 

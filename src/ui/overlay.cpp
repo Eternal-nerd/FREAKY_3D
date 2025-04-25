@@ -283,8 +283,16 @@ void Overlay::generateElements() {
     std::unordered_map<std::string, std::string> configObjects = config_.getObjects();
 
     for (auto it = configObjects.begin(); it != configObjects.end(); it++) {
+        // Crosshair
+        if (it->second == "Crosshair") {
+            crosshair_.init(state_, 
+                { config_.getFloatAttribute(it->first, "pixelWidth"),
+                config_.getFloatAttribute(it->first, "pixelHeight") },
+                config_.getIntAttribute(it->first, "texIndex")
+            );
+        }
         // Rectangles
-        if (it->second == "Rectangle") {
+        else if (it->second == "Rectangle") {
             Rectangle r;
             r.init(state_, nullptr, it->first,
                 { config_.getFloatAttribute(it->first, "positionX"), 
@@ -330,7 +338,7 @@ void Overlay::updateExtent(VkExtent2D extent) {
     state_.extent = extent;
     
     if (state_.initialized) {
-        crosshairMapped_ = false;
+        crosshair_.scale();
 
         for (Rectangle& r : rectangles_) {
             r.scale();
@@ -339,8 +347,11 @@ void Overlay::updateExtent(VkExtent2D extent) {
         for (Text& t : text_) {
             t.scale();
         }
-
     }
+
+    // tell elements to re-map
+    state_.updatedLine = true;
+    state_.updatedTri = true;
 }
 
 OverlayUpdates Overlay::getUpdates() {
@@ -362,15 +373,9 @@ void Overlay::toggleWireframe() {
         util::log(name_, "switching overlay to VK_POLYGON_MODE_FILL");
     }
 
-    // tell elements they need update
-    for (Rectangle& r : rectangles_) {
-        r.needsRemap();
-    }
-
-    for (Text& t : text_) {
-        t.needsRemap();
-    }
-
+    // tell elements to re-map
+    state_.updatedLine = true;
+    state_.updatedTri = true;
 }
 
 void Overlay::toggleMenu() {
@@ -389,8 +394,11 @@ void Overlay::toggleMenu() {
         for (Text& t : text_) {
             t.resetInteraction();
         }
-
     }
+
+    // tell elements to re-map
+    state_.updatedLine = true;
+    state_.updatedTri = true;
 }
 
 void Overlay::mouseButtonTrigger(bool state) {
@@ -405,6 +413,10 @@ void Overlay::mouseButtonTrigger(bool state) {
         for (Text& t : text_) {
             t.onMouseButton();
         }
+
+        // tell elements to re-map
+        state_.updatedLine = true;
+        state_.updatedTri = true;
     }
 }
 
@@ -426,6 +438,10 @@ void Overlay::updateMousePosition(float xPos, float yPos) {
         for (Text& t : text_) {
             t.onMouseMove();
         }
+
+        // tell elements to re-map
+        state_.updatedLine = true;
+        state_.updatedTri = true;
     }
 }
 
@@ -455,11 +471,10 @@ void Overlay::handleInputUpdates() {
 }
 
 // API: call start update, then can call update textbox/element methods any amt of times, then, call end update
-void Overlay::startUpdate() {
-    quadCount_ = 0;
-
+void Overlay::update() {
     //handleInputUpdates();
 
+    // triangle buffer
     if (vkMapMemory(device_, vertexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&vertexMapped_) != VK_SUCCESS) {
         throw std::runtime_error("failed to map vertex buffer memory for overlay update ");
     }
@@ -473,49 +488,51 @@ void Overlay::startUpdate() {
 
     assert(lineVertexMapped_ != nullptr);
 
-    //if (!crosshairMapped_) {
-    mapCrosshair();
-    //}
-
     int wired = (currentPolygonMode_ == VK_POLYGON_MODE_LINE) ? wireframeIndex_ : -1;
 
-    // map rectangles
-    for (Rectangle& r : rectangles_) {
-        vertexMapped_ += r.map(vertexMapped_, wired);
-        quadCount_++;
-    }
-    
-    // Text boxes
+    // used to move the buffer access pointers along..
     int offset = 0;
-    for (Text& t : text_) {
-        offset = t.map(vertexMapped_, wired);
-        vertexMapped_ += offset;
-        quadCount_ += offset / 4;
+    
+    // LINES
+    if (state_.updatedLine) {
+        // reset line point count
+        linePointCount_ = 0;
 
-        offset = t.mapLines(lineVertexMapped_);
+        // map crosshair
+        offset = crosshair_.mapLines(lineVertexMapped_);
         lineVertexMapped_ += offset;
-        lineCount_ += offset / 2;
-    }
-}
+        linePointCount_ += offset;
 
-void Overlay::updateTextBox(int index, const std::string& newText) {
-    /* todo
-    if (index < 0 || index > textBoxes_.size()-1 || textBoxes_.size()==0) {
-        throw std::runtime_error("attempting to modify a textbox that doesnt exist");
-    }
-    textBoxes_[index].updateText(newText);*/
-}
-
-bool Overlay::checkTextBoxMessage(int index, const std::string& compareString) {
-    /*if (index < 0 || index > textBoxes_.size() - 1 || textBoxes_.size() == 0) {
-        throw std::runtime_error("attempting to access a textbox that doesnt exist");
+        // Text boxes
+        for (Text& t : text_) {
+            offset = t.mapLines(lineVertexMapped_);
+            lineVertexMapped_ += offset;
+            linePointCount_ += offset;
+        }
     }
 
-    return (textBoxes_[index].compareMessage(compareString));*/
-    return true;
-}
+    // TRIANGLES
+    if (state_.updatedTri) {
+        // reset quad count
+        quadCount_ = 0;
 
-void Overlay::endUpdate() {
+        // map rectangles
+        for (Rectangle& r : rectangles_) {
+            vertexMapped_ += r.map(vertexMapped_, wired);
+            quadCount_++;
+        }
+
+        // Text boxes
+        for (Text& t : text_) {
+            offset = t.map(vertexMapped_, wired);
+            vertexMapped_ += offset;
+            quadCount_ += offset / 4;
+        }
+    }
+
+
+    // END ---------------------------------------<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
     // vertex buffer
     vkUnmapMemory(device_, vertexBufferMemory_);
     vertexMapped_ = nullptr;
@@ -548,6 +565,24 @@ void Overlay::endUpdate() {
     indexMapped_ = nullptr;
 
     indexCount_ = count;
+
+    // tell overlay elements that a map has occurred
+    state_.updatedLine = false;
+    state_.updatedTri = false;
+}
+
+void Overlay::updateTextBox(const std::string& label, const std::string& newText) {
+    for (Text& t : text_) {
+        if (t.id_ == label) {
+            t.updateMessage(newText);
+            return;
+        }
+    }
+
+    throw std::runtime_error("failed to find text with label: " + label);
+
+    // IMPORTANT: text class will determine if an overlay update needs to occur
+    // - if new text is same as whats already in the box, no update
 }
 
 /*-----------------------------------------------------------------------------
@@ -572,57 +607,12 @@ void Overlay::draw(VkCommandBuffer commandBuffer) {
     // DRAW LINES
     vkCmdSetPrimitiveTopology(commandBuffer, VK_PRIMITIVE_TOPOLOGY_LINE_LIST);
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, &lineVertexBuffer_, &offsets);
-    vkCmdDraw(commandBuffer, static_cast<uint32_t>(lineCount_*2), 1, 0, 0);
+    vkCmdDraw(commandBuffer, static_cast<uint32_t>(linePointCount_), 1, 0, 0);
 }
 
 /*-----------------------------------------------------------------------------
 ------------------------------UTILITY------------------------------------------
 -----------------------------------------------------------------------------*/
-// LINES
-void Overlay::mapCrosshair() {
-    //util::log(name_, "mapping overlay crosshair");
-
-    assert(lineVertexMapped_ != nullptr);
-
-    // calculate width and height from pixels
-    float xOffset = ( 15.f / state_.extent.width);
-    float yOffset = ( 15.f / state_.extent.height);
-
-    // top crosshair vertex
-    lineVertexMapped_->pos = {0.f, -yOffset};
-    lineVertexMapped_->texCoord = {}; // ????
-    lineVertexMapped_->texIndex = wireframeIndex_;
-    lineVertexMapped_->interaction = 0;
-    lineVertexMapped_++;
-    lineCount_++;
-
-    // bottom crosshair vertex
-    lineVertexMapped_->pos = { 0.f, yOffset };
-    lineVertexMapped_->texCoord = {}; // ????
-    lineVertexMapped_->texIndex = wireframeIndex_;
-    lineVertexMapped_->interaction = 0;
-    lineVertexMapped_++;
-    lineCount_++;
-
-    // left crosshair vertex
-    lineVertexMapped_->pos = { -xOffset, 0.f };
-    lineVertexMapped_->texCoord = {}; // ????
-    lineVertexMapped_->texIndex = wireframeIndex_;
-    lineVertexMapped_->interaction = 0;
-    lineVertexMapped_++;
-    lineCount_++;
-
-    // right crosshair vertex
-    lineVertexMapped_->pos = { xOffset, 0.f };
-    lineVertexMapped_->texCoord = {}; // ????
-    lineVertexMapped_->texIndex = wireframeIndex_;
-    lineVertexMapped_->interaction = 0;
-    lineVertexMapped_++;
-    lineCount_++;
-
-    crosshairMapped_ = true;
-}
-
 OverlayMode Overlay::getMode(const std::string& modeString) {
     if (modeString == "OVERLAY_DEFAULT") {
         return OVERLAY_DEFAULT;

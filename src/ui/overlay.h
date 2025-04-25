@@ -12,6 +12,7 @@
 #include "../config.h"
 #include "../assets/assets.h"
 #include "../assets/texture.h"
+#include "crosshair.h"
 #include "rectangle.h"
 #include "container.h"
 #include "text.h"
@@ -32,23 +33,19 @@ public:
 	void resetUpdates();
 
 	// API: call start update, then can call update textbox/element methods any amt of times, then, call end update
-	void startUpdate();
+	void update();
 
-	void updateMousePosition(float xPos, float yPos);
-
-	void updateTextBox(int index, const std::string& newText);
-	//void updateElement(int index);
-	bool checkTextBoxMessage(int index, const std::string& compareString);
-
-	void endUpdate();
+	void updateTextBox(const std::string& label, const std::string& newText);
 
 	// draw entire vertex buffer
 	void draw(VkCommandBuffer commandBuffer);
 
-	void updateExtent(VkExtent2D extent);
-	void toggleWireframe();
+	// input events
 	void toggleMenu();
+	void toggleWireframe();
 	void mouseButtonTrigger(bool state);
+	void updateMousePosition(float xPos, float yPos);
+	void updateExtent(VkExtent2D extent);
 
 	void cleanup();
 
@@ -118,12 +115,11 @@ private:
 
 	// debug drawing lines, also used for crosshair, also border of containers
 	// memory mapped vertex buffer
+	Crosshair crosshair_;
 	VkBuffer lineVertexBuffer_ = VK_NULL_HANDLE;
 	VkDeviceMemory lineVertexBufferMemory_ = VK_NULL_HANDLE;
 	UIVertex* lineVertexMapped_ = nullptr;
-	int lineCount_ = 0;
-	bool crosshairMapped_ = false;
-	void mapCrosshair();
+	int linePointCount_ = 0;
 
 
 
