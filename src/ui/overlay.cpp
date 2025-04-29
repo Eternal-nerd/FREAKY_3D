@@ -305,8 +305,6 @@ void Overlay::generateElements() {
                 config_.getFloatAttribute(it->first, "yOffset") },
                 config_.getIntAttribute(it->first, "texIndex")
             );
-            // set options here
-            //r.setMovable(config_.getBoolAttribute(it->first, "movable"));
             rectangles_.push_back(r);
         }
         // text boxes
@@ -325,7 +323,23 @@ void Overlay::generateElements() {
             t.setBorder(config_.getBoolAttribute(it->first, "border"));
             text_.push_back(t);
         }
-    
+        // button
+        else if (it->second == "Button") {
+            Button b;
+            b.init(state_, nullptr, it->first,
+                config_.getStringAttribute(it->first, "label"), // label
+                { config_.getFloatAttribute(it->first, "positionX"),
+                config_.getFloatAttribute(it->first, "positionY") }, // position
+                { config_.getFloatAttribute(it->first, "widthPixel"),
+                config_.getFloatAttribute(it->first, "heightPixel") }, // rectangle size
+                { config_.getFloatAttribute(it->first, "fontWidthPixel"),
+                config_.getFloatAttribute(it->first, "fontHeightPixel") }, // font size
+                config_.getIntAttribute(it->first, "fontTexIndex"),
+                config_.getIntAttribute(it->first, "backgroundTexIndex")
+            );
+            buttons_.push_back(b);
+        }
+
         // TODO
         else {}
     }
@@ -347,6 +361,10 @@ void Overlay::updateExtent(VkExtent2D extent) {
 
         for (Text& t : text_) {
             t.scale();
+        }
+
+        for (Button& b : buttons_) {
+            b.scale();
         }
     }
 
@@ -395,6 +413,10 @@ void Overlay::toggleMenu() {
         for (Text& t : text_) {
             t.resetInteraction();
         }
+
+        for (Button& b : buttons_) {
+            b.resetInteraction();
+        }
     }
 
     // tell elements to re-map
@@ -415,6 +437,10 @@ void Overlay::mouseButtonTrigger(bool state) {
             t.onMouseButton();
         }
 
+        for (Button& b : buttons_) {
+            b.onMouseButton();
+        }
+
         // tell elements to re-map
         state_.updatedLine = true;
         state_.updatedTri = true;
@@ -422,15 +448,17 @@ void Overlay::mouseButtonTrigger(bool state) {
 }
 
 void Overlay::updateMousePosition(float xPos, float yPos) {
-    // update old position
-    state_.oldMousePos.x = state_.mousePos.x;
-    state_.oldMousePos.y = state_.mousePos.y;
+    
+    if (state_.menuShown) { 
+        // update old position
+        state_.oldMousePos.x = state_.mousePos.x;
+        state_.oldMousePos.y = state_.mousePos.y;
 
-    // update current position
-    state_.mousePos.x = -1 + (2 * (xPos / state_.extent.width));
-    state_.mousePos.y = -1 + (2 * (yPos / state_.extent.height));
+        // update current position
+        state_.mousePos.x = -1 + (2 * (xPos / state_.extent.width));
+        state_.mousePos.y = -1 + (2 * (yPos / state_.extent.height));
 
-    if (state_.menuShown) {
+
         // call elements on mouse move
         for (Rectangle& r : rectangles_) {
             r.onMouseMove();
@@ -438,6 +466,10 @@ void Overlay::updateMousePosition(float xPos, float yPos) {
 
         for (Text& t : text_) {
             t.onMouseMove();
+        }
+        
+        for (Button& b : buttons_) {
+            b.onMouseMove();
         }
 
         // tell elements to re-map
@@ -526,6 +558,13 @@ void Overlay::update() {
         // Text boxes
         for (Text& t : text_) {
             offset = t.map(vertexMapped_, wired);
+            vertexMapped_ += offset;
+            quadCount_ += offset / 4;
+        }
+
+        // Buttons
+        for (Button& b : buttons_) {
+            offset = b.map(vertexMapped_, wired);
             vertexMapped_ += offset;
             quadCount_ += offset / 4;
         }
@@ -651,6 +690,9 @@ void Overlay::cleanup() {
         t.cleanup();
     }
 
+    for (Button& b : buttons_) {
+        b.cleanup();
+    }
 
     // vertex buffer
     vkDestroyBuffer(device_, vertexBuffer_, nullptr);
