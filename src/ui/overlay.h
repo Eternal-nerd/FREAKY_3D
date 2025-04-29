@@ -16,6 +16,7 @@
 #include "rectangle.h"
 #include "container.h"
 #include "text.h"
+#include "button.h"
 
 // Max. number of elements the text overlay buffer can hold
 #define MAX_OVERLAY_QUADS 2048
@@ -95,7 +96,7 @@ private:
 	// ELEMENTS
 	std::vector<Rectangle> rectangles_{};
 	std::vector<Text> text_{};
-	//std::vector<>
+	std::vector<Button> buttons_{};
 
 	// Actual elements that will exist:
 	// textbox, slider, button, 

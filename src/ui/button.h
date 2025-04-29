@@ -15,7 +15,7 @@ public:
 
 	// returns the number of vertices (aka how much to increment pointer)
 	int map(UIVertex* mapped, int overrideIndex = -1);
-	int mapLines(UIVertex* mapped);
+	// int mapLines(UIVertex* mapped);
 
 	// events
 	void scale();
@@ -28,8 +28,6 @@ public:
 	bool unique_ = false;
 
 	std::string id_ = "";
-
-	std::string message_ = "";
 
 	const std::string name_ = "BUTTON";
 
