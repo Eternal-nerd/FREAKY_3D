@@ -337,6 +337,13 @@ void Overlay::generateElements() {
                 config_.getIntAttribute(it->first, "fontTexIndex"),
                 config_.getIntAttribute(it->first, "backgroundTexIndex")
             );
+            // need to set button function pointers
+            if (it->first == "resume") {
+                b.setAction(&resume);
+            }
+            else if (it->first == "quit") {
+                b.setAction(&quitF);
+            }
             buttons_.push_back(b);
         }
 
@@ -371,10 +378,6 @@ void Overlay::updateExtent(VkExtent2D extent) {
     // tell elements to re-map
     state_.updatedLine = true;
     state_.updatedTri = true;
-}
-
-OverlayUpdates Overlay::getUpdates() {
-    return updates_;
 }
 
 void Overlay::resetUpdates() {
@@ -670,6 +673,17 @@ OverlayMode Overlay::getMode(const std::string& modeString) {
 }
 
 /*-----------------------------------------------------------------------------
+------------------------------BUTTON-FUNCTIONS---------------------------------
+-----------------------------------------------------------------------------*/
+void Overlay::resume() {
+    updates_.unpause = true;
+}
+
+void Overlay::quitF() {
+    updates_.quit = true;
+}
+
+/*-----------------------------------------------------------------------------
 ------------------------------CLEANUP------------------------------------------
 -----------------------------------------------------------------------------*/
 void Overlay::cleanup() {
@@ -691,6 +705,8 @@ void Overlay::cleanup() {
     }
 
     for (Button& b : buttons_) {
+        config_.setAttributeString(b.id_, "positionX", std::to_string(b.getPosition().x));
+        config_.setAttributeString(b.id_, "positionY", std::to_string(b.getPosition().y));
         b.cleanup();
     }
 

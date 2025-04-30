@@ -117,7 +117,7 @@ void Engine::updateUBO() {
     float time = clock_.getProgramTime();
     
     // FIXME animations
-    entities_[0].setOrientation(30*time, 60*time, 90*time);
+    entities_[0].setOrientation(78*time, 378*time, 200*time);
     //entities_[3].setOrientation(270.f, 0.f, 10.f * time);
 
     UniformBufferObject ubo{};
@@ -141,11 +141,10 @@ void Engine::updateUBO() {
 
 void Engine::updateOverlay() {
     // need to check overlay for updates
-    OverlayUpdates updates = overlay_->getUpdates();
-    if (updates.unpause) {
+    if (overlay_->updates_.unpause) {
         togglePause();
     }
-    if (updates.quit) {
+    if (overlay_->updates_.quit) {
         util::log(name_, "quitting program (onClick)");
         running_ = false;
     }

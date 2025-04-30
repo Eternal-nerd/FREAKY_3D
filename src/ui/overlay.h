@@ -29,7 +29,6 @@ class Overlay {
 public:
 	void init(VkDevice device, VkPhysicalDevice physicalDevice, VkRenderPass renderpass, VkExtent2D extent, Assets& assets);
 
-	OverlayUpdates getUpdates();
 	void resetUpdates();
 
 	// API: call start update, then can call update textbox/element methods any amt of times, then, call end update
@@ -47,7 +46,13 @@ public:
 	void updateMousePosition(float xPos, float yPos);
 	void updateExtent(VkExtent2D extent);
 
+    // BUTTON functions:
+    static void resume();
+    static void quitF();
+
 	void cleanup();
+
+    inline static OverlayUpdates updates_;
 
 	const std::string name_ = "OVERLAY";
 
@@ -56,8 +61,6 @@ private:
 	
 	// extent is in here
 	OverlayState state_;
-
-	OverlayUpdates updates_;
 
 	// access to vulkan
 	VkPhysicalDevice physicalDevice_ = VK_NULL_HANDLE;
@@ -110,8 +113,6 @@ private:
 	//void 
 
 	// UTILITY:
-
-
 
 	// debug drawing lines, also used for crosshair, also border of containers
 	// memory mapped vertex buffer

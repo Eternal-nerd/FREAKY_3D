@@ -23,6 +23,7 @@ void Button::init(OverlayState& state, OverlayElementState* elementState, const 
 	}
     
     // init member variables
+    id_ = id;
     position_ = position;
     sizePixels_ = sizePixels;
     fontSize_ = fontSize;
@@ -66,6 +67,10 @@ int Button::map(UIVertex* mapped, int overrideIndex) {
 /*-----------------------------------------------------------------------------
 --------------------------------UPDATES----------------------------------------
 -----------------------------------------------------------------------------*/
+void Button::setAction(void (*func)()) {
+    action_ = func;
+}
+
 void Button::scale() {
     // scale rectangle
     clickable_.scale();
@@ -78,16 +83,29 @@ void Button::scale() {
 void Button::onMouseMove() {
     clickable_.onMouseMove();
     label_.onMouseMove();
+    position_ = clickable_.getPosition();
 }
 
 void Button::onMouseButton() {
     clickable_.onMouseButton();
     label_.onMouseButton();
+    
+    if (!state_->mouseDown && elementState_->hovered) {
+        util::log(name_, "executing " + id_ + " button function");
+        action_();
+    }
 }
 
 void Button::resetInteraction() {
     clickable_.resetInteraction();
     label_.resetInteraction();
+}
+
+/*-----------------------------------------------------------------------------
+------------------------------GETTER-------------------------------------------
+-----------------------------------------------------------------------------*/
+glm::vec2 Button::getPosition() {
+    return position_;
 }
 
 /*-----------------------------------------------------------------------------

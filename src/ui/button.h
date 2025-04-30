@@ -18,7 +18,9 @@ public:
 	int map(UIVertex* mapped, int overrideIndex = -1);
 	// int mapLines(UIVertex* mapped);
 
-	void setAction();
+	void setAction(void (*func)());
+
+    glm::vec2 getPosition();
 
 	// events
 	void scale();
@@ -38,7 +40,9 @@ private:
 	OverlayState* state_ = nullptr;
 	OverlayElementState* elementState_ = nullptr;
 
-	Text label_;
+    void (*action_)();
+
+    Text label_;
 	Rectangle clickable_;
 
 	glm::vec2 position_ = { 0.f, 0.f };
