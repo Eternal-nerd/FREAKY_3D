@@ -9,6 +9,7 @@
 #include "text.h"
 #include "rectangle.h"
 
+// TODO: allow assignment of a function pointer to button that executes on click
 class Button {
 public:
 	void init(OverlayState& state, OverlayElementState* elementState, const std::string& id, const std::string label, glm::vec2 position, glm::vec2 sizePixels, glm::vec2 fontSize, int fontIndex, int backgroundIndex);
@@ -16,6 +17,8 @@ public:
 	// returns the number of vertices (aka how much to increment pointer)
 	int map(UIVertex* mapped, int overrideIndex = -1);
 	// int mapLines(UIVertex* mapped);
+
+	void setAction();
 
 	// events
 	void scale();
@@ -44,5 +47,4 @@ private:
 
 	int fontTexIndex_ = -1;
 	int backgroundTexIndex_ = -1;
-
 };

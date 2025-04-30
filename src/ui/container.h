@@ -20,6 +20,8 @@ public:
 
 	glm::vec2 getPosition();
 
+	void setElementStateUpdate(bool state);
+
 	// returns the number of vertices (aka how much to increment pointer)
 	int map(UIVertex* mapped, int overrideIndex = -1);
 	int mapLines(UIVertex* mapped);
@@ -47,6 +49,7 @@ public:
 private:
 	OverlayState* state_ = nullptr;
 	OverlayElementState* elementState_ = nullptr;
+	bool updateElementState_ = true;
 
 	glm::vec2 position_ = { 0.f, 0.f };
 	glm::vec2 sizePixels_ = { 0.f, 0.f };

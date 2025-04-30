@@ -21,7 +21,6 @@
 // Max. number of elements the text overlay buffer can hold
 #define MAX_OVERLAY_QUADS 2048
 #define MAX_OVERLAY_LINES 100
-// FIXME make sure this is being used properly to set buffer size
 
 /*
 class for 2d rendering (GUI/debug text)

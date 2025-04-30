@@ -75,6 +75,8 @@ struct OverlayState {
 struct OverlayElementState {
     OverlayMode mode = OVERLAY_DEFAULT;
 
+    // ??? glm::vec2 position = {0.f, 0.f};
+
     bool hovered = false;
     bool dragged = false;
     int interaction = 0;

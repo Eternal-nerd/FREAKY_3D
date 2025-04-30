@@ -18,6 +18,9 @@ public:
 	void setBorder(bool state);
 
 	glm::vec2 getPosition();
+	void setPosition(glm::vec2 position);
+
+	void setElementStateUpdate(bool state);
 
 	// returns the number of vertices (aka how much to increment pointer)
 	int map(UIVertex* mapped, int overrideIndex = -1);

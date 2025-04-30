@@ -28,6 +28,9 @@ void Container::init(OverlayState& state, OverlayElementState* elementState, con
 
 	insertPosition_ = position_;
 
+	// update element state by default
+	updateElementState_ = true;
+
 	// create border lines
 	borderLines_.resize(8); // 8 vertices needed for 4 lines
 	createBorderLines();
@@ -150,7 +153,9 @@ void Container::onMouseMove() {
 	
 	bool oldHover = elementState_->hovered;
 
-	elementState_->hovered = util::withinBorders(state_->mousePos, { left, right, top, bottom });
+	if (updateElementState_) {
+		elementState_->hovered = util::withinBorders(state_->mousePos, { left, right, top, bottom });
+	}
 
 	// NEED TO do drag interaction here
 	if (elementState_->dragged) {
@@ -162,11 +167,6 @@ void Container::onMouseMove() {
 			rePosition();
 		}
 	}
-	else {
-		if (oldHover != elementState_->hovered) {
-			updateInteraction();
-		}
-	}
 	
 	// tell rectangles to update
 	updateInteraction();
@@ -175,16 +175,19 @@ void Container::onMouseMove() {
 void Container::onMouseButton() {
 	if (state_->mouseDown) {
 		if (elementState_->hovered) {
-			elementState_->dragged = true;
-			updateInteraction();
+			if (updateElementState_) {
+				elementState_->dragged = true;
+			}
 		}
 	}
 	else {
 		if (elementState_->dragged) {
-			elementState_->dragged = false;
-			updateInteraction();
+			if (updateElementState_) {
+				elementState_->dragged = false;
+			}
 		}
 	}
+	updateInteraction();
 }
 
 void Container::resetInteraction() {
@@ -247,7 +250,9 @@ glm::vec2 Container::getPosition() {
 /*-----------------------------------------------------------------------------
 ------------------------------HELPER-------------------------------------------
 -----------------------------------------------------------------------------*/
-//
+void Container::setElementStateUpdate(bool state) {
+	updateElementState_ = state;
+}
 
 
 /*-----------------------------------------------------------------------------

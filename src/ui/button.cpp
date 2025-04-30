@@ -32,13 +32,19 @@ void Button::init(OverlayState& state, OverlayElementState* elementState, const 
     // init rectangle
     clickable_.init(*state_, elementState_, id_ + " clickable", position_, sizePixels_, {0,0,1,1}, backgroundTexIndex_);
 
-    // init text
-    // TODO: calculate centered position
-    label_.init(*state_, elementState_, id_ + " text", label, position_, sizePixels_, fontSize_, fontTexIndex_);
+    // init text - size of textbox should be same as the letters
+    glm::vec2 labelBox = { fontSize_.x * label.length(), fontSize_.y + 0.01f };
+    // calculate center position for label
+    float labelXPos = position_.x + ((((sizePixels_.x / state_->extent.width) * state_->scale) - ((label.length() * (fontSize_.x / state_->extent.width) * state_->scale))) / 2);
+    float labelYPos = position_.y + ((((sizePixels_.y / state_->extent.height) * state_->scale) - ((fontSize_.y / state_->extent.height) * state_->scale)) / 2);
+    util::log("DEBUG", "labelPos: {" + std::to_string(labelXPos) + ", " + std::to_string(labelYPos) + "}");
+    label_.init(*state_, elementState_, id_ + " text", label, { labelXPos, labelYPos }, labelBox, fontSize_, fontTexIndex_);
 
     // disable border
     label_.setBorder(false);
-    
+
+    // tell label to just update based off rectangle
+    label_.setElementStateUpdate(false);
 }
 
 
@@ -68,6 +74,7 @@ void Button::scale() {
     label_.scale();
 }
 
+// NEXT 3 functions: need to reflect changes of clickable to the label
 void Button::onMouseMove() {
     clickable_.onMouseMove();
     label_.onMouseMove();

@@ -98,6 +98,10 @@ glm::vec2 Text::getPosition() {
 	return position_;
 }
 
+void Text::setPosition(glm::vec2 position) {
+	position_ = position;
+}
+
 void Text::setBorder(bool state) {
 	container_.border_ = state;
 }
@@ -137,7 +141,9 @@ void Text::resetInteraction() {
 /*-----------------------------------------------------------------------------
 ------------------------------HELPER-------------------------------------------
 -----------------------------------------------------------------------------*/
-//
+void Text::setElementStateUpdate(bool state) {
+	container_.setElementStateUpdate(state);
+}
 
 /*-----------------------------------------------------------------------------
 ------------------------------CLEANUP------------------------------------------

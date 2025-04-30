@@ -18,6 +18,8 @@ void Overlay::init(VkDevice device, VkPhysicalDevice physicalDevice, VkRenderPas
     initDescriptors();
     initPipeline();
 
+    //state_.scale = 0.5f;
+
     // generate elements here
     generateElements();
 
@@ -39,9 +41,7 @@ void Overlay::initTextures() {
     textureCount_++;
     textures_.push_back(&assets_->getTexture("fontgrid"));
     textureCount_++;
-    textures_.push_back(&assets_->getTexture("resume"));
-    textureCount_++;
-    textures_.push_back(&assets_->getTexture("quit"));
+    textures_.push_back(&assets_->getTexture("button_background"));
     textureCount_++;
     textures_.push_back(&assets_->getTexture("slider"));
     textureCount_++;

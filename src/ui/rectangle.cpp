@@ -27,8 +27,8 @@ void Rectangle::init(OverlayState& state, OverlayElementState* elementState, con
 	sizePixels_ = sizePixels;
 
 	// calculate x and y offsets
-	float xOffset = (sizePixels_.x / state_->extent.width);
-	float yOffset = (sizePixels_.y / state_->extent.height);
+	float xOffset = (sizePixels_.x / state_->extent.width) * state_->scale;
+	float yOffset = (sizePixels_.y / state_->extent.height) * state_->scale;
 
 	// top left
 	quad_.vertices[0].pos = {position_.x, position_.y};
@@ -81,8 +81,10 @@ void Rectangle::onMouseMove() {
 	float bottom = position_.y + ((sizePixels_.y / state_->extent.height) * state_->scale);
 
 	bool oldHover = elementState_->hovered;
-
-	elementState_->hovered = util::withinBorders(state_->mousePos, { left, right, top, bottom });
+	
+	if (updateElementState_) {
+		elementState_->hovered = util::withinBorders(state_->mousePos, { left, right, top, bottom });
+	}
 
 	// NEED TO do drag interaction here
 	if (elementState_->dragged) {
@@ -94,33 +96,51 @@ void Rectangle::onMouseMove() {
 			rePosition();
 		}
 	}
-	else {
-		if (oldHover != elementState_->hovered) {
-			updateInteraction();
-		}
-	}
+	updateInteraction();
 }
 
 void Rectangle::onMouseButton() {
-	if (state_->mouseDown) {
-		if (elementState_->hovered) {
-			elementState_->dragged = true;
-			updateInteraction();
+	if (updateElementState_) {
+		if (state_->mouseDown) {
+			if (elementState_->hovered) {
+				elementState_->dragged = true;
+			}
+		}
+		else {
+			if (elementState_->dragged) {
+				elementState_->dragged = false;
+			}
 		}
 	}
-	else {
-		if (elementState_->dragged) {
-			elementState_->dragged = false;
-			updateInteraction();
-		}
-	}
+	updateInteraction();
 }
 
 void Rectangle::resetInteraction() {
-	elementState_->hovered = false;
-	elementState_->dragged = false;
-
+	if (updateElementState_) {
+		elementState_->hovered = false;
+		elementState_->dragged = false;
+	}
 	updateInteraction();
+}
+
+
+void Rectangle::updateInteraction() {
+	if (updateElementState_) {
+		if (elementState_->hovered) {
+			elementState_->interaction = 1;
+		}
+		if (elementState_->dragged && elementState_->movable) {
+			elementState_->interaction = 2;
+		}
+		if (!elementState_->hovered && !elementState_->dragged) {
+			elementState_->interaction = 0;
+		}
+	}
+
+	quad_.vertices[0].interaction = elementState_->interaction;
+	quad_.vertices[1].interaction = elementState_->interaction;
+	quad_.vertices[2].interaction = elementState_->interaction;
+	quad_.vertices[3].interaction = elementState_->interaction;
 }
 
 /*-----------------------------------------------------------------------------
@@ -173,6 +193,11 @@ void Rectangle::setTextureCoords(glm::vec4 texCoords) {
 	quad_.vertices[3].texCoord = { texCoords.x + texCoords.z, texCoords.y + texCoords.w };
 }
 
+void Rectangle::setElementStateUpdate(bool state) {
+	updateElementState_ = state;
+}
+
+
 /*-----------------------------------------------------------------------------
 ------------------------------PRIVATE-HELPERS----------------------------------
 -----------------------------------------------------------------------------*/
@@ -180,23 +205,6 @@ void Rectangle::rePosition() {
 	// update top left position
 	quad_.vertices[0].pos = { position_.x, position_.y };
 	scale(); // updates other 3 vertices position
-}
-
-void Rectangle::updateInteraction() {
-	if (elementState_->hovered) {
-		elementState_->interaction = 1;
-	}
-	if (elementState_->dragged && elementState_->movable) {
-		elementState_->interaction = 2;
-	}
-	if (!elementState_->hovered && !elementState_->dragged) {
-		elementState_->interaction = 0;
-	}
-
-	quad_.vertices[0].interaction = elementState_->interaction;
-	quad_.vertices[1].interaction = elementState_->interaction;
-	quad_.vertices[2].interaction = elementState_->interaction;
-	quad_.vertices[3].interaction = elementState_->interaction;
 }
 
 /*-----------------------------------------------------------------------------
