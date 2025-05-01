@@ -108,6 +108,15 @@ glm::vec2 Button::getPosition() {
     return position_;
 }
 
+OverlayMode Button::getMode() {
+    return elementState_->mode;
+}
+
+void Button::setMode(OverlayMode mode) {
+    elementState_->mode = mode;
+}
+
+
 /*-----------------------------------------------------------------------------
 ------------------------------CLEANUP------------------------------------------
 -----------------------------------------------------------------------------*/

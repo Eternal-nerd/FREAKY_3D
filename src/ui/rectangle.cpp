@@ -171,6 +171,10 @@ glm::vec2 Rectangle::getPosition() {
     return { position_.x, position_.y};
 }
 
+OverlayMode Rectangle::getMode() {
+    return elementState_->mode;
+}
+
 /*-----------------------------------------------------------------------------
 ------------------------------SETTERS------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -197,6 +201,9 @@ void Rectangle::setElementStateUpdate(bool state) {
 	updateElementState_ = state;
 }
 
+void Rectangle::setMode(OverlayMode mode) {
+    elementState_->mode = mode;
+}
 
 /*-----------------------------------------------------------------------------
 ------------------------------PRIVATE-HELPERS----------------------------------

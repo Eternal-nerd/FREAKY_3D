@@ -106,13 +106,14 @@ private:
 	void generateElements();
 
 	// utility
-	OverlayMode getMode(const std::string& modeString);
+	OverlayMode strToMode(const std::string& modeString);
 
 	// UPDATES
 	void handleInputUpdates();
 	//void 
 
 	// UTILITY:
+    bool modeMapCheck(OverlayMode mode);
 
 	// debug drawing lines, also used for crosshair, also border of containers
 	// memory mapped vertex buffer

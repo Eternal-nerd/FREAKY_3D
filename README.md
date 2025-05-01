@@ -4,6 +4,8 @@ TODO:
 -IMPLEMENT OVERLAY MODES (DEFAULT&MENU to start);
 
 
+TODO ASAP: Remove duplicate functions for ui elements.  make a base class that does this, or make thier state ptrs public?
+
 ! CONFIG FILES (in /config)
 Config files are comprised of typed objects and typed attributes
 Ex: 

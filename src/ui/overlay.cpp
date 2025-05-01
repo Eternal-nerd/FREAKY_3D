@@ -305,6 +305,8 @@ void Overlay::generateElements() {
                 config_.getFloatAttribute(it->first, "yOffset") },
                 config_.getIntAttribute(it->first, "texIndex")
             );
+            // set mode
+            r.setMode(strToMode(config_.getStringAttribute(it->first, "mode")));
             rectangles_.push_back(r);
         }
         // text boxes
@@ -321,6 +323,8 @@ void Overlay::generateElements() {
                 config_.getIntAttribute(it->first, "texIndex")                
             );
             t.setBorder(config_.getBoolAttribute(it->first, "border"));
+            // set mode
+            t.setMode(strToMode(config_.getStringAttribute(it->first, "mode")));
             text_.push_back(t);
         }
         // button
@@ -344,6 +348,8 @@ void Overlay::generateElements() {
             else if (it->first == "quit") {
                 b.setAction(&quitF);
             }
+            // set mode
+            b.setMode(strToMode(config_.getStringAttribute(it->first, "mode")));
             buttons_.push_back(b);
         }
 
@@ -538,12 +544,14 @@ void Overlay::update() {
         offset = crosshair_.mapLines(lineVertexMapped_);
         lineVertexMapped_ += offset;
         linePointCount_ += offset;
-
+        
         // Text boxes
         for (Text& t : text_) {
-            offset = t.mapLines(lineVertexMapped_);
-            lineVertexMapped_ += offset;
-            linePointCount_ += offset;
+            if (modeMapCheck(t.getMode())) {
+                offset = t.mapLines(lineVertexMapped_);
+                lineVertexMapped_ += offset;
+                linePointCount_ += offset;
+            }
         }
     }
 
@@ -554,22 +562,28 @@ void Overlay::update() {
 
         // map rectangles
         for (Rectangle& r : rectangles_) {
-            vertexMapped_ += r.map(vertexMapped_, wired);
-            quadCount_++;
+            if (modeMapCheck(r.getMode())) {
+                vertexMapped_ += r.map(vertexMapped_, wired);
+                quadCount_++;
+            }
         }
 
         // Text boxes
         for (Text& t : text_) {
-            offset = t.map(vertexMapped_, wired);
-            vertexMapped_ += offset;
-            quadCount_ += offset / 4;
+            if (modeMapCheck(t.getMode())) {
+                offset = t.map(vertexMapped_, wired);
+                vertexMapped_ += offset;
+                quadCount_ += offset / 4;
+            }
         }
 
         // Buttons
         for (Button& b : buttons_) {
-            offset = b.map(vertexMapped_, wired);
-            vertexMapped_ += offset;
-            quadCount_ += offset / 4;
+            if (modeMapCheck(b.getMode())) {
+                offset = b.map(vertexMapped_, wired);
+                vertexMapped_ += offset;
+                quadCount_ += offset / 4;
+            } 
         }
     }
 
@@ -656,7 +670,7 @@ void Overlay::draw(VkCommandBuffer commandBuffer) {
 /*-----------------------------------------------------------------------------
 ------------------------------UTILITY------------------------------------------
 -----------------------------------------------------------------------------*/
-OverlayMode Overlay::getMode(const std::string& modeString) {
+OverlayMode Overlay::strToMode(const std::string& modeString) {
     if (modeString == "OVERLAY_DEFAULT") {
         return OVERLAY_DEFAULT;
     }
@@ -670,6 +684,23 @@ OverlayMode Overlay::getMode(const std::string& modeString) {
         return OVERLAY_INVENTORY;
     }
     throw std::runtime_error("invalid mode: " + modeString);
+}
+
+bool Overlay::modeMapCheck(OverlayMode mode) {
+    bool retVal = false;
+    switch (mode) {
+    case OVERLAY_MENU:
+        if (state_.menuShown) {
+            retVal = true;
+        }
+        break;
+    case OVERLAY_DEFAULT:
+        retVal = true;
+        break;
+    default:
+        break;
+    } 
+    return retVal;
 }
 
 /*-----------------------------------------------------------------------------

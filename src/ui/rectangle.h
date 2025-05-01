@@ -37,6 +37,9 @@ public:
 	void setPosition(glm::vec2 position);
 	void setTextureCoords(glm::vec4 texCoords);
 
+    OverlayMode getMode();
+    void setMode(OverlayMode mode);
+
 	void cleanup();
 
 	bool unique_ = false;

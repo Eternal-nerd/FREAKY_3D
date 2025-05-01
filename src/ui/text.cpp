@@ -106,6 +106,14 @@ void Text::setBorder(bool state) {
 	container_.border_ = state;
 }
 
+OverlayMode Text::getMode() {
+    return elementState_->mode;
+}
+
+void Text::setMode(OverlayMode mode) {
+    elementState_->mode = mode;
+}
+
 /*-----------------------------------------------------------------------------
 ------------------------------MAPPING-TO-BUFFER--------------------------------
 -----------------------------------------------------------------------------*/

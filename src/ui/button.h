@@ -28,6 +28,9 @@ public:
 	void onMouseButton();
 	void resetInteraction();
 
+    OverlayMode getMode();
+    void setMode(OverlayMode mode);
+
 	void cleanup();
 	
 	bool unique_ = false;
