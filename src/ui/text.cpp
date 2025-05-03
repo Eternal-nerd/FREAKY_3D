@@ -94,24 +94,12 @@ void Text::updateMessage(const std::string& message) {
 	}
 }
 
-glm::vec2 Text::getPosition() {
-	return position_;
-}
-
 void Text::setPosition(glm::vec2 position) {
 	position_ = position;
 }
 
 void Text::setBorder(bool state) {
 	container_.border_ = state;
-}
-
-OverlayMode Text::getMode() {
-    return elementState_->mode;
-}
-
-void Text::setMode(OverlayMode mode) {
-    elementState_->mode = mode;
 }
 
 /*-----------------------------------------------------------------------------

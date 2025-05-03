@@ -123,8 +123,6 @@ private:
 	UIVertex* lineVertexMapped_ = nullptr;
 	int linePointCount_ = 0;
 
-
-
 	// EXTERNAL Vulkan API function ptrs
 	PFN_vkCmdSetPolygonModeEXT vkCmdSetPolygonModeEXT{ VK_NULL_HANDLE };
 

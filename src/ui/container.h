@@ -6,9 +6,10 @@
 
 #include "../types.h"
 #include "../util.h"
+#include "base_element.h"
 #include "rectangle.h"
 
-class Container {
+class Container : public BaseElement{
 public:
 	void init(OverlayState& state, OverlayElementState* elementState, const std::string& id, OverlayContainerType type, glm::vec2 position, glm::vec2 sizePixels);
 
@@ -17,8 +18,6 @@ public:
 
 	// remove rectangles from container
 	void removeRectangles(int amount);
-
-	glm::vec2 getPosition();
 
 	void setElementStateUpdate(bool state);
 
@@ -47,11 +46,8 @@ public:
 	const std::string name_ = "CONTAINER";
 
 private:
-	OverlayState* state_ = nullptr;
-	OverlayElementState* elementState_ = nullptr;
 	bool updateElementState_ = true;
 
-	glm::vec2 position_ = { 0.f, 0.f };
 	glm::vec2 sizePixels_ = { 0.f, 0.f };
 
 	std::vector<UIVertex> borderLines_ = {};

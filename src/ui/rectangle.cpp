@@ -167,14 +167,6 @@ glm::vec2 Rectangle::getDimensions() {
 	return {(sizePixels_.x / state_->extent.width) * state_->scale, (sizePixels_.y / state_->extent.height)* state_->scale};
 }
 
-glm::vec2 Rectangle::getPosition() {
-    return { position_.x, position_.y};
-}
-
-OverlayMode Rectangle::getMode() {
-    return elementState_->mode;
-}
-
 /*-----------------------------------------------------------------------------
 ------------------------------SETTERS------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -199,10 +191,6 @@ void Rectangle::setTextureCoords(glm::vec4 texCoords) {
 
 void Rectangle::setElementStateUpdate(bool state) {
 	updateElementState_ = state;
-}
-
-void Rectangle::setMode(OverlayMode mode) {
-    elementState_->mode = mode;
 }
 
 /*-----------------------------------------------------------------------------
