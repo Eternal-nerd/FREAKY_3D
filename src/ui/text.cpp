@@ -96,6 +96,7 @@ void Text::updateMessage(const std::string& message) {
 
 void Text::setPosition(glm::vec2 position) {
 	position_ = position;
+	container_.setPosition(position_);
 }
 
 void Text::setBorder(bool state) {
@@ -139,17 +140,6 @@ void Text::resetInteraction() {
 -----------------------------------------------------------------------------*/
 void Text::setElementStateUpdate(bool state) {
 	container_.setElementStateUpdate(state);
-}
-
-/*-----------------------------------------------------------------------------
-------------------------------CLEANUP------------------------------------------
------------------------------------------------------------------------------*/
-void Text::cleanup() {
-	util::log(name_, "cleaning up Text resources");
-
-	if (unique_) {
-		delete elementState_;
-	}
 }
 
 /*-----------------------------------------------------------------------------

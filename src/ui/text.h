@@ -32,10 +32,6 @@ public:
 	void onMouseButton();
 	void resetInteraction();
 
-	void cleanup();
-
-	bool unique_ = false;
-
 	std::string id_ = "";
 
 	const std::string name_ = "TEXT";

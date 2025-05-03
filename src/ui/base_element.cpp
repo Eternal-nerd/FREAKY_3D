@@ -25,3 +25,13 @@ void BaseElement::setMode(OverlayMode mode) {
     }
 }
 
+/*-----------------------------------------------------------------------------
+------------------------------CLEANUP------------------------------------------
+-----------------------------------------------------------------------------*/
+void BaseElement::cleanup() {
+    util::log("ELEMENT BASE", "cleaning up overlay element resources");
+
+    if (unique_ && elementState_) {
+        delete elementState_;
+    }
+}

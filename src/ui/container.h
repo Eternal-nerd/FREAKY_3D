@@ -21,6 +21,9 @@ public:
 
 	void setElementStateUpdate(bool state);
 
+	// reposition
+	void setPosition(glm::vec2 position);
+
 	// returns the number of vertices (aka how much to increment pointer)
 	int map(UIVertex* mapped, int overrideIndex = -1);
 	int mapLines(UIVertex* mapped);
@@ -30,10 +33,6 @@ public:
 	void onMouseMove();
 	void onMouseButton();
 	void resetInteraction();
-
-	void cleanup();
-
-	bool unique_ = false;
 
 	bool border_ = true;
 
@@ -59,7 +58,6 @@ private:
 
 	void resetRectanglePositions();
 	void updateInteraction();
-	void rePosition();
-
 	void createBorderLines();
+	void rePosition();
 };

@@ -201,14 +201,3 @@ void Rectangle::rePosition() {
 	quad_.vertices[0].pos = { position_.x, position_.y };
 	scale(); // updates other 3 vertices position
 }
-
-/*-----------------------------------------------------------------------------
-------------------------------CLEANUP------------------------------------------
------------------------------------------------------------------------------*/
-void Rectangle::cleanup() {
-	util::log(name_, "cleaning up Rectangle resources");
-
-	if (unique_) {
-		delete elementState_;
-	}
-}

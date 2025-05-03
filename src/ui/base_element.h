@@ -16,10 +16,13 @@ public:
     OverlayMode getMode();
     void setMode(OverlayMode mode);
 
+    void cleanup();
+
 protected:
+    bool unique_ = false;
+
     OverlayState* state_ = nullptr;
 	OverlayElementState* elementState_ = nullptr;
-	bool updateElementState_ = true;
 
     glm::vec2 position_ = {0.f, 0.f};
 

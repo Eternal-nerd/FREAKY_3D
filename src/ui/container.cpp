@@ -247,13 +247,7 @@ void Container::setElementStateUpdate(bool state) {
 	updateElementState_ = state;
 }
 
-/*-----------------------------------------------------------------------------
-------------------------------CLEANUP------------------------------------------
------------------------------------------------------------------------------*/
-void Container::cleanup() {
-	util::log(name_, "cleaning up Container resources");
-
-	if (unique_) {
-		delete elementState_;
-	}
+void Container::setPosition(glm::vec2 position) {
+	position_ = position;
+	rePosition();
 }
