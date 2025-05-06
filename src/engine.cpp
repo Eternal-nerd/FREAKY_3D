@@ -117,7 +117,7 @@ void Engine::updateUBO() {
     float time = clock_.getProgramTime();
     
     // FIXME animations
-    entities_[0].setOrientation(78*time, 378*time, 200*time);
+    entities_[0].setOrientation(cubeRotation_.x*time, cubeRotation_.y*time, cubeRotation_ .z*time);
     //entities_[3].setOrientation(270.f, 0.f, 10.f * time);
 
     UniformBufferObject ubo{};
@@ -149,8 +149,10 @@ void Engine::updateOverlay() {
         running_ = false;
     }
     if (overlay_->updates_.fov != camera_.config_.fovy) {
-        util::log(name_, "setting camera FOV to: " + std::to_string(overlay_->updates_.fov));
         camera_.config_.fovy = overlay_->updates_.fov;
+    }
+    if (overlay_->updates_.cubeRot != cubeRotation_) {
+        cubeRotation_ = overlay_->updates_.cubeRot;
     }
 
     // need to reset updates ??? do we?

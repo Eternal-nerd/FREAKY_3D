@@ -52,6 +52,9 @@ public:
     static void quitF();
 	// SLIDER FUNCTIONS:
 	static void setFOV(float fov);
+	static void setCubeX(float rotation);
+	static void setCubeY(float rotation);
+	static void setCubeZ(float rotation);
 
 	void cleanup();
 

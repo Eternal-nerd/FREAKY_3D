@@ -28,6 +28,9 @@ private:
 	bool visible_ = true;
 	bool paused_ = false;
 
+	// FIXME FUN
+	glm::vec3 cubeRotation_ = {0.f,0.f,0.f};
+
 	// Clock
 	Clock clock_;
 	float fpsTime_ = 0.f;

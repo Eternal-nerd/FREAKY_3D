@@ -375,6 +375,16 @@ void Overlay::generateElements() {
             if (it->first == "FOV") {
                 s.setAction(&setFOV);
             }
+            // cube rotation FIXME
+            else if (it->first == "CubeRotationX") {
+                s.setAction(&setCubeX);
+            }
+            else if (it->first == "CubeRotationY") {
+                s.setAction(&setCubeY);
+            }
+            else if (it->first == "CubeRotationZ") {
+                s.setAction(&setCubeZ);
+            }
             // set mode & pushback
             s.setMode(strToMode(config_.getStringAttribute(it->first, "mode")));
             sliders_.push_back(s);
@@ -739,6 +749,18 @@ void Overlay::quitF() {
 
 void Overlay::setFOV(float fov) {
     updates_.fov = fov;
+}
+
+void Overlay::setCubeX(float rotation) {
+    updates_.cubeRot.x = rotation;
+}
+
+void Overlay::setCubeY(float rotation) {
+    updates_.cubeRot.y = rotation;
+}
+
+void Overlay::setCubeZ(float rotation) {
+    updates_.cubeRot.z = rotation;
 }
 
 /*-----------------------------------------------------------------------------

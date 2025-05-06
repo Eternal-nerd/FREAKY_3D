@@ -53,6 +53,7 @@ struct OverlayUpdates {
     bool unpause = false;
     bool quit = false;
     float fov = 90.f;
+    glm::vec3 cubeRot = {0.f,0.f,0.f};
 };
 
 struct OverlayState {

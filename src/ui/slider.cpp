@@ -219,9 +219,8 @@ void Slider::knobMove() {
     // update reading to value
     reading_.updateMessage(std::to_string(currentValue_).substr(0, SLIDER_VALUE_RECTANGLE_COUNT));
 
-    // callback function - TODO
+    // callback function
     if (action_) {
-        util::log(name_, "executing " + id_ + " slider function");
         action_(currentValue_);
     }
     else {
