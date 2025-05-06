@@ -38,7 +38,6 @@ public:
 
 private:
 	std::string message_ = "";
-	glm::vec2 sizePixels_ = { 0.f, 0.f };
 	glm::vec2 fontSize_ = { 0.f, 0.f };
 	int texIndex_ = -1;
 

@@ -17,6 +17,7 @@
 #include "container.h"
 #include "text.h"
 #include "button.h"
+#include "slider.h"
 
 // Max. number of elements the text overlay buffer can hold
 #define MAX_OVERLAY_QUADS 2048
@@ -93,27 +94,17 @@ private:
 	UIVertex* vertexMapped_ = nullptr;
     uint32_t* indexMapped_ = nullptr;
 	int indexCount_ = 0;
-	int quadCount_ = 0;
 
 	// ELEMENTS
 	std::vector<Rectangle> rectangles_{};
 	std::vector<Text> text_{};
 	std::vector<Button> buttons_{};
-
-	// Actual elements that will exist:
-	// textbox, slider, button, 
-
+	std::vector<Slider> sliders_{};
 	void generateElements();
-
-	// utility
-	OverlayMode strToMode(const std::string& modeString);
-
-	// UPDATES
-	void handleInputUpdates();
-	//void 
 
 	// UTILITY:
     bool modeMapCheck(OverlayMode mode);
+	OverlayMode strToMode(const std::string& modeString);
 
 	// debug drawing lines, also used for crosshair, also border of containers
 	// memory mapped vertex buffer

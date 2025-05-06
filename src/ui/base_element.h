@@ -16,7 +16,12 @@ public:
     OverlayMode getMode();
     void setMode(OverlayMode mode);
 
-    void cleanup();
+    glm::vec2 getScaledSize();
+
+    bool wasHovered();
+    bool toggled();
+
+    void cleanup(); 
 
 protected:
     bool unique_ = false;
@@ -25,5 +30,5 @@ protected:
 	OverlayElementState* elementState_ = nullptr;
 
     glm::vec2 position_ = {0.f, 0.f};
-
+    glm::vec2 sizePixels_ = { 0.f, 0.f };
 };

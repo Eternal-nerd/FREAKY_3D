@@ -17,6 +17,7 @@ const float NOCLIP_SPEED = 30.f;
 const int MAX_MODELS = 512;
 
 const float FONT_OFFSET = 0.0625f;
+const int SLIDER_VALUE_RECTANGLE_COUNT = 7;
 
 const int FPS_MEASURE_INTERVAL = 1000;
 

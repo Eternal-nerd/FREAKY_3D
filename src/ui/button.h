@@ -38,7 +38,6 @@ private:
     Text label_;
 	Rectangle clickable_;
 
-	glm::vec2 sizePixels_ = { 0.f, 0.f };
 	glm::vec2 fontSize_ = { 0.f, 0.f };
 
 	int fontTexIndex_ = -1;

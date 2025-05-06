@@ -47,8 +47,6 @@ public:
 private:
 	bool updateElementState_ = true;
 
-	glm::vec2 sizePixels_ = { 0.f, 0.f };
-
 	std::vector<UIVertex> borderLines_ = {};
 
 	float xOffset_ = 0.f;

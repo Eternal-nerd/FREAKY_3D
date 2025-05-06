@@ -109,9 +109,8 @@ void Container::removeRectangles(int amount) {
 int Container::map(UIVertex* mapped, int overrideIndex) {
 	int retVal = 0;
 	for (Rectangle& r : rectangles_) {
-		int incr = r.map(mapped, overrideIndex);
-		mapped += incr;
-		retVal += incr;
+		mapped += r.map(mapped, overrideIndex);
+		retVal += 4;
 	}
 	return retVal;
 }

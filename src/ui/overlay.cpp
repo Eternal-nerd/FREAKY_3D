@@ -43,7 +43,9 @@ void Overlay::initTextures() {
     textureCount_++;
     textures_.push_back(&assets_->getTexture("button_background"));
     textureCount_++;
-    textures_.push_back(&assets_->getTexture("slider"));
+    textures_.push_back(&assets_->getTexture("bar"));
+    textureCount_++;
+    textures_.push_back(&assets_->getTexture("set"));
     textureCount_++;
 }
 
@@ -352,6 +354,28 @@ void Overlay::generateElements() {
             b.setMode(strToMode(config_.getStringAttribute(it->first, "mode")));
             buttons_.push_back(b);
         }
+        // sliders
+        else if (it->second == "Slider") {
+            Slider s;
+            s.init(state_, nullptr, it->first,
+                config_.getStringAttribute(it->first, "label"), // label
+                { config_.getFloatAttribute(it->first, "minValue"),
+                config_.getFloatAttribute(it->first, "maxValue") }, // limits
+                { config_.getFloatAttribute(it->first, "positionX"),
+                config_.getFloatAttribute(it->first, "positionY") }, // position
+                { config_.getFloatAttribute(it->first, "widthPixel"),
+                config_.getFloatAttribute(it->first, "heightPixel") }, // rectangle size
+                config_.getIntAttribute(it->first, "fontTexIndex"),
+                config_.getIntAttribute(it->first, "backgroundTexIndex"),
+                config_.getIntAttribute(it->first, "knobTexIndex"),
+                config_.getIntAttribute(it->first, "barTexIndex")
+            );
+            // set function
+
+            // set mode & pushback
+            s.setMode(strToMode(config_.getStringAttribute(it->first, "mode")));
+            sliders_.push_back(s);
+        }
 
         // TODO
         else {}
@@ -378,6 +402,10 @@ void Overlay::updateExtent(VkExtent2D extent) {
 
         for (Button& b : buttons_) {
             b.scale();
+        }
+
+        for (Slider& s : sliders_) {
+            s.scale();
         }
     }
 
@@ -426,6 +454,10 @@ void Overlay::toggleMenu() {
         for (Button& b : buttons_) {
             b.resetInteraction();
         }
+
+        for (Slider& s : sliders_) {
+            s.resetInteraction();
+        }
     }
 
     // tell elements to re-map
@@ -448,6 +480,10 @@ void Overlay::mouseButtonTrigger(bool state) {
 
         for (Button& b : buttons_) {
             b.onMouseButton();
+        }
+
+        for (Slider& s : sliders_) {
+            s.onMouseButton();
         }
 
         // tell elements to re-map
@@ -481,64 +517,29 @@ void Overlay::updateMousePosition(float xPos, float yPos) {
             b.onMouseMove();
         }
 
+        for (Slider& s : sliders_) {
+            s.onMouseMove();
+        }
+
         // tell elements to re-map
         state_.updatedLine = true;
         state_.updatedTri = true;
     }
 }
 
-
-void Overlay::handleInputUpdates() {
-    // hover effects
-    /*if (!menuShown_) {
-        for (Rectangle& r : rectangles_) {
-            r.resetInteraction();
-        }
-    }*/
-
-    // onClick events
-    /*if (mouseRelease_) {
-        if (elements_[getElementIndex("resume")].hovered_) {
-            updates_.unpause = true;
-        }
-        if (elements_[getElementIndex("quit")].hovered_) {
-            updates_.quit = true;
-        }
-
-
-
-        // after the release has been handled
-        mouseRelease_ = false;
-    }*/
-}
-
 // API: call start update, then can call update textbox/element methods any amt of times, then, call end update
 void Overlay::update() {
-    //handleInputUpdates();
-
-    // triangle buffer
-    if (vkMapMemory(device_, vertexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&vertexMapped_) != VK_SUCCESS) {
-        throw std::runtime_error("failed to map vertex buffer memory for overlay update ");
-    }
-
-    assert(vertexMapped_ != nullptr);
-
-    // map line buffer
-    if (vkMapMemory(device_, lineVertexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&lineVertexMapped_) != VK_SUCCESS) {
-        throw std::runtime_error("failed to map vertex buffer memory for overlay update ");
-    }
-
-    assert(lineVertexMapped_ != nullptr);
-
-    int wired = (currentPolygonMode_ == VK_POLYGON_MODE_LINE) ? wireframeIndex_ : -1;
-
     // used to move the buffer access pointers along..
     int offset = 0;
     
-    // LINES
+    // LINES ---------------------<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     if (state_.updatedLine) {
-        // reset line point count
-        linePointCount_ = 0;
+        // map line buffer
+        if (vkMapMemory(device_, lineVertexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&lineVertexMapped_) != VK_SUCCESS) {
+            throw std::runtime_error("failed to map vertex buffer memory for overlay update ");
+        }
+
+        assert(lineVertexMapped_ != nullptr);
 
         // map crosshair
         offset = crosshair_.mapLines(lineVertexMapped_);
@@ -553,18 +554,36 @@ void Overlay::update() {
                 linePointCount_ += offset;
             }
         }
+
+        // maybe add lines to others?
+
+        // line buffer
+        vkUnmapMemory(device_, lineVertexBufferMemory_);
+        lineVertexMapped_ = nullptr;
+
+        state_.updatedLine = false;
     }
 
-    // TRIANGLES
+    // TRIANGLES ---------------------<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     if (state_.updatedTri) {
-        // reset quad count
-        quadCount_ = 0;
+        indexCount_ = 0;
+        int pointCount = 0;
+
+        // triangle buffer
+        if (vkMapMemory(device_, vertexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&vertexMapped_) != VK_SUCCESS) {
+            throw std::runtime_error("failed to map vertex buffer memory for overlay update ");
+        }
+
+        assert(vertexMapped_ != nullptr);
+
+        int wired = (currentPolygonMode_ == VK_POLYGON_MODE_LINE) ? wireframeIndex_ : -1;
 
         // map rectangles
         for (Rectangle& r : rectangles_) {
             if (modeMapCheck(r.getMode())) {
-                vertexMapped_ += r.map(vertexMapped_, wired);
-                quadCount_++;
+                offset = r.map(vertexMapped_, wired);
+                vertexMapped_ += offset;
+                pointCount += offset;
             }
         }
 
@@ -573,7 +592,7 @@ void Overlay::update() {
             if (modeMapCheck(t.getMode())) {
                 offset = t.map(vertexMapped_, wired);
                 vertexMapped_ += offset;
-                quadCount_ += offset / 4;
+                pointCount += offset;
             }
         }
 
@@ -582,50 +601,51 @@ void Overlay::update() {
             if (modeMapCheck(b.getMode())) {
                 offset = b.map(vertexMapped_, wired);
                 vertexMapped_ += offset;
-                quadCount_ += offset / 4;
-            } 
-        }
-    }
-
-
-    // END ---------------------------------------<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-    // vertex buffer
-    vkUnmapMemory(device_, vertexBufferMemory_);
-    vertexMapped_ = nullptr;
-
-    // line buffer
-    vkUnmapMemory(device_, lineVertexBufferMemory_);
-    lineVertexMapped_ = nullptr;
-
-    // populate index buffer
-    if (vkMapMemory(device_, indexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&indexMapped_) != VK_SUCCESS) {
-        throw std::runtime_error("failed to map index buffer memory for overlay update ");
-    }
-
-    assert(indexMapped_ != nullptr);
-
-    int count = 0;
-    std::vector<int> indices = { 0,1,2,2,1,3 };
-
-    // 0,1,2, 2,1,3
-    for (int i = 0; i < quadCount_; i++) {
-        for (int j = 0; j < indices.size(); j++) {
-            *indexMapped_ = (indices[j] + (4 * i));
-            indexMapped_++;
-            count++;
+                pointCount += offset;
+            }
         }
 
+        // Sliders
+        for (Slider& s : sliders_) {
+            if (modeMapCheck(s.getMode())) {
+                offset = s.map(vertexMapped_, wired);
+                vertexMapped_ += offset;
+                pointCount += offset;
+            }
+        }
+
+        // points should be divisible by 4 no remainder
+        if (pointCount % 4 != 0) {
+            throw std::runtime_error("overlay pointCount not divisible by 4, pointCount % 4 = " + std::to_string(pointCount % 4));
+        }
+
+        // vertex buffer
+        vkUnmapMemory(device_, vertexBufferMemory_);
+        vertexMapped_ = nullptr;
+
+        // INDEX MAPPING ---------------------------------------<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+        // populate index buffer
+        if (vkMapMemory(device_, indexBufferMemory_, 0, VK_WHOLE_SIZE, 0, (void**)&indexMapped_) != VK_SUCCESS) {
+            throw std::runtime_error("failed to map index buffer memory for overlay update ");
+        }
+
+        assert(indexMapped_ != nullptr);
+
+        std::vector<int> indices = { 0,1,2,2,1,3 };
+        for (int i = 0; i < pointCount/4; i++) {
+            for (int j = 0; j < indices.size(); j++) {
+                *indexMapped_ = (indices[j] + (4 * i));
+                indexMapped_++;
+                indexCount_++;
+            }
+        }
+
+        vkUnmapMemory(device_, indexBufferMemory_);
+        indexMapped_ = nullptr;
+
+        state_.updatedTri = false;
     }
-
-    vkUnmapMemory(device_, indexBufferMemory_);
-    indexMapped_ = nullptr;
-
-    indexCount_ = count;
-
-    // tell overlay elements that a map has occurred
-    state_.updatedLine = false;
-    state_.updatedTri = false;
 }
 
 void Overlay::updateTextBox(const std::string& label, const std::string& newText) {
@@ -739,6 +759,12 @@ void Overlay::cleanup() {
         config_.setAttributeString(b.id_, "positionX", std::to_string(b.getPosition().x));
         config_.setAttributeString(b.id_, "positionY", std::to_string(b.getPosition().y));
         b.cleanup();
+    }
+
+    for (Slider& s : sliders_) {
+        config_.setAttributeString(s.id_, "positionX", std::to_string(s.getPosition().x));
+        config_.setAttributeString(s.id_, "positionY", std::to_string(s.getPosition().y));
+        s.cleanup();
     }
 
     // vertex buffer

@@ -61,7 +61,6 @@ int Button::map(UIVertex* mapped, int overrideIndex) {
     retVal += label_.map(mapped, overrideIndex);
     
     return retVal;
-
 }
 
 /*-----------------------------------------------------------------------------
