@@ -25,9 +25,7 @@ void Camera::init(float aspect) {
 
 	// init view matrix
 	view_ = glm::translate(glm::mat4(1), body_.getPosition());
-
 }
-
 
 /*-----------------------------------------------------------------------------
 -----------------------------UPDATE-STUFF--------------------------------------

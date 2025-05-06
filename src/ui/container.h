@@ -33,6 +33,7 @@ public:
 	void onMouseMove();
 	void onMouseButton();
 	void resetInteraction();
+	void updateInteraction();
 
 	bool border_ = true;
 
@@ -55,7 +56,6 @@ private:
 	glm::vec2 insertPosition_ = { 0.f, 0.f };
 
 	void resetRectanglePositions();
-	void updateInteraction();
 	void createBorderLines();
 	void rePosition();
 };

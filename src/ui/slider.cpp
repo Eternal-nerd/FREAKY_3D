@@ -1,6 +1,6 @@
 #include "slider.h"
 
-void Slider::init(OverlayState& state, OverlayElementState* elementState, const std::string& id, const std::string label, glm::vec2 limits, glm::vec2 position, glm::vec2 sizePixels, int fontIndex, int backgroundIndex, int knobIndex, int barIndex) {
+void Slider::init(OverlayState& state, OverlayElementState* elementState, const std::string& id, const std::string label, glm::vec2 limits, float initValue, glm::vec2 position, glm::vec2 sizePixels, int fontIndex, int backgroundIndex, int knobIndex, int barIndex) {
     util::log(name_, "initializing overlay Slider");
 
     state_ = &state;
@@ -21,6 +21,7 @@ void Slider::init(OverlayState& state, OverlayElementState* elementState, const 
     // init member variables
     id_ = id;
     limits_ = limits;
+    currentValue_ = initValue;
     position_ = position;
     sizePixels_ = sizePixels;
     fontTexIndex_ = fontIndex;
@@ -47,16 +48,20 @@ void Slider::init(OverlayState& state, OverlayElementState* elementState, const 
     // init reading
     fontSize = { (sizePixels_.x * 0.25f * 0.75f) / SLIDER_VALUE_RECTANGLE_COUNT, sizePixels_.y * 0.75f };
     boxSize = { fontSize.x * SLIDER_VALUE_RECTANGLE_COUNT + 0.1f, fontSize.y };
-    reading_.init(*state_, elementState_, id_ + " reading", "testing", position_, boxSize, fontSize, fontTexIndex_);
+    reading_.init(*state_, elementState_, id_ + " reading", "test.", position_, boxSize, fontSize, fontTexIndex_);
+    reading_.updateMessage(std::to_string(currentValue_).substr(0, SLIDER_VALUE_RECTANGLE_COUNT));
     reading_.setBorder(false);
     reading_.setElementStateUpdate(false);
 
     // init knob, set correct size here, position is set in 
     glm::vec2 knobSize = { sizePixels_.y * 0.5f, sizePixels_.y * 0.5f };
     // IMPORTANT - know has its own element state
-    knob_.init(*state_, nullptr, id_ + " knob", position_, knobSize, { 0,0,1,1 }, knobTexIndex_);
-    // FIXME
-    //knob_.setElementStateUpdate(false);
+    knobState_ = new OverlayElementState;
+    knobState_->dragged = false;
+    knobState_->hovered = false;
+    knobState_->interaction = 0;
+    knobState_->movable = true;
+    knob_.init(*state_, knobState_, id_ + " knob", position_, knobSize, { 0,0,1,1 }, knobTexIndex_);
 
     // move elements to correct positions
     orientElements();
@@ -91,8 +96,14 @@ int Slider::map(UIVertex* mapped, int overrideIndex) {
 }
 
 
-void Slider::setAction(void (*func)()) {
+void Slider::setAction(void (*func)(float)) {
+    action_ = func;
+    // initialize updates
+    action_(currentValue_);
+}
 
+float Slider::getValue() {
+    return currentValue_;
 }
 
 /*-----------------------------------------------------------------------------
@@ -108,49 +119,73 @@ void Slider::scale() {
 
 // SPECIAL! need to do different things if knob is hovered or just background rectangle
 void Slider::onMouseMove() {
-    if (!state_->mouseDown) {
-        resetInteraction();
+    // state_->mousePos is a new val, get relative by state_->mousePos - state_->oldMousePos_
+    float xDelta = state_->mousePos.x - state_->oldMousePos.x;
+    float yDelta = state_->mousePos.y - state_->oldMousePos.y;
+    if (knobState_->dragged) {
+        // need to set boundaries for knob position
+        float leftBound = position_.x + (getScaledSize().x * 0.25f);
+        float rightBound = position_.x + (getScaledSize().x - (getScaledSize().x * 0.25f) - knob_.getScaledSize().x);
+        if (knob_.getPosition().x + xDelta > leftBound && knob_.getPosition().x + xDelta < rightBound) {
+            knob_.setPosition({ knob_.getPosition().x + xDelta, knob_.getPosition().y });
+            knobMove();
+        }
+
+    }
+    else if (elementState_->dragged) {
+        background_.setPosition({ background_.getPosition().x + xDelta, background_.getPosition().y + yDelta });
+        bar_.setPosition({ bar_.getPosition().x + xDelta, bar_.getPosition().y + yDelta });
+        label_.setPosition({ label_.getPosition().x + xDelta, label_.getPosition().y + yDelta });
+        reading_.setPosition({ reading_.getPosition().x + xDelta, reading_.getPosition().y + yDelta });
+        knob_.setPosition({ knob_.getPosition().x + xDelta, knob_.getPosition().y + yDelta });
+    }   
+    else {
+        if (knob_.isHovered()) {
+            knobState_->hovered = true;
+            elementState_->hovered = false;
+        }
+        else {
+            knobState_->hovered = false;
+            elementState_->hovered = background_.isHovered();
+        }
     }
 
-    if (knob_.wasHovered() && !background_.toggled()) {
-        if (!knob_.toggled()) {
-            resetInteraction();
-        }
-        knob_.onMouseMove();
-    }
-    else {
-        background_.onMouseMove();
-        bar_.onMouseMove();
-        label_.onMouseMove();
-        reading_.onMouseMove();
-        if (background_.wasHovered() && background_.toggled()) {
-            // manually change knobs position
-            float xDelta = state_->mousePos.x - state_->oldMousePos.x;
-            float yDelta = state_->mousePos.y - state_->oldMousePos.y;
-            knob_.setPosition({ knob_.getPosition().x + xDelta, knob_.getPosition().y + yDelta });
-        }
-    }
+    background_.updateInteraction();
+    bar_.updateInteraction();
+    label_.updateInteraction();
+    reading_.updateInteraction();
+    knob_.updateInteraction();
+
+    position_ = background_.getPosition();
 }
 
 // SPECIAL! need to do different things if knob is hovered or just background rectangle
 void Slider::onMouseButton() {
-    if (knob_.wasHovered()) {
-        knob_.onMouseButton();
+    if (state_->mouseDown) {
+        if (knob_.isHovered()) {
+            knobState_->dragged = true;
+        }
+        else {
+            elementState_->dragged = background_.isHovered();
+        }
     }
     else {
-        background_.onMouseButton();
-        bar_.onMouseButton();
-        label_.onMouseButton();
-        reading_.onMouseButton();
+        resetInteraction();
     }
+
+    background_.updateInteraction();
+    bar_.updateInteraction();
+    label_.updateInteraction();
+    reading_.updateInteraction();
+    knob_.updateInteraction();
 }
 
 void Slider::resetInteraction() {
     background_.resetInteraction();
     bar_.resetInteraction();
-    knob_.resetInteraction();
     label_.resetInteraction();
     reading_.resetInteraction();
+    knob_.resetInteraction();
 }
 
 /*-----------------------------------------------------------------------------
@@ -167,5 +202,42 @@ void Slider::orientElements() {
     reading_.setPosition({ (position_.x + getScaledSize().x) - (reading_.getScaledSize().x + (getScaledSize().x * 0.25f * 0.25f * 0.5f)), position_.y + (getScaledSize().y - reading_.getScaledSize().y) / 2 });
 
     // move knob
-    knob_.setPosition({ position_.x + (getScaledSize().x - knob_.getScaledSize().x) / 2, position_.y + (getScaledSize().y - knob_.getScaledSize().y) / 2 });
+    // get x offset
+    float percentFull = (currentValue_ - limits_.x) / (limits_.y - limits_.x);
+    knob_.setPosition({ position_.x + (getScaledSize().x * 0.25f) + (((getScaledSize().x * 0.5f) - knob_.getScaledSize().x) * percentFull), position_.y + (getScaledSize().y - knob_.getScaledSize().y) / 2});
+}
+
+void Slider::knobMove() {
+    // need to set boundaries for knob position
+    float leftBound = position_.x + (getScaledSize().x * 0.25f);
+    float rightBound = position_.x + (getScaledSize().x - (getScaledSize().x * 0.25f) - knob_.getScaledSize().x);
+
+    float percentFull = (knob_.getPosition().x - leftBound) / (rightBound - leftBound);
+
+    currentValue_ = limits_.x + ((limits_.y - limits_.x) * percentFull);
+
+    // update reading to value
+    reading_.updateMessage(std::to_string(currentValue_).substr(0, SLIDER_VALUE_RECTANGLE_COUNT));
+
+    // callback function - TODO
+    if (action_) {
+        util::log(name_, "executing " + id_ + " slider function");
+        action_(currentValue_);
+    }
+    else {
+        throw std::runtime_error("slider function pointer is null! for slider: " + id_);
+    }
+}
+
+/*-----------------------------------------------------------------------------
+------------------------------CLEANUP------------------------------------------
+-----------------------------------------------------------------------------*/
+void Slider::cleanup() {
+    util::log("ELEMENT BASE", "cleaning up overlay slider resources");
+
+    if (unique_ && elementState_) {
+        delete elementState_;
+    }
+
+    delete knobState_;
 }

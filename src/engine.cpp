@@ -148,8 +148,12 @@ void Engine::updateOverlay() {
         util::log(name_, "quitting program (onClick)");
         running_ = false;
     }
+    if (overlay_->updates_.fov != camera_.config_.fovy) {
+        util::log(name_, "setting camera FOV to: " + std::to_string(overlay_->updates_.fov));
+        camera_.config_.fovy = overlay_->updates_.fov;
+    }
 
-    // need to reset updates
+    // need to reset updates ??? do we?
     overlay_->resetUpdates();
 
     overlay_->update();

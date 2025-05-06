@@ -33,13 +33,13 @@ public:
     const glm::mat4& getViewMatrix() const;
 	const glm::mat4& getPerspectiveMatrix() const;
 
+	// camera config
+	CameraConfig config_;
+
 	RigidBody* getBodyPtr();
 
 	const std::string name_ = "CAMERA";
 private:
-	// camera config
-	CameraConfig config_;
-
 	// initial rotation
 	float pitch_ = 0;
 	float yaw_ = 0;

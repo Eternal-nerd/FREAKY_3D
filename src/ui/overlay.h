@@ -50,6 +50,8 @@ public:
     // BUTTON functions:
     static void resume();
     static void quitF();
+	// SLIDER FUNCTIONS:
+	static void setFOV(float fov);
 
 	void cleanup();
 

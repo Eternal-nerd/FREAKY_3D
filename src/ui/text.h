@@ -31,6 +31,7 @@ public:
 	void onMouseMove();
 	void onMouseButton();
 	void resetInteraction();
+	void updateInteraction();
 
 	std::string id_ = "";
 

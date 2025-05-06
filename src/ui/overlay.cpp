@@ -361,6 +361,7 @@ void Overlay::generateElements() {
                 config_.getStringAttribute(it->first, "label"), // label
                 { config_.getFloatAttribute(it->first, "minValue"),
                 config_.getFloatAttribute(it->first, "maxValue") }, // limits
+                config_.getFloatAttribute(it->first, "initValue"),
                 { config_.getFloatAttribute(it->first, "positionX"),
                 config_.getFloatAttribute(it->first, "positionY") }, // position
                 { config_.getFloatAttribute(it->first, "widthPixel"),
@@ -370,8 +371,10 @@ void Overlay::generateElements() {
                 config_.getIntAttribute(it->first, "knobTexIndex"),
                 config_.getIntAttribute(it->first, "barTexIndex")
             );
-            // set function
-
+            // set function pointers
+            if (it->first == "FOV") {
+                s.setAction(&setFOV);
+            }
             // set mode & pushback
             s.setMode(strToMode(config_.getStringAttribute(it->first, "mode")));
             sliders_.push_back(s);
@@ -724,7 +727,7 @@ bool Overlay::modeMapCheck(OverlayMode mode) {
 }
 
 /*-----------------------------------------------------------------------------
-------------------------------BUTTON-FUNCTIONS---------------------------------
+------------------------------BUTTON-AND-SLIDER-FUNCTIONS----------------------
 -----------------------------------------------------------------------------*/
 void Overlay::resume() {
     updates_.unpause = true;
@@ -732,6 +735,10 @@ void Overlay::resume() {
 
 void Overlay::quitF() {
     updates_.quit = true;
+}
+
+void Overlay::setFOV(float fov) {
+    updates_.fov = fov;
 }
 
 /*-----------------------------------------------------------------------------
@@ -764,6 +771,7 @@ void Overlay::cleanup() {
     for (Slider& s : sliders_) {
         config_.setAttributeString(s.id_, "positionX", std::to_string(s.getPosition().x));
         config_.setAttributeString(s.id_, "positionY", std::to_string(s.getPosition().y));
+        config_.setAttributeString(s.id_, "initValue", std::to_string(s.getValue()));
         s.cleanup();
     }
 

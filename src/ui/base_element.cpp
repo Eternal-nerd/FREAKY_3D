@@ -29,22 +29,20 @@ glm::vec2 BaseElement::getScaledSize() {
     return { (sizePixels_.x / state_->extent.width) * state_->scale , (sizePixels_.y / state_->extent.height) * state_->scale };
 }
 
-bool BaseElement::wasHovered() {
+bool BaseElement::isHovered() {
     // calculate boundaries
     float left = position_.x;
     float right = position_.x + ((sizePixels_.x / state_->extent.width) * state_->scale);
     float top = position_.y;
     float bottom = position_.y + ((sizePixels_.y / state_->extent.height) * state_->scale);
 
-    return util::withinBorders(state_->oldMousePos, { left, right, top, bottom });
+    return util::withinBorders(state_->mousePos, { left, right, top, bottom });
 }
 
-bool BaseElement::toggled() {
-    if (elementState_) {
-        return elementState_->dragged;
-    }
-    throw std::runtime_error("elementState_ was nullptr in BaseElement::toggled");
+void BaseElement::setElementStateUpdate(bool state) {
+    updateElementState_ = state;
 }
+
 
 /*-----------------------------------------------------------------------------
 ------------------------------CLEANUP------------------------------------------

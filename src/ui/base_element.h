@@ -18,13 +18,15 @@ public:
 
     glm::vec2 getScaledSize();
 
-    bool wasHovered();
-    bool toggled();
+    void setElementStateUpdate(bool state);
+
+    bool isHovered();
 
     void cleanup(); 
 
 protected:
     bool unique_ = false;
+    bool updateElementState_ = true;
 
     OverlayState* state_ = nullptr;
 	OverlayElementState* elementState_ = nullptr;

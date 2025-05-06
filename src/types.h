@@ -17,7 +17,7 @@ const float NOCLIP_SPEED = 30.f;
 const int MAX_MODELS = 512;
 
 const float FONT_OFFSET = 0.0625f;
-const int SLIDER_VALUE_RECTANGLE_COUNT = 7;
+const int SLIDER_VALUE_RECTANGLE_COUNT = 5;
 
 const int FPS_MEASURE_INTERVAL = 1000;
 
@@ -52,6 +52,7 @@ typedef enum OverlayModifyType {
 struct OverlayUpdates {
     bool unpause = false;
     bool quit = false;
+    float fov = 90.f;
 };
 
 struct OverlayState {

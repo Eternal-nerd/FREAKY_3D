@@ -189,10 +189,6 @@ void Rectangle::setTextureCoords(glm::vec4 texCoords) {
 	quad_.vertices[3].texCoord = { texCoords.x + texCoords.z, texCoords.y + texCoords.w };
 }
 
-void Rectangle::setElementStateUpdate(bool state) {
-	updateElementState_ = state;
-}
-
 /*-----------------------------------------------------------------------------
 ------------------------------PRIVATE-HELPERS----------------------------------
 -----------------------------------------------------------------------------*/
