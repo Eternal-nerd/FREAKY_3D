@@ -170,6 +170,9 @@ void Slider::onMouseButton() {
         }
     }
     else {
+        if (knobState_->dragged) {
+            util::log(name_, "set value to: " + std::to_string(currentValue_));
+        }
         resetInteraction();
     }
 
@@ -232,7 +235,7 @@ void Slider::knobMove() {
 ------------------------------CLEANUP------------------------------------------
 -----------------------------------------------------------------------------*/
 void Slider::cleanup() {
-    util::log("ELEMENT BASE", "cleaning up overlay slider resources");
+    util::log(name_, "cleaning up overlay slider resources");
 
     if (unique_ && elementState_) {
         delete elementState_;
