@@ -10,7 +10,7 @@
 #include "engine.h"
 
 // Program entry point
-int main(int argv, char** args) {
+int main(int argc, char** argv) {
     std::cout << "main function invocation\n";
 
     Engine eng;
