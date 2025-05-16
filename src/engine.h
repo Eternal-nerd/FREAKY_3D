@@ -29,7 +29,7 @@ private:
 	bool paused_ = false;
 
 	// FIXME FUN
-	glm::vec3 cubeRotation_ = {0.f,0.f,0.f};
+	glm::vec3 cubeRotation_ = {10.f,20.f,30.f};
 
 	// Clock
 	Clock clock_;

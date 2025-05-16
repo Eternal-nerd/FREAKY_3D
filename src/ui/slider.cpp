@@ -115,6 +115,7 @@ void Slider::scale() {
     knob_.scale();
     label_.scale();
     reading_.scale();
+    orientElements();
 }
 
 // SPECIAL! need to do different things if knob is hovered or just background rectangle

@@ -52,7 +52,7 @@ void Engine::init() {
 void Engine::loop() {
 	util::log(name_, "beginning the main loop");
 
-    // FIXME 
+    // FIXME
     std::string testt = "abcdefghijklmnopqrstuvwxyz";
     int idx = 1;
     bool upward = true;
@@ -151,9 +151,10 @@ void Engine::updateOverlay() {
     if (overlay_->updates_.fov != camera_.config_.fovy) {
         camera_.config_.fovy = overlay_->updates_.fov;
     }
-    if (overlay_->updates_.cubeRot != cubeRotation_) {
-        cubeRotation_ = overlay_->updates_.cubeRot;
-    }
+
+    glm::vec3 camPos = camera_.getBodyPtr()->getPosition();
+    std::string camPosStr = "Cam Pos: [" + std::to_string(camPos.x).substr(0,5) + ", " + std::to_string(camPos.y).substr(0,5) + ", " + std::to_string(camPos.z).substr(0,5) + "]";
+    overlay_->updateTextBox("CameraPos", camPosStr);
 
     // need to reset updates ??? do we?
     overlay_->resetUpdates();
