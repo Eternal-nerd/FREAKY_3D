@@ -151,6 +151,9 @@ void Engine::updateOverlay() {
     if (overlay_->updates_.fov != camera_.config_.fovy) {
         camera_.config_.fovy = overlay_->updates_.fov;
     }
+    if (overlay_->updates_.polygonToggle) {
+        gfx_.togglePolygonMode();
+    }
 
     glm::vec3 camPos = camera_.getBodyPtr()->getPosition();
     std::string camPosStr = "Cam Pos: [" + std::to_string(camPos.x).substr(0,5) + ", " + std::to_string(camPos.y).substr(0,5) + ", " + std::to_string(camPos.z).substr(0,5) + "]";
