@@ -48,6 +48,7 @@ public:
 	void updateExtent(VkExtent2D extent);
 
     // BUTTON functions:
+    static void polygon();
     static void resume();
     static void quitF();
 	// SLIDER FUNCTIONS:

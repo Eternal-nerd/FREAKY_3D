@@ -350,6 +350,9 @@ void Overlay::generateElements() {
             else if (it->first == "quit") {
                 b.setAction(&quitF);
             }
+            else if (it->first == "polygon") {
+                b.setAction(&polygon);
+            }
             // set mode
             b.setMode(strToMode(config_.getStringAttribute(it->first, "mode")));
             buttons_.push_back(b);
@@ -420,6 +423,7 @@ void Overlay::updateExtent(VkExtent2D extent) {
 void Overlay::resetUpdates() {
     updates_.unpause = false;
     updates_.quit = false; // unused lol
+    updates_.polygonToggle = false;
 }
 
 void Overlay::toggleWireframe() {
@@ -731,6 +735,10 @@ bool Overlay::modeMapCheck(OverlayMode mode) {
 /*-----------------------------------------------------------------------------
 ------------------------------BUTTON-AND-SLIDER-FUNCTIONS----------------------
 -----------------------------------------------------------------------------*/
+void Overlay::polygon() {
+    updates_.polygonToggle = true;
+}
+
 void Overlay::resume() {
     updates_.unpause = true;
 }

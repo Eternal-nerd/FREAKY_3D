@@ -85,5 +85,4 @@ private:
 
     // draw game objects and preent image
     void renderScene();
-
 };
