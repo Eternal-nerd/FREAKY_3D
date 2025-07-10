@@ -125,7 +125,7 @@ void Engine::updateUBO() {
     // model transforms (obtined from each entity's rigid body) --=====<
     for (int i=0; i<entities_.size(); i++) {
         ubo.model[i] = entities_[i].getModelMat();
-    } 
+    }
 
     // Camera matrices -------------------------=========<
     ubo.view = camera_.getViewMatrix();
